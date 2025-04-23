@@ -31,6 +31,12 @@
       <textarea id="instructions" class="form-control" rows="3"></textarea>
     </div>
 
+    <div id="cartSection" class="mt-5 d-none">
+      <h4>Your Order</h4>
+      <ul id="cartList" class="list-group mb-3"></ul>
+      <h5>Total: ₹<span id="cartTotal">0</span></h5>
+    </div>
+
     <button id="placeOrderBtn" class="btn btn-success mt-4">Place Order</button>
 
     <div id="confirmationMsg" class="alert alert-success mt-4 d-none">
@@ -44,7 +50,7 @@
   const room = params.get('room') || '';
   document.getElementById('roomHeader').textContent = `Room: ${room}`;
 
-  const cart = [];
+  const cart = {};
 
   async function loadMenu() {
     const res = await fetch(SHEET_URL);
@@ -72,7 +78,9 @@
             <div><strong>${item.Item}</strong></div>
             <div class="text-muted small">₹${item["Price (₹)"]}</div>
           </div>
-          <button class="btn btn-outline-primary btn-sm" onclick="addItem('${item.Item}', ${item["Price (₹)"]})">Add</button>
+          <div>
+            <button class="btn btn-outline-primary btn-sm" onclick="addToCart('${item.Item}', ${item["Price (₹)"]})">Add</button>
+          </div>
         `;
         section.appendChild(row);
       });
@@ -81,21 +89,78 @@
     }
   }
 
-  function addItem(name, price) {
-    cart.push({ name, price });
-    alert(`${name} added to order.`);
+  function addToCart(name, price) {
+    if (!cart[name]) {
+      cart[name] = { quantity: 1, price };
+    } else {
+      cart[name].quantity += 1;
+    }
+    updateCartUI();
+  }
+
+  function changeQty(name, delta) {
+    if (cart[name]) {
+      cart[name].quantity += delta;
+      if (cart[name].quantity <= 0) delete cart[name];
+      updateCartUI();
+    }
+  }
+
+  function updateCartUI() {
+    const cartList = document.getElementById('cartList');
+    const cartSection = document.getElementById('cartSection');
+    const cartTotal = document.getElementById('cartTotal');
+    cartList.innerHTML = '';
+    let total = 0;
+
+    for (const item in cart) {
+      const { quantity, price } = cart[item];
+      total += quantity * price;
+      const li = document.createElement('li');
+      li.className = 'list-group-item d-flex justify-content-between align-items-center';
+      li.innerHTML = `
+        <div>
+          <strong>${item}</strong>
+          <span class="text-muted">× ₹${price}</span>
+        </div>
+        <div>
+          <button class="btn btn-sm btn-outline-secondary" onclick="changeQty('${item}', -1)">−</button>
+          <span class="mx-2">${quantity}</span>
+          <button class="btn btn-sm btn-outline-secondary" onclick="changeQty('${item}', 1)">+</button>
+        </div>
+      `;
+      cartList.appendChild(li);
+    }
+
+    cartTotal.textContent = total;
+    cartSection.classList.toggle('d-none', total === 0);
   }
 
   document.getElementById('placeOrderBtn').addEventListener('click', () => {
     const instructions = document.getElementById('instructions').value;
-    console.log({ room, cart, instructions });
+    const items = Object.entries(cart).map(([name, { quantity, price }]) => ({
+      name,
+      quantity,
+      price
+    }));
+
+    if (items.length === 0) {
+      alert("Cart is empty!");
+      return;
+    }
+
+    const order = {
+      room,
+      instructions,
+      items
+    };
+
+    console.log("Order to be sent:", order);
     document.getElementById('confirmationMsg').classList.remove('d-none');
-    // ⚠️ No actual order storage or WhatsApp message yet — we’ll add that next!
   });
 
   loadMenu();
 </script>
 
-  
 </body>
 </html>
