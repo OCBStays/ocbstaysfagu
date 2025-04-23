@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>OCB Stays - Food Menu</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"/>
   <style>
     .menu-category {
       margin-top: 2rem;
@@ -53,148 +53,160 @@
     </div>
   </div>
 
-<script>
-  const SHEET_URL = 'https://opensheet.elk.sh/12TG5XURaO5WIhFH2f1z9RG9sjCMCRiVDdzZWDHIdrGs/Sheet1';
-  const params = new URLSearchParams(window.location.search);
-  const room = params.get('room') || '';
-  document.getElementById('roomHeader').textContent = `Room: ${room}`;
+  <script>
+    const MENU_SHEET_URL = 'https://opensheet.elk.sh/12TG5XURaO5WIhFH2f1z9RG9sjCMCRiVDdzZWDHIdrGs/Sheet1';
+    const ORDER_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbx-uL4MHXz6dbrVAGQHzXlGJnvJ3UkvMeZT3e31eFcgM0PWYCtdJXvL7E2qa_eqvRRiOw/exec';
+    const params = new URLSearchParams(window.location.search);
+    const room = params.get('room') || '';
+    document.getElementById('roomHeader').textContent = `Room: ${room}`;
 
-  const cart = {};
+    const cart = {};
 
-  async function loadMenu() {
-    const res = await fetch(SHEET_URL);
-    const data = await res.json();
-    const grouped = {};
+    async function loadMenu() {
+      const res = await fetch(MENU_SHEET_URL);
+      const data = await res.json();
+      const grouped = {};
 
-    data.forEach(item => {
-      if (item["Available?"] === 'Yes') {
-        if (!grouped[item.Category]) grouped[item.Category] = [];
-        grouped[item.Category].push(item);
+      data.forEach(item => {
+        if (item["Available?"] === 'Yes') {
+          if (!grouped[item.Category]) grouped[item.Category] = [];
+          grouped[item.Category].push(item);
+        }
+      });
+
+      const container = document.getElementById('menuContainer');
+      for (const category in grouped) {
+        const section = document.createElement('div');
+        section.className = 'menu-category';
+        section.innerHTML = `<h4>${category}</h4>`;
+
+        grouped[category].forEach(item => {
+          const row = document.createElement('div');
+          row.className = 'item-row';
+          const itemId = item.Item.replace(/\s+/g, '-').toLowerCase();
+
+          row.innerHTML = `
+            <div>
+              <div><strong>${item.Item}</strong></div>
+              <div class="text-muted small">₹${item["Price (₹)"]}</div>
+            </div>
+            <div id="controls-${itemId}">
+              <button class="btn btn-outline-primary btn-sm" onclick="addItem('${item.Item}', ${item["Price (₹)"]})">Add</button>
+            </div>
+          `;
+          section.appendChild(row);
+        });
+
+        container.appendChild(section);
+      }
+    }
+
+    function addItem(name, price) {
+      cart[name] = { quantity: 1, price };
+      updateQtyUI(name);
+      updateCartUI();
+    }
+
+    function changeQty(name, price, delta) {
+      if (!cart[name]) return;
+      cart[name].quantity += delta;
+      if (cart[name].quantity <= 0) {
+        delete cart[name];
+        showAddButton(name);
+      } else {
+        updateQtyUI(name);
+      }
+      updateCartUI();
+    }
+
+    function updateQtyUI(name) {
+      const itemId = name.replace(/\s+/g, '-').toLowerCase();
+      const container = document.getElementById(`controls-${itemId}`);
+      const quantity = cart[name]?.quantity || 0;
+
+      container.innerHTML = `
+        <div class="qty-controls">
+          <button class="btn btn-outline-secondary btn-sm" onclick="changeQty('${name}', ${cart[name].price}, -1)">−</button>
+          <span id="qty-${itemId}">${quantity}</span>
+          <button class="btn btn-outline-secondary btn-sm" onclick="changeQty('${name}', ${cart[name].price}, 1)">+</button>
+        </div>
+      `;
+    }
+
+    function showAddButton(name) {
+      const itemId = name.replace(/\s+/g, '-').toLowerCase();
+      const container = document.getElementById(`controls-${itemId}`);
+      container.innerHTML = `
+        <button class="btn btn-outline-primary btn-sm" onclick="addItem('${name}', ${cart[name]?.price || 0})">Add</button>
+      `;
+    }
+
+    function updateCartUI() {
+      const cartList = document.getElementById('cartList');
+      const cartSection = document.getElementById('cartSection');
+      const cartTotal = document.getElementById('cartTotal');
+      cartList.innerHTML = '';
+      let total = 0;
+
+      for (const item in cart) {
+        const { quantity, price } = cart[item];
+        total += quantity * price;
+        const li = document.createElement('li');
+        li.className = 'list-group-item d-flex justify-content-between align-items-center';
+        li.innerHTML = `
+          <div>
+            <strong>${item}</strong>
+            <span class="text-muted">× ₹${price}</span>
+          </div>
+          <div>
+            <button class="btn btn-sm btn-outline-secondary" onclick="changeQty('${item}', ${price}, -1)">−</button>
+            <span class="mx-2">${quantity}</span>
+            <button class="btn btn-sm btn-outline-secondary" onclick="changeQty('${item}', ${price}, 1)">+</button>
+          </div>
+        `;
+        cartList.appendChild(li);
+      }
+
+      cartTotal.textContent = total;
+      cartSection.classList.toggle('d-none', total === 0);
+    }
+
+    document.getElementById('placeOrderBtn').addEventListener('click', async () => {
+      const instructions = document.getElementById('instructions').value;
+      const items = Object.entries(cart).map(([name, { quantity, price }]) => ({
+        name,
+        quantity,
+        price
+      }));
+
+      if (items.length === 0) {
+        alert("Cart is empty!");
+        return;
+      }
+
+      const order = { room, instructions, items };
+
+      try {
+        const res = await fetch(ORDER_WEBAPP_URL, {
+          method: 'POST',
+          body: JSON.stringify(order),
+          headers: { 'Content-Type': 'application/json' }
+        });
+
+        if (res.ok) {
+          document.getElementById('confirmationMsg').classList.remove('d-none');
+          Object.keys(cart).forEach(name => showAddButton(name));
+          Object.keys(cart).forEach(name => delete cart[name]);
+          updateCartUI();
+        } else {
+          alert('Failed to place order. Try again.');
+        }
+      } catch (err) {
+        alert('Error: ' + err.message);
       }
     });
 
-    const container = document.getElementById('menuContainer');
-    for (const category in grouped) {
-      const section = document.createElement('div');
-      section.className = 'menu-category';
-      section.innerHTML = `<h4>${category}</h4>`;
-
-      grouped[category].forEach(item => {
-        const row = document.createElement('div');
-        row.className = 'item-row';
-        const itemId = item.Item.replace(/\s+/g, '-').toLowerCase();
-
-        row.innerHTML = `
-          <div>
-            <div><strong>${item.Item}</strong></div>
-            <div class="text-muted small">₹${item["Price (₹)"]}</div>
-          </div>
-          <div id="controls-${itemId}">
-            <button class="btn btn-outline-primary btn-sm" onclick="addItem('${item.Item}', ${item["Price (₹)"]})">Add</button>
-          </div>
-        `;
-        section.appendChild(row);
-      });
-
-      container.appendChild(section);
-    }
-  }
-
-  function addItem(name, price) {
-    cart[name] = { quantity: 1, price };
-    updateQtyUI(name);
-    updateCartUI();
-  }
-
-  function changeQty(name, price, delta) {
-    if (!cart[name]) return;
-    cart[name].quantity += delta;
-    if (cart[name].quantity <= 0) {
-      delete cart[name];
-      showAddButton(name);
-    } else {
-      updateQtyUI(name);
-    }
-    updateCartUI();
-  }
-
-  function updateQtyUI(name) {
-    const itemId = name.replace(/\s+/g, '-').toLowerCase();
-    const container = document.getElementById(`controls-${itemId}`);
-    const quantity = cart[name]?.quantity || 0;
-
-    container.innerHTML = `
-      <div class="qty-controls">
-        <button class="btn btn-outline-secondary btn-sm" onclick="changeQty('${name}', ${cart[name].price}, -1)">−</button>
-        <span id="qty-${itemId}">${quantity}</span>
-        <button class="btn btn-outline-secondary btn-sm" onclick="changeQty('${name}', ${cart[name].price}, 1)">+</button>
-      </div>
-    `;
-  }
-
-  function showAddButton(name) {
-    const itemId = name.replace(/\s+/g, '-').toLowerCase();
-    const container = document.getElementById(`controls-${itemId}`);
-    container.innerHTML = `
-      <button class="btn btn-outline-primary btn-sm" onclick="addItem('${name}', ${cart[name]?.price || 0})">Add</button>
-    `;
-  }
-
-  function updateCartUI() {
-    const cartList = document.getElementById('cartList');
-    const cartSection = document.getElementById('cartSection');
-    const cartTotal = document.getElementById('cartTotal');
-    cartList.innerHTML = '';
-    let total = 0;
-
-    for (const item in cart) {
-      const { quantity, price } = cart[item];
-      total += quantity * price;
-      const li = document.createElement('li');
-      li.className = 'list-group-item d-flex justify-content-between align-items-center';
-      li.innerHTML = `
-        <div>
-          <strong>${item}</strong>
-          <span class="text-muted">× ₹${price}</span>
-        </div>
-        <div>
-          <button class="btn btn-sm btn-outline-secondary" onclick="changeQty('${item}', ${price}, -1)">−</button>
-          <span class="mx-2">${quantity}</span>
-          <button class="btn btn-sm btn-outline-secondary" onclick="changeQty('${item}', ${price}, 1)">+</button>
-        </div>
-      `;
-      cartList.appendChild(li);
-    }
-
-    cartTotal.textContent = total;
-    cartSection.classList.toggle('d-none', total === 0);
-  }
-
-  document.getElementById('placeOrderBtn').addEventListener('click', () => {
-    const instructions = document.getElementById('instructions').value;
-    const items = Object.entries(cart).map(([name, { quantity, price }]) => ({
-      name,
-      quantity,
-      price
-    }));
-
-    if (items.length === 0) {
-      alert("Cart is empty!");
-      return;
-    }
-
-    const order = {
-      room,
-      instructions,
-      items
-    };
-
-    console.log("Order to be sent:", order);
-    document.getElementById('confirmationMsg').classList.remove('d-none');
-  });
-
-  loadMenu();
-</script>
-
+    loadMenu();
+  </script>
 </body>
 </html>
