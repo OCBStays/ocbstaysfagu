@@ -38,66 +38,64 @@
     </div>
   </div>
 
-  <script>
-    const SHEET_URL = 'https://script.google.com/macros/s/YOUR_DEPLOYED_WEB_APP_URL/exec'; // Replace with your Apps Script web app URL
-    const params = new URLSearchParams(window.location.search);
-    const room = params.get('room') || '';
-    document.getElementById('roomHeader').textContent = `Room: ${room}`;
+<script>
+  const SHEET_URL = 'https://opensheet.elk.sh/12TG5XURaO5WIhFH2f1z9RG9sjCMCRiVDdzZWDHIdrGs/Sheet1';
+  const params = new URLSearchParams(window.location.search);
+  const room = params.get('room') || '';
+  document.getElementById('roomHeader').textContent = `Room: ${room}`;
 
-    async function loadMenu() {
-      const res = await fetch(`${SHEET_URL}?type=menu`);
-      const data = await res.json();
-      const grouped = {};
+  const cart = [];
 
-      data.forEach(item => {
-        if (item.Available === 'Yes') {
-          if (!grouped[item.Category]) grouped[item.Category] = [];
-          grouped[item.Category].push(item);
-        }
-      });
+  async function loadMenu() {
+    const res = await fetch(SHEET_URL);
+    const data = await res.json();
+    const grouped = {};
 
-      const container = document.getElementById('menuContainer');
-      for (const category in grouped) {
-        const section = document.createElement('div');
-        section.className = 'menu-category';
-        section.innerHTML = `<h4>${category}</h4>`;
-
-        grouped[category].forEach(item => {
-          const row = document.createElement('div');
-          row.className = 'item-row';
-          row.innerHTML = `
-            <div>
-              <div><strong>${item.Item}</strong></div>
-              <div class="text-muted small">₹${item["Price (₹)"]}</div>
-            </div>
-            <button class="btn btn-outline-primary btn-sm" onclick="addItem('${item.Item}', ${item["Price (₹)"]})">Add</button>
-          `;
-          section.appendChild(row);
-        });
-
-        container.appendChild(section);
-      }
-    }
-
-    const cart = [];
-    function addItem(name, price) {
-      cart.push({ name, price });
-      alert(`${name} added to order.`);
-    }
-
-    document.getElementById('placeOrderBtn').addEventListener('click', async () => {
-      const instructions = document.getElementById('instructions').value;
-      const res = await fetch(`${SHEET_URL}?type=order`, {
-        method: 'POST',
-        body: JSON.stringify({ room, cart, instructions })
-      });
-
-      if (res.ok) {
-        document.getElementById('confirmationMsg').classList.remove('d-none');
+    data.forEach(item => {
+      if (item["Available?"] === 'Yes') {
+        if (!grouped[item.Category]) grouped[item.Category] = [];
+        grouped[item.Category].push(item);
       }
     });
 
-    loadMenu();
-  </script>
+    const container = document.getElementById('menuContainer');
+    for (const category in grouped) {
+      const section = document.createElement('div');
+      section.className = 'menu-category';
+      section.innerHTML = `<h4>${category}</h4>`;
+
+      grouped[category].forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'item-row';
+        row.innerHTML = `
+          <div>
+            <div><strong>${item.Item}</strong></div>
+            <div class="text-muted small">₹${item["Price (₹)"]}</div>
+          </div>
+          <button class="btn btn-outline-primary btn-sm" onclick="addItem('${item.Item}', ${item["Price (₹)"]})">Add</button>
+        `;
+        section.appendChild(row);
+      });
+
+      container.appendChild(section);
+    }
+  }
+
+  function addItem(name, price) {
+    cart.push({ name, price });
+    alert(`${name} added to order.`);
+  }
+
+  document.getElementById('placeOrderBtn').addEventListener('click', () => {
+    const instructions = document.getElementById('instructions').value;
+    console.log({ room, cart, instructions });
+    document.getElementById('confirmationMsg').classList.remove('d-none');
+    // ⚠️ No actual order storage or WhatsApp message yet — we’ll add that next!
+  });
+
+  loadMenu();
+</script>
+
+  
 </body>
 </html>
