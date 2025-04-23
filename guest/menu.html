@@ -1,68 +1,49 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>OCB Food Menu</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  <style>
-    .category-title { @apply text-xl font-semibold mt-6 mb-2; }
-    .item-row { @apply flex justify-between py-1 border-b; }
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OCB Stays Guest Portal</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
 </head>
-<body class="bg-gray-50 p-4">
-  <h1 class="text-2xl font-bold text-center mb-6">🍽️ OCB Stays – Food Menu</h1>
-  
-  <div class="max-w-2xl mx-auto">
-    <div>
-      <h2 class="category-title">🥘 Main Course</h2>
-      <div class="item-row"><span>Dal Tadka</span><span>₹340</span></div>
-      <div class="item-row"><span>Mix Veg</span><span>₹380</span></div>
-      <div class="item-row"><span>Dal Makhani (6 hr pre-order)</span><span>₹460</span></div>
-      <div class="item-row"><span>Chole Masala (6 hr pre-order)</span><span>₹360</span></div>
-      <div class="item-row"><span>Shahi Paneer</span><span>₹410</span></div>
-      <div class="item-row"><span>Kadhai Paneer</span><span>₹450</span></div>
-      <div class="item-row"><span>Palak Paneer</span><span>₹410</span></div>
-      <div class="item-row"><span>Paneer Bhurji</span><span>₹320</span></div>
-      <div class="item-row"><span>Kadai Mushroom</span><span>₹380</span></div>
-      <div class="item-row"><span>Masala Aloo</span><span>₹250</span></div>
-      <div class="item-row"><span>Seasonal Veg</span><span>₹350</span></div>
-      <div class="item-row"><span>Khichdi</span><span>₹200</span></div>
-      <div class="item-row"><span>Special Pahadi Chicken (serves 2)</span><span>₹1200</span></div>
+<body class="bg-gray-50 text-gray-800">
+  <div class="max-w-4xl mx-auto p-6">
+    <h1 class="text-3xl font-bold mb-4">Welcome to OCB Stays 🌄</h1>
+    <p class="mb-4">We’re excited to host you! Below you'll find all important information during your stay.</p>
+
+    <div class="mb-6">
+      <h2 class="text-xl font-semibold">Wi-Fi</h2>
+      <p><strong>Name:</strong> OCB Stays<br><strong>Password:</strong> CozyBalcony!</p>
     </div>
 
-    <div>
-      <h2 class="category-title">🥞 Breakfast</h2>
-      <div class="item-row"><span>Aloo Paratha</span><span>₹150</span></div>
-      <div class="item-row"><span>Gobhi Paratha</span><span>₹150</span></div>
-      <div class="item-row"><span>Paneer Paratha</span><span>₹180</span></div>
-      <div class="item-row"><span>Mix Paratha</span><span>₹180</span></div>
-      <div class="item-row"><span>Onion Paratha</span><span>₹150</span></div>
-      <div class="item-row"><span>Poori Aloo (4 pcs)</span><span>₹200</span></div>
-      <div class="item-row"><span>Poha</span><span>₹180</span></div>
+    <div class="mb-6">
+      <h2 class="text-xl font-semibold">Caretaker</h2>
+      <p><strong>Name:</strong> Vandana Didi<br><strong>Hours:</strong> 10AM–3PM<br><strong>Phone:</strong> 98164 11860</p>
     </div>
 
-    <div>
-      <h2 class="category-title">🍝 Snacks / Starters</h2>
-      <div class="item-row"><span>Classic French Fries</span><span>₹260</span></div>
-      <div class="item-row"><span>Peri Peri French Fries</span><span>₹280</span></div>
-      <div class="item-row"><span>Honey Chilli Potato</span><span>₹340</span></div>
-      <div class="item-row"><span>Veg Cutlet</span><span>₹280</span></div>
-      <div class="item-row"><span>Cheese Cutlet</span><span>₹280</span></div>
-      <div class="item-row"><span>Crispy Corn</span><span>₹340</span></div>
-      <div class="item-row"><span>Peanut Masala</span><span>₹280</span></div>
-      <div class="item-row"><span>Veg Pakode</span><span>₹300</span></div>
-      <div class="item-row"><span>Potato Onion Pakode</span><span>₹300</span></div>
+    <div class="mb-6">
+      <h2 class="text-xl font-semibold">Taxi Service</h2>
+      <p><strong>Driver:</strong> Kuldeep Bhaiyya<br><strong>Phone:</strong> 9857816967</p>
     </div>
 
-    <div>
-      <h2 class="category-title">🍜 Maggi & Pasta</h2>
-      <div class="item-row"><span>Plain Maggi</span><span>₹60</span></div>
-      <div class="item-row"><span>Veg Maggi</span><span>₹120</span></div>
-      <div class="item-row"><span>Veg Macaroni</span><span>₹310</span></div>
-      <div class="item-row"><span>White/Red Sauce Pasta</span><span>₹410</span></div>
-      <div class="item-row"><span>Veg Sauté Pasta</span><span>₹360</span></div>
+    <div class="mb-6">
+      <h2 class="text-xl font-semibold">Food & Café Menu</h2>
+      <p>Last orders by 9:30 PM. View and order from nearby cafes via our menu portal:</p>
+      <a href="menu.html" class="text-blue-600 underline">Order Food 🍽️</a>
     </div>
+
+    <div class="mb-6">
+      <h2 class="text-xl font-semibold">House Rules</h2>
+      <ol class="list-decimal list-inside">
+        <li>No smoking inside. Use balcony area.</li>
+        <li>Cleaning between 10AM – 3PM. Ask for help as needed.</li>
+        <li>Please switch off lights/geysers when not in use.</li>
+        <li>No loud music outdoors after 10PM.</li>
+        <li>Washing machine? Ask us to assist.</li>
+      </ol>
+    </div>
+
+    <p class="text-sm mt-10">Thanks for staying with us. – Team OCB Stays</p>
   </div>
 </body>
 </html>
