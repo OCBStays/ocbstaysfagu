@@ -3,58 +3,87 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Order Food – OCB Stays</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
+  <title>OCB Stays - Food Menu</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body class="bg-white text-gray-800">
-  <div class="max-w-3xl mx-auto p-6">
-    <h1 class="text-3xl font-bold mb-6">OCB Food Ordering Menu 🍛</h1>
-    <form id="orderForm" class="space-y-4">
-      <div>
-        <label class="block text-lg font-medium">Guest Name</label>
-        <input type="text" name="guest" required class="w-full border p-2 rounded" />
-      </div>
-      <div>
-        <label class="block text-lg font-medium">Room Number</label>
-        <input type="text" name="room" required class="w-full border p-2 rounded" />
-      </div>
+<body class="bg-light text-dark">
+  <div class="container py-5">
+    <h1 class="mb-4">🍽️ Food Menu – OCB Stays</h1>
+    <p class="text-muted mb-4">Choose your items. Orders will be sent directly to the kitchen.</p>
 
-      <div>
-        <label class="block text-lg font-medium">Select Items</label>
-        <div class="space-y-2">
-          <label class="block"><input type="checkbox" name="items" value="Aloo Paratha" /> Aloo Paratha – ₹80</label>
-          <label class="block"><input type="checkbox" name="items" value="Paneer Sandwich" /> Paneer Sandwich – ₹120</label>
-          <label class="block"><input type="checkbox" name="items" value="Maggie" /> Maggie – ₹50</label>
-          <label class="block"><input type="checkbox" name="items" value="Tea" /> Tea – ₹30</label>
-          <label class="block"><input type="checkbox" name="items" value="Coffee" /> Coffee – ₹40</label>
-        </div>
-      </div>
+    <div class="mb-4">
+      <label class="form-label fw-bold">Room:</label>
+      <input type="text" id="roomDisplay" class="form-control bg-white" readonly>
+    </div>
 
-      <div>
-        <label class="block text-lg font-medium">Additional Notes</label>
-        <textarea name="notes" class="w-full border p-2 rounded" rows="3" placeholder="Any special requests?"></textarea>
-      </div>
+    <div id="menuItems" class="row gy-3">
+      <!-- Items will be dynamically added here -->
+    </div>
 
-      <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Place Order</button>
-    </form>
+    <div class="mb-4">
+      <label class="form-label fw-bold">Special Instructions:</label>
+      <textarea id="instructions" class="form-control" rows="3"></textarea>
+    </div>
 
-    <div id="responseMsg" class="mt-4 text-green-600 font-semibold hidden">Order placed successfully!</div>
+    <button id="placeOrderBtn" class="btn btn-primary">Place Order</button>
+    <p id="confirmation" class="mt-4 text-success fw-bold d-none">Order placed successfully!</p>
   </div>
 
   <script>
-    const scriptURL = 'YOUR_GOOGLE_APPS_SCRIPT_WEBAPP_URL';
-    const form = document.getElementById('orderForm');
-    const responseMsg = document.getElementById('responseMsg');
+    const params = new URLSearchParams(window.location.search);
+    const room = params.get('room') || '';
+    document.getElementById('roomDisplay').value = room;
 
-    form.addEventListener('submit', e => {
-      e.preventDefault();
-      const formData = new FormData(form);
-      fetch(scriptURL, { method: 'POST', body: formData })
-        .then(response => {
-          form.reset();
-          responseMsg.classList.remove('hidden');
-        })
-        .catch(error => alert('Error!' + error.message));
+    const menuData = [
+      { name: 'Aloo Paratha', price: 60 },
+      { name: 'Maggi', price: 50 },
+      { name: 'Bread Omelette', price: 70 },
+      { name: 'Pasta', price: 150 }
+    ];
+
+    const menuContainer = document.getElementById('menuItems');
+
+    menuData.forEach((item, index) => {
+      const col = document.createElement('div');
+      col.className = 'col-md-6';
+
+      col.innerHTML = `
+        <div class="card shadow-sm">
+          <div class="card-body d-flex justify-content-between align-items-center">
+            <div>
+              <h5 class="card-title mb-1">${item.name}</h5>
+              <p class="card-text text-muted mb-0">₹${item.price}</p>
+            </div>
+            <button class="btn btn-outline-primary add-btn" data-name="${item.name}" data-price="${item.price}">Add</button>
+          </div>
+        </div>
+      `;
+
+      menuContainer.appendChild(col);
+    });
+
+    let selectedItems = [];
+
+    document.querySelectorAll('.add-btn').forEach(btn => {
+      btn.addEventListener('click', function () {
+        const name = this.dataset.name;
+        const price = this.dataset.price;
+        selectedItems.push({ name, price });
+        this.textContent = 'Added';
+        this.disabled = true;
+      });
+    });
+
+    document.getElementById('placeOrderBtn').addEventListener('click', () => {
+      const instructions = document.getElementById('instructions').value;
+      const order = {
+        room,
+        items: selectedItems,
+        instructions
+      };
+
+      console.log('Order:', order); // replace with sending to Google Sheets
+      document.getElementById('confirmation').classList.remove('d-none');
     });
   </script>
 </body>
