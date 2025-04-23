@@ -16,6 +16,15 @@
       padding: 0.5rem 0;
       border-bottom: 1px solid #eee;
     }
+    .qty-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .qty-controls span {
+      min-width: 20px;
+      text-align: center;
+    }
   </style>
 </head>
 <body class="bg-light">
@@ -73,13 +82,17 @@
       grouped[category].forEach(item => {
         const row = document.createElement('div');
         row.className = 'item-row';
+        const itemId = item.Item.replace(/\s+/g, '-').toLowerCase();
+
         row.innerHTML = `
           <div>
             <div><strong>${item.Item}</strong></div>
             <div class="text-muted small">₹${item["Price (₹)"]}</div>
           </div>
-          <div>
-            <button class="btn btn-outline-primary btn-sm" onclick="addToCart('${item.Item}', ${item["Price (₹)"]})">Add</button>
+          <div class="qty-controls" id="controls-${itemId}">
+            <button class="btn btn-outline-secondary btn-sm" onclick="changeQty('${item.Item}', ${item["Price (₹)"]}, -1)">−</button>
+            <span id="qty-${itemId}">0</span>
+            <button class="btn btn-outline-secondary btn-sm" onclick="changeQty('${item.Item}', ${item["Price (₹)"]}, 1)">+</button>
           </div>
         `;
         section.appendChild(row);
@@ -89,21 +102,22 @@
     }
   }
 
-  function addToCart(name, price) {
+  function changeQty(name, price, delta) {
     if (!cart[name]) {
-      cart[name] = { quantity: 1, price };
+      if (delta > 0) cart[name] = { quantity: 1, price };
     } else {
-      cart[name].quantity += 1;
+      cart[name].quantity += delta;
+      if (cart[name].quantity <= 0) delete cart[name];
     }
+    updateQtyDisplay(name);
     updateCartUI();
   }
 
-  function changeQty(name, delta) {
-    if (cart[name]) {
-      cart[name].quantity += delta;
-      if (cart[name].quantity <= 0) delete cart[name];
-      updateCartUI();
-    }
+  function updateQtyDisplay(name) {
+    const itemId = name.replace(/\s+/g, '-').toLowerCase();
+    const qty = cart[name]?.quantity || 0;
+    const span = document.getElementById(`qty-${itemId}`);
+    if (span) span.textContent = qty;
   }
 
   function updateCartUI() {
@@ -124,9 +138,9 @@
           <span class="text-muted">× ₹${price}</span>
         </div>
         <div>
-          <button class="btn btn-sm btn-outline-secondary" onclick="changeQty('${item}', -1)">−</button>
+          <button class="btn btn-sm btn-outline-secondary" onclick="changeQty('${item}', ${price}, -1)">−</button>
           <span class="mx-2">${quantity}</span>
-          <button class="btn btn-sm btn-outline-secondary" onclick="changeQty('${item}', 1)">+</button>
+          <button class="btn btn-sm btn-outline-secondary" onclick="changeQty('${item}', ${price}, 1)">+</button>
         </div>
       `;
       cartList.appendChild(li);
