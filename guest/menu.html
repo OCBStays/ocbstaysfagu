@@ -3,47 +3,59 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OCB Stays Guest Portal</title>
+  <title>Order Food – OCB Stays</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
 </head>
-<body class="bg-gray-50 text-gray-800">
-  <div class="max-w-4xl mx-auto p-6">
-    <h1 class="text-3xl font-bold mb-4">Welcome to OCB Stays 🌄</h1>
-    <p class="mb-4">We’re excited to host you! Below you'll find all important information during your stay.</p>
+<body class="bg-white text-gray-800">
+  <div class="max-w-3xl mx-auto p-6">
+    <h1 class="text-3xl font-bold mb-6">OCB Food Ordering Menu 🍛</h1>
+    <form id="orderForm" class="space-y-4">
+      <div>
+        <label class="block text-lg font-medium">Guest Name</label>
+        <input type="text" name="guest" required class="w-full border p-2 rounded" />
+      </div>
+      <div>
+        <label class="block text-lg font-medium">Room Number</label>
+        <input type="text" name="room" required class="w-full border p-2 rounded" />
+      </div>
 
-    <div class="mb-6">
-      <h2 class="text-xl font-semibold">Wi-Fi</h2>
-      <p><strong>Name:</strong> OCB Stays<br><strong>Password:</strong> CozyBalcony!</p>
-    </div>
+      <div>
+        <label class="block text-lg font-medium">Select Items</label>
+        <div class="space-y-2">
+          <label class="block"><input type="checkbox" name="items" value="Aloo Paratha" /> Aloo Paratha – ₹80</label>
+          <label class="block"><input type="checkbox" name="items" value="Paneer Sandwich" /> Paneer Sandwich – ₹120</label>
+          <label class="block"><input type="checkbox" name="items" value="Maggie" /> Maggie – ₹50</label>
+          <label class="block"><input type="checkbox" name="items" value="Tea" /> Tea – ₹30</label>
+          <label class="block"><input type="checkbox" name="items" value="Coffee" /> Coffee – ₹40</label>
+        </div>
+      </div>
 
-    <div class="mb-6">
-      <h2 class="text-xl font-semibold">Caretaker</h2>
-      <p><strong>Name:</strong> Vandana Didi<br><strong>Hours:</strong> 10AM–3PM<br><strong>Phone:</strong> 98164 11860</p>
-    </div>
+      <div>
+        <label class="block text-lg font-medium">Additional Notes</label>
+        <textarea name="notes" class="w-full border p-2 rounded" rows="3" placeholder="Any special requests?"></textarea>
+      </div>
 
-    <div class="mb-6">
-      <h2 class="text-xl font-semibold">Taxi Service</h2>
-      <p><strong>Driver:</strong> Kuldeep Bhaiyya<br><strong>Phone:</strong> 9857816967</p>
-    </div>
+      <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Place Order</button>
+    </form>
 
-    <div class="mb-6">
-      <h2 class="text-xl font-semibold">Food & Café Menu</h2>
-      <p>Last orders by 9:30 PM. View and order from nearby cafes via our menu portal:</p>
-      <a href="menu.html" class="text-blue-600 underline">Order Food 🍽️</a>
-    </div>
-
-    <div class="mb-6">
-      <h2 class="text-xl font-semibold">House Rules</h2>
-      <ol class="list-decimal list-inside">
-        <li>No smoking inside. Use balcony area.</li>
-        <li>Cleaning between 10AM – 3PM. Ask for help as needed.</li>
-        <li>Please switch off lights/geysers when not in use.</li>
-        <li>No loud music outdoors after 10PM.</li>
-        <li>Washing machine? Ask us to assist.</li>
-      </ol>
-    </div>
-
-    <p class="text-sm mt-10">Thanks for staying with us. – Team OCB Stays</p>
+    <div id="responseMsg" class="mt-4 text-green-600 font-semibold hidden">Order placed successfully!</div>
   </div>
+
+  <script>
+    const scriptURL = 'YOUR_GOOGLE_APPS_SCRIPT_WEBAPP_URL';
+    const form = document.getElementById('orderForm');
+    const responseMsg = document.getElementById('responseMsg');
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const formData = new FormData(form);
+      fetch(scriptURL, { method: 'POST', body: formData })
+        .then(response => {
+          form.reset();
+          responseMsg.classList.remove('hidden');
+        })
+        .catch(error => alert('Error!' + error.message));
+    });
+  </script>
 </body>
 </html>
