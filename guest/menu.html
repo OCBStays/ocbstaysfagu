@@ -4,29 +4,39 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>OCB Stays - Food Menu</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    .menu-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem;
+      border-bottom: 1px solid #dee2e6;
+    }
+    .menu-item-name {
+      font-weight: 500;
+    }
+  </style>
 </head>
-<body class="bg-light text-dark">
+<body class="bg-light">
   <div class="container py-5">
-    <h1 class="mb-4">🍽️ Food Menu – OCB Stays</h1>
-    <p class="text-muted mb-4">Choose your items. Orders will be sent directly to the kitchen.</p>
+    <h1 class="mb-4 text-center">🍽️ OCB Stays – Food Menu</h1>
+    <p class="mb-3 text-center text-muted">Please select your food items. Orders will be sent to the kitchen.</p>
 
     <div class="mb-4">
-      <label class="form-label fw-bold">Room:</label>
-      <input type="text" id="roomDisplay" class="form-control bg-white" readonly>
+      <label for="roomDisplay" class="form-label">Room:</label>
+      <input type="text" id="roomDisplay" class="form-control" disabled>
     </div>
 
-    <div id="menuItems" class="row gy-3">
-      <!-- Items will be dynamically added here -->
+    <div id="menuContainer"></div>
+
+    <div class="mb-3">
+      <label for="instructions" class="form-label">Special Instructions:</label>
+      <textarea id="instructions" rows="3" class="form-control"></textarea>
     </div>
 
-    <div class="mb-4">
-      <label class="form-label fw-bold">Special Instructions:</label>
-      <textarea id="instructions" class="form-control" rows="3"></textarea>
-    </div>
-
-    <button id="placeOrderBtn" class="btn btn-primary">Place Order</button>
-    <p id="confirmation" class="mt-4 text-success fw-bold d-none">Order placed successfully!</p>
+    <button id="placeOrder" class="btn btn-primary">Place Order</button>
+    <div id="confirmation" class="mt-3 text-success fw-bold d-none">Order placed successfully!</div>
   </div>
 
   <script>
@@ -34,57 +44,50 @@
     const room = params.get('room') || '';
     document.getElementById('roomDisplay').value = room;
 
-    const menuData = [
-      { name: 'Aloo Paratha', price: 60 },
-      { name: 'Maggi', price: 50 },
-      { name: 'Bread Omelette', price: 70 },
-      { name: 'Pasta', price: 150 }
-    ];
+    const menuContainer = document.getElementById('menuContainer');
+    const selectedItems = [];
 
-    const menuContainer = document.getElementById('menuItems');
-
-    menuData.forEach((item, index) => {
-      const col = document.createElement('div');
-      col.className = 'col-md-6';
-
-      col.innerHTML = `
-        <div class="card shadow-sm">
-          <div class="card-body d-flex justify-content-between align-items-center">
-            <div>
-              <h5 class="card-title mb-1">${item.name}</h5>
-              <p class="card-text text-muted mb-0">₹${item.price}</p>
-            </div>
-            <button class="btn btn-outline-primary add-btn" data-name="${item.name}" data-price="${item.price}">Add</button>
-          </div>
-        </div>
-      `;
-
-      menuContainer.appendChild(col);
-    });
-
-    let selectedItems = [];
-
-    document.querySelectorAll('.add-btn').forEach(btn => {
-      btn.addEventListener('click', function () {
-        const name = this.dataset.name;
-        const price = this.dataset.price;
-        selectedItems.push({ name, price });
-        this.textContent = 'Added';
-        this.disabled = true;
+    function renderMenu(menuData) {
+      menuContainer.innerHTML = '';
+      menuData.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'menu-item';
+        div.innerHTML = `
+          <span class="menu-item-name">${item.name} – ₹${item.price}</span>
+          <button class="btn btn-sm btn-outline-primary" onclick="addItem('${item.name}', ${item.price})">Add</button>
+        `;
+        menuContainer.appendChild(div);
       });
-    });
+    }
 
-    document.getElementById('placeOrderBtn').addEventListener('click', () => {
+    function addItem(name, price) {
+      selectedItems.push({ name, price });
+      alert(`${name} added to order.`);
+    }
+
+    document.getElementById('placeOrder').addEventListener('click', () => {
       const instructions = document.getElementById('instructions').value;
       const order = {
         room,
         items: selectedItems,
-        instructions
+        instructions,
+        timestamp: new Date().toLocaleString()
       };
-
-      console.log('Order:', order); // replace with sending to Google Sheets
+      console.log('Order:', order);
       document.getElementById('confirmation').classList.remove('d-none');
+
+      // TODO: send order to Google Sheets via Apps Script
     });
+
+    // === SIMULATION: Load menu from Google Sheets === //
+    // Replace this with Google Sheets fetch code later
+    const sampleMenu = [
+      { name: "Aloo Paratha", price: 60 },
+      { name: "Maggi", price: 50 },
+      { name: "Bread Omelette", price: 70 },
+      { name: "Pasta", price: 150 }
+    ];
+    renderMenu(sampleMenu);
   </script>
 </body>
 </html>
