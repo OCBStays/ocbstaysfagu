@@ -89,10 +89,8 @@
             <div><strong>${item.Item}</strong></div>
             <div class="text-muted small">₹${item["Price (₹)"]}</div>
           </div>
-          <div class="qty-controls" id="controls-${itemId}">
-            <button class="btn btn-outline-secondary btn-sm" onclick="changeQty('${item.Item}', ${item["Price (₹)"]}, -1)">−</button>
-            <span id="qty-${itemId}">0</span>
-            <button class="btn btn-outline-secondary btn-sm" onclick="changeQty('${item.Item}', ${item["Price (₹)"]}, 1)">+</button>
+          <div id="controls-${itemId}">
+            <button class="btn btn-outline-primary btn-sm" onclick="addItem('${item.Item}', ${item["Price (₹)"]})">Add</button>
           </div>
         `;
         section.appendChild(row);
@@ -102,22 +100,44 @@
     }
   }
 
-  function changeQty(name, price, delta) {
-    if (!cart[name]) {
-      if (delta > 0) cart[name] = { quantity: 1, price };
-    } else {
-      cart[name].quantity += delta;
-      if (cart[name].quantity <= 0) delete cart[name];
-    }
-    updateQtyDisplay(name);
+  function addItem(name, price) {
+    cart[name] = { quantity: 1, price };
+    updateQtyUI(name);
     updateCartUI();
   }
 
-  function updateQtyDisplay(name) {
+  function changeQty(name, price, delta) {
+    if (!cart[name]) return;
+    cart[name].quantity += delta;
+    if (cart[name].quantity <= 0) {
+      delete cart[name];
+      showAddButton(name);
+    } else {
+      updateQtyUI(name);
+    }
+    updateCartUI();
+  }
+
+  function updateQtyUI(name) {
     const itemId = name.replace(/\s+/g, '-').toLowerCase();
-    const qty = cart[name]?.quantity || 0;
-    const span = document.getElementById(`qty-${itemId}`);
-    if (span) span.textContent = qty;
+    const container = document.getElementById(`controls-${itemId}`);
+    const quantity = cart[name]?.quantity || 0;
+
+    container.innerHTML = `
+      <div class="qty-controls">
+        <button class="btn btn-outline-secondary btn-sm" onclick="changeQty('${name}', ${cart[name].price}, -1)">−</button>
+        <span id="qty-${itemId}">${quantity}</span>
+        <button class="btn btn-outline-secondary btn-sm" onclick="changeQty('${name}', ${cart[name].price}, 1)">+</button>
+      </div>
+    `;
+  }
+
+  function showAddButton(name) {
+    const itemId = name.replace(/\s+/g, '-').toLowerCase();
+    const container = document.getElementById(`controls-${itemId}`);
+    container.innerHTML = `
+      <button class="btn btn-outline-primary btn-sm" onclick="addItem('${name}', ${cart[name]?.price || 0})">Add</button>
+    `;
   }
 
   function updateCartUI() {
