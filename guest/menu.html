@@ -187,20 +187,27 @@
       const order = { room, instructions, cart: items };
 
       try {
-        const res = await fetch(ORDER_WEBAPP_URL, {
-          method: 'POST',
-          body: JSON.stringify(order),
-          headers: { 'Content-Type': 'application/json' }
-        });
+        try {
+  const res = await fetch(ORDER_WEBAPP_URL, {
+    method: 'POST',
+    body: JSON.stringify(order),
+    headers: { 'Content-Type': 'application/json' }
+  });
 
-        if (res.ok) {
-          document.getElementById('confirmationMsg').classList.remove('d-none');
-          Object.keys(cart).forEach(name => showAddButton(name));
-          Object.keys(cart).forEach(name => delete cart[name]);
-          updateCartUI();
-        } else {
-          alert('Failed to place order. Try again.');
-        }
+  const text = await res.text();  // 🔥 Read response as text, not JSON
+
+  if (res.ok && text.includes("Order saved")) {
+    document.getElementById('confirmationMsg').classList.remove('d-none');
+    Object.keys(cart).forEach(name => showAddButton(name));
+    Object.keys(cart).forEach(name => delete cart[name]);
+    updateCartUI();
+  } else {
+    alert("Order failed: " + text);
+  }
+} catch (err) {
+  alert('Error: ' + err.message);
+}
+
       } catch (err) {
         alert('Error: ' + err.message);
       }
