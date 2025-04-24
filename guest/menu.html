@@ -184,7 +184,7 @@
         return;
       }
 
-      const order = { room, instructions, items };
+      const order = { room, instructions, cart: items };
 
       try {
         const res = await fetch(ORDER_WEBAPP_URL, {
