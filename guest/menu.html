@@ -187,14 +187,13 @@
       const order = { room, instructions, cart: items };
 
       try {
-        const res = await fetch(ORDER_WEBAPP_URL, {
-          method: 'POST',
-          mode: 'cors',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(order)
-        });
+        const res = await fetch("https://thingproxy.freeboard.io/fetch/https://script.google.com/macros/s/AKfycbx-uL4MHXz6dbrVAGQHzXlGJnvJ3UkvMeZT3e31eFcgM0PWYCtdJXvL7E2qa_eqvRRiOw/exec", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(order)
+      });
 
 
         const text = await res.text();
