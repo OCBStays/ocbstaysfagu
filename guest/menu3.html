@@ -31,20 +31,35 @@
       padding: 0.5rem 0;
       border-bottom: 1px solid #ddd;
     }
-    .qty-controls {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
+    .toggle-button {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-size: 1rem;
     }
-    #floatingCart {
+    #floatingCart,
+    #scrollTopBtn,
+    #scrollBottomBtn {
       position: fixed;
-      bottom: 20px;
-      right: 20px;
       z-index: 999;
     }
-    #cartModal .modal-body {
-      max-height: 400px;
-      overflow-y: auto;
+    #floatingCart {
+      bottom: 20px;
+      right: 20px;
+    }
+    #scrollTopBtn {
+      bottom: 80px;
+      right: 10px;
+    }
+    #scrollBottomBtn {
+      bottom: 130px;
+      right: 10px;
+    }
+    #categoryDropdown {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 999;
     }
   </style>
 </head>
@@ -54,15 +69,29 @@
     <p class="text-muted mb-4">Select items below. Orders will be delivered to your room.</p>
     <h5 id="roomHeader" class="text-primary mb-4"></h5>
     <div id="menuContainer"></div>
-    <div id="confirmationMsg" class="alert alert-success mt-4 d-none">
-      ✅ Order placed successfully!
-    </div>
   </div>
 
   <!-- Floating Cart -->
   <button id="floatingCart" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#cartModal">
     🛒 <span id="cartCount">0</span> | ₹<span id="cartTotal">0</span>
   </button>
+
+  <!-- Scroll Buttons -->
+  <button id="scrollTopBtn" class="btn btn-light">⬆️</button>
+  <button id="scrollBottomBtn" class="btn btn-light">⬇️</button>
+
+  <!-- Categories Dropdown -->
+  <div class="dropdown" id="categoryDropdown">
+    <button
+      class="btn btn-primary dropdown-toggle"
+      type="button"
+      data-bs-toggle="dropdown"
+      aria-expanded="false"
+    >
+      Categories
+    </button>
+    <ul class="dropdown-menu" id="categoriesList"></ul>
+  </div>
 
   <!-- Cart Modal -->
   <div class="modal fade" id="cartModal" tabindex="-1" aria-labelledby="cartModalLabel" aria-hidden="true">
@@ -104,34 +133,47 @@
       });
 
       const container = document.getElementById('menuContainer');
+      const categoriesList = document.getElementById('categoriesList');
 
       for (const category in grouped) {
         const section = document.createElement('div');
         section.className = 'menu-category';
+        const anchor = category.replace(/\s+/g, '-').toLowerCase();
+
         section.innerHTML = `
-          <h4>${category}</h4>
-          <div class="category-items"></div>
+          <h4 id="${anchor}">
+            ${category}
+            <button class="toggle-button" onclick="toggleCategory('${anchor}')">⬇️</button>
+          </h4>
+          <div class="category-items" id="items-${anchor}"></div>
         `;
 
-        const itemsContainer = section.querySelector('.category-items');
         grouped[category].forEach(item => {
           const row = document.createElement('div');
           row.className = 'item-row';
-          const itemId = item.Item.replace(/\s+/g, '-').toLowerCase();
 
           row.innerHTML = `
             <div>
               <strong>${item.Item}</strong>
               <div class="text-muted small">₹${item["Price (₹)"]}</div>
             </div>
-            <div id="controls-${itemId}">
-              <button class="btn btn-outline-primary btn-sm" onclick="addItem('${item.Item}', ${item["Price (₹)"]})">Add</button>
-            </div>
+            <button class="btn btn-outline-primary btn-sm" onclick="addItem('${item.Item}', ${item["Price (₹)"]})">Add</button>
           `;
-          itemsContainer.appendChild(row);
+
+          section.querySelector('.category-items').appendChild(row);
         });
+
+        const dropdownItem = document.createElement('li');
+        dropdownItem.innerHTML = `<a class="dropdown-item" href="#${anchor}">${category}</a>`;
+        categoriesList.appendChild(dropdownItem);
+
         container.appendChild(section);
       }
+    }
+
+    function toggleCategory(anchor) {
+      const itemsContainer = document.getElementById(`items-${anchor}`);
+      itemsContainer.style.display = itemsContainer.style.display === 'none' ? '' : 'none';
     }
 
     function addItem(name, price) {
@@ -153,10 +195,7 @@
 
         const row = document.createElement('div');
         row.className = 'd-flex justify-content-between align-items-center mb-2';
-        row.innerHTML = `
-          <div>${item} x ${quantity}</div>
-          <div>₹${price * quantity}</div>
-        `;
+        row.innerHTML = `<div>${item} x ${quantity}</div><div>₹${price * quantity}</div>`;
         cartItemsContainer.appendChild(row);
       }
 
@@ -170,9 +209,17 @@
 
     function placeOrder() {
       alert('Order placed successfully!');
-      cart = {};
+      Object.keys(cart).forEach(key => delete cart[key]);
       updateCartUI();
     }
+
+    document.getElementById('scrollTopBtn').addEventListener('click', () =>
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    );
+
+    document.getElementById('scrollBottomBtn').addEventListener('click', () =>
+      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
+    );
 
     loadMenu();
   </script>
