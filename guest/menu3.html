@@ -7,37 +7,36 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
   <style>
     body {
-      background-image: url('https://images.unsplash.com/photo-1604908177523-0ec4faef4dfc?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1920&h=1080');
+      background-image: url('https://images.unsplash.com/photo-1612914360952-9e8af26c34f4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080');
       background-size: cover;
       background-attachment: fixed;
       background-repeat: no-repeat;
       background-position: center;
-      color: #fff;
     }
     .menu-wrapper {
-      background-color: rgba(0, 0, 0, 0.7);
+      background-color: rgba(0, 0, 0, 0.6);
       padding: 2rem;
       border-radius: 1rem;
+      color: white;
     }
     .menu-category {
       margin-top: 2rem;
-      background-color: rgba(255, 255, 255, 0.1);
-      padding: 1rem;
-      border-radius: 0.5rem;
-      cursor: pointer;
     }
-    .menu-category h4 {
-      margin-bottom: 0;
+    .category-heading {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      background-color: rgba(255, 255, 255, 0.1);
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      cursor: pointer;
     }
     .item-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
       padding: 0.5rem 0;
-      border-bottom: 1px solid #555;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.3);
     }
     .qty-controls {
       display: flex;
@@ -47,107 +46,73 @@
     .qty-controls span {
       min-width: 20px;
       text-align: center;
+      color: white;
     }
-    #floatingControls {
+    .fixed-footer {
       position: fixed;
-      bottom: 20px;
-      width: 100%;
-      display: flex;
-      justify-content: space-around;
-      align-items: center;
+      bottom: 0;
+      left: 0;
+      right: 0;
       background-color: rgba(0, 0, 0, 0.8);
-      padding: 0.5rem;
-      z-index: 999;
-      border-radius: 0.5rem;
-    }
-    #floatingControls input {
-      width: 60%;
-      border-radius: 1.5rem;
-      padding: 0.5rem;
-      border: none;
-    }
-    #floatingControls .btn {
-      border-radius: 1.5rem;
-    }
-    #cartModal .modal-content {
-      background-color: #222;
-      color: #fff;
-    }
-    .scroll-button {
-      position: fixed;
-      right: 10px;
-      z-index: 998;
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
       display: flex;
       align-items: center;
-      justify-content: center;
-      font-size: 1.2rem;
-      background-color: #f8f9fa;
-      border: 1px solid #ccc;
+      padding: 0.5rem 1rem;
+      z-index: 999;
+      color: white;
     }
-    #scrollTopBtn {
-      bottom: 80px;
+    .fixed-footer .search-bar {
+      flex: 1;
+      margin-right: 0.5rem;
     }
-    #scrollBottomBtn {
-      bottom: 130px;
+    .cart-modal {
+      color: black;
+    }
+    .modal-content {
+      background-color: #fff;
+      border-radius: 0.5rem;
     }
   </style>
 </head>
 <body>
   <div class="container py-5 menu-wrapper">
-    <h1 class="mb-4">🍽️ OCB Stays – Food Menu</h1>
+    <h1 class="mb-4">🍲 OCB Stays – Food Menu</h1>
     <p class="text-muted mb-4">Select items below. Orders will be delivered to your room.</p>
     <h5 id="roomHeader" class="text-primary mb-4"></h5>
     <div id="menuContainer"></div>
-
-    <div id="confirmationMsg" class="alert alert-success mt-4 d-none">
-      ✅ Order placed successfully!
-    </div>
   </div>
 
-  <div id="floatingControls">
-    <input id="searchInput" class="form-control" placeholder="Search for items...">
-    <button id="categoryBtn" class="btn btn-primary">Categories</button>
-    <button id="floatingCart" class="btn btn-success">
-      🛒 <span id="cartCount">0</span> | ₹<span id="cartTotal">0</span>
-    </button>
+  <!-- Footer -->
+  <div class="fixed-footer">
+    <input type="text" class="form-control search-bar" placeholder="Search items" id="searchBar">
+    <button class="btn btn-outline-light me-2" id="categoriesBtn">Categories</button>
+    <button class="btn btn-success" id="floatingCart">🛒 <span id="cartCount">0</span> | ₹<span id="cartTotal">0</span></button>
   </div>
 
-  <div id="cartModal" class="modal fade" tabindex="-1">
+  <!-- Cart Modal -->
+  <div class="modal fade" id="cartModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
-      <div class="modal-content">
+      <div class="modal-content cart-modal">
         <div class="modal-header">
           <h5 class="modal-title">Your Cart</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-        <div class="modal-body">
-          <ul id="cartItemsList" class="list-group mb-3"></ul>
-          <div>
-            <label for="instructions" class="form-label">Special Instructions</label>
-            <textarea id="instructions" class="form-control" rows="3"></textarea>
-          </div>
+        <div class="modal-body" id="cartItemsContainer">
+          <!-- Cart items will appear here -->
         </div>
         <div class="modal-footer">
-          <button id="placeOrderBtn" class="btn btn-primary">Place Order</button>
+          <textarea class="form-control" id="specialInstructions" rows="2" placeholder="Any special instructions?"></textarea>
+          <div class="w-100 text-end mt-2">Total: ₹<span id="cartModalTotal">0</span></div>
+          <button type="button" class="btn btn-primary" id="placeOrderBtn">Place Order</button>
         </div>
       </div>
     </div>
   </div>
 
-  <div id="scrollTopBtn" class="scroll-button">↑</div>
-  <div id="scrollBottomBtn" class="scroll-button">↓</div>
-
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     const MENU_SHEET_URL = 'https://opensheet.elk.sh/12TG5XURaO5WIhFH2f1z9RG9sjCMCRiVDdzZWDHIdrGs/Sheet1';
-    const TELEGRAM_API_URL = 'https://api.telegram.org/bot7519042380:AAEuIMpdUkXJnBoH_xAvFk8vUjS25cdO0i0/sendMessage';
-    const CHAT_ID = '-1002542002840';
-
-    const params = new URLSearchParams(window.location.search);
-    const room = params.get('room') || '';
-    document.getElementById('roomHeader').textContent = `Room: ${room}`;
+    const TELEGRAM_CHAT_ID = '-1002542002840';
+    const TELEGRAM_BOT_TOKEN = '7519042380:AAEuIMpdUkXJnBoH_xAvFk8vUjS25cdO0i0';
 
     const cart = {};
 
@@ -164,162 +129,46 @@
       });
 
       const container = document.getElementById('menuContainer');
-
       for (const category in grouped) {
-        const anchor = category.replace(/\s+/g, '-').toLowerCase();
-
         const section = document.createElement('div');
         section.className = 'menu-category';
-        section.id = anchor;
+
         section.innerHTML = `
-          <h4>
-            ${category}
-            <button class="btn btn-sm btn-outline-light">Toggle</button>
-          </h4>
+          <div class="category-heading" onclick="toggleCategory(this)">
+            <span>${category}</span>
+            <i class="bi bi-chevron-down"></i>
+          </div>
           <div class="category-items"></div>
         `;
 
         const itemsContainer = section.querySelector('.category-items');
-
         grouped[category].forEach(item => {
           const row = document.createElement('div');
           row.className = 'item-row';
-          const itemId = item.Item.replace(/\s+/g, '-').toLowerCase();
 
           row.innerHTML = `
             <div>
-              <div><strong>${item.Item}</strong></div>
-              <div class="text-muted small">₹${item["Price (₹)"]}</div>
+              <strong>${item.Item}</strong>
+              <div class="text-muted">₹${item["Price (₹)"]}</div>
             </div>
-            <div id="controls-${itemId}">
+            <div>
               <button class="btn btn-outline-primary btn-sm" onclick="addItem('${item.Item}', ${item["Price (₹)"]})">Add</button>
             </div>
           `;
+
           itemsContainer.appendChild(row);
         });
         container.appendChild(section);
       }
-
-      document.querySelectorAll('.menu-category h4').forEach(header => {
-        header.addEventListener('click', e => {
-          const items = e.target.closest('.menu-category').querySelector('.category-items');
-          items.style.display = items.style.display === 'none' ? '' : 'none';
-        });
-      });
     }
 
-    function addItem(name, price) {
-      if (!cart[name]) cart[name] = { quantity: 0, price };
-      cart[name].quantity++;
-      updateQtyUI(name);
-      updateCartUI();
+    function toggleCategory(element) {
+      const items = element.nextElementSibling;
+      const icon = element.querySelector('i');
+      const isVisible = items.style.display !== 'none';
+      items.style.display = isVisible ? 'none' : '';
+      icon.className = isVisible ? 'bi bi-chevron-right' : 'bi bi-chevron-down';
     }
-
-    function changeQty(name, delta) {
-      if (!cart[name]) return;
-      cart[name].quantity += delta;
-      if (cart[name].quantity <= 0) delete cart[name];
-      updateQtyUI(name);
-      updateCartUI();
-    }
-
-    function updateQtyUI(name) {
-      const itemId = name.replace(/\s+/g, '-').toLowerCase();
-      const container = document.getElementById(`controls-${itemId}`);
-      if (!cart[name]) {
-        container.innerHTML = `
-          <button class="btn btn-outline-primary btn-sm" onclick="addItem('${name}', ${cart[name]?.price || 0})">Add</button>
-        `;
-      } else {
-        container.innerHTML = `
-          <div class="qty-controls">
-            <button class="btn btn-outline-secondary btn-sm" onclick="changeQty('${name}', -1)">−</button>
-            <span>${cart[name].quantity}</span>
-            <button class="btn btn-outline-secondary btn-sm" onclick="changeQty('${name}', 1)">+</button>
-          </div>
-        `;
-      }
-    }
-
-    function updateCartUI() {
-      let total = 0;
-      let count = 0;
-      for (const item in cart) {
-        total += cart[item].price * cart[item].quantity;
-        count += cart[item].quantity;
-      }
-      document.getElementById('cartCount').textContent = count;
-      document.getElementById('cartTotal').textContent = total;
-    }
-
-    document.getElementById('floatingCart').addEventListener('click', () => {
-      const cartItemsList = document.getElementById('cartItemsList');
-      cartItemsList.innerHTML = '';
-      for (const name in cart) {
-        const li = document.createElement('li');
-        li.className = 'list-group-item d-flex justify-content-between align-items-center';
-        li.innerHTML = `
-          ${name} x ${cart[name].quantity}
-          <div class="qty-controls">
-            <button class="btn btn-outline-secondary btn-sm" onclick="changeQty('${name}', -1)">−</button>
-            <span>${cart[name].quantity}</span>
-            <button class="btn btn-outline-secondary btn-sm" onclick="changeQty('${name}', 1)">+</button>
-          </div>
-        `;
-        cartItemsList.appendChild(li);
-      }
-      const modal = new bootstrap.Modal(document.getElementById('cartModal'));
-      modal.show();
-    });
-
-    document.getElementById('placeOrderBtn').addEventListener('click', async () => {
-      const instructions = document.getElementById('instructions').value;
-      const orderSummary = Object.entries(cart)
-        .map(([name, item]) => `${name} x ${item.quantity}`)
-        .join('\n');
-      const message = `Room: ${room}\nOrder:\n${orderSummary}\n\nInstructions: ${instructions}`;
-
-      await fetch(TELEGRAM_API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chat_id: CHAT_ID, text: message }),
-      });
-
-      cart = {};
-      updateCartUI();
-      const modal = bootstrap.Modal.getInstance(document.getElementById('cartModal'));
-      modal.hide();
-      document.getElementById('confirmationMsg').classList.remove('d-none');
-      setTimeout(() => {
-        document.getElementById('confirmationMsg').classList.add('d-none');
-      }, 3000);
-    });
-
-    document.getElementById('searchInput').addEventListener('input', (e) => {
-      const query = e.target.value.toLowerCase();
-      document.querySelectorAll('.item-row').forEach(row => {
-        const itemName = row.querySelector('div strong').textContent.toLowerCase();
-        row.style.display = itemName.includes(query) ? '' : 'none';
-      });
-    });
-
-    document.getElementById('categoryBtn').addEventListener('click', () => {
-      const dropdownMenu = document.createElement('div');
-      dropdownMenu.className = 'dropdown-menu dropdown-menu-scrollable';
-      dropdownMenu.style.position = 'absolute';
-      dropdownMenu.style.top = `${document.getElementById('floatingControls').offsetTop}px`;
-
-      Object.keys(grouped).forEach(category => {
-        const anchor = category.replace(/\s+/g, '-').toLowerCase();
-        const link = document.createElement('a');
-        link.className = 'dropdown-item';
-        link.href = `#${anchor}`;
-        link.textContent = category;
-        dropdownMenu.appendChild(link);
-      });
-
-      document.body.appendChild(dropdownMenu);
-    });
 
     loadMenu();
   </script>
