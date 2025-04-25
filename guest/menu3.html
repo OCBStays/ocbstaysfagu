@@ -1,291 +1,267 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OCB Stays - Food Menu</title>
-    <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: url('https://example.com/north-indian-food.jpg') no-repeat center center fixed;
-            background-size: cover;
-            color: #fff;
-        }
-
-        .header {
-            background-color: rgba(0, 0, 0, 0.8);
-            padding: 10px;
-            text-align: center;
-            font-size: 24px;
-            font-weight: bold;
-        }
-
-        .menu-category {
-            background-color: rgba(255, 165, 0, 0.8);
-            margin: 10px;
-            padding: 10px;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-
-        .menu-category:hover {
-            background-color: rgba(255, 140, 0, 0.9);
-        }
-
-        .menu-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 5px 10px;
-            padding: 10px;
-            background-color: rgba(0, 0, 0, 0.7);
-            border-radius: 8px;
-        }
-
-        .menu-item .item-name {
-            flex: 1;
-        }
-
-        .menu-item .item-price {
-            margin-left: 10px;
-        }
-
-        .menu-item .item-controls {
-            display: flex;
-            align-items: center;
-        }
-
-        .menu-item button {
-            background-color: orange;
-            border: none;
-            color: white;
-            padding: 5px 10px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        .menu-item button:hover {
-            background-color: darkorange;
-        }
-
-        .footer-bar {
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            background-color: rgba(0, 0, 0, 0.8);
-            padding: 10px;
-        }
-
-        .footer-bar input[type="text"] {
-            width: 60%;
-            padding: 5px;
-            border-radius: 5px;
-            border: none;
-        }
-
-        .footer-bar button {
-            background-color: orange;
-            border: none;
-            color: white;
-            padding: 10px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        .footer-bar button:hover {
-            background-color: darkorange;
-        }
-
-        .cart-modal {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: rgba(0, 0, 0, 0.9);
-            padding: 20px;
-            border-radius: 10px;
-            display: none;
-            color: white;
-            z-index: 10;
-        }
-
-        .cart-modal.visible {
-            display: block;
-        }
-
-        .cart-modal .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .cart-modal .modal-header h2 {
-            margin: 0;
-        }
-
-        .cart-modal .close-btn {
-            background: none;
-            border: none;
-            font-size: 20px;
-            color: white;
-            cursor: pointer;
-        }
-
-        .cart-modal .cart-items {
-            margin: 20px 0;
-        }
-
-        .cart-modal .total {
-            font-size: 18px;
-            margin: 20px 0;
-        }
-
-        .cart-modal .special-instructions {
-            margin: 10px 0;
-        }
-
-        .cart-modal .special-instructions textarea {
-            width: 100%;
-            height: 50px;
-            border-radius: 5px;
-            padding: 5px;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OCB Stays - Food Menu</title>
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+  />
+  <style>
+    body {
+      background-image: url('https://images.unsplash.com/photo-1604908812092-d7d4b04de71c?auto=format&fit=crop&w=1950&q=80');
+      background-size: cover;
+      background-attachment: fixed;
+      background-repeat: no-repeat;
+      background-position: center;
+    }
+    .menu-wrapper {
+      background-color: rgba(0, 0, 0, 0.8);
+      padding: 2rem;
+      border-radius: 1rem;
+    }
+    .menu-category {
+      margin-top: 2rem;
+    }
+    .category-header {
+      padding: 0.5rem;
+      background-color: #333;
+      color: #fff;
+      border-radius: 0.5rem;
+      cursor: pointer;
+    }
+    .category-items {
+      margin-top: 1rem;
+    }
+    .item-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid #555;
+    }
+    .qty-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .qty-controls span {
+      min-width: 20px;
+      text-align: center;
+    }
+    #bottomControls {
+      position: fixed;
+      bottom: 10px;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem;
+      background-color: rgba(0, 0, 0, 0.8);
+      color: #fff;
+      z-index: 999;
+    }
+    .dropdown-menu-scrollable {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+  </style>
 </head>
+<body class="bg-light">
+  <div class="container py-5 menu-wrapper">
+    <h1 class="mb-4 text-white">🍽️ OCB Stays – Food Menu</h1>
+    <p class="text-muted mb-4">Select items below. Orders will be delivered to your room.</p>
+    <h5 id="roomHeader" class="text-primary mb-4"></h5>
+    <div id="menuContainer"></div>
 
-<body>
-    <div class="header">OCB Stays - Food Menu</div>
-
-    <div id="menu">
-        <!-- Dynamically populated menu will go here -->
+    <div class="mt-4">
+      <label for="instructions" class="form-label text-white">Special Instructions</label>
+      <textarea id="instructions" class="form-control" rows="3"></textarea>
     </div>
 
-    <div class="footer-bar">
-        <input type="text" placeholder="Search items..." id="search-bar">
-        <button id="categories-btn">Categories</button>
-        <button id="cart-btn">Cart (0)</button>
+    <div id="confirmationMsg" class="alert alert-success mt-4 d-none">
+      ✅ Order placed successfully!
     </div>
+  </div>
 
-    <div class="cart-modal" id="cart-modal">
-        <div class="modal-header">
-            <h2>Your Cart</h2>
-            <button class="close-btn" id="close-cart">&times;</button>
+  <div id="bottomControls">
+    <input
+      type="text"
+      id="searchBar"
+      class="form-control me-2"
+      placeholder="Search items..."
+      style="flex: 2; margin-right: 1rem;"
+    />
+    <button class="btn btn-primary" id="categoriesBtn">Categories</button>
+    <button class="btn btn-success" id="cartBtn">🛒 Cart</button>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const MENU_SHEET_URL =
+      'https://opensheet.elk.sh/12TG5XURaO5WIhFH2f1z9RG9sjCMCRiVDdzZWDHIdrGs/Sheet1';
+    const TELEGRAM_API_URL =
+      'https://api.telegram.org/bot7519042380:AAEuIMpdUkXJnBoH_xAvFk8vUjS25cdO0i0/sendMessage';
+    const TELEGRAM_CHAT_ID = '-1002542002840';
+
+    const params = new URLSearchParams(window.location.search);
+    const room = params.get('room') || '';
+    document.getElementById('roomHeader').textContent = `Room: ${room}`;
+
+    const cart = {};
+
+    async function loadMenu() {
+      const res = await fetch(MENU_SHEET_URL);
+      const data = await res.json();
+      const grouped = {};
+
+      data.forEach((item) => {
+        if (item['Available?'] === 'Yes') {
+          if (!grouped[item.Category]) grouped[item.Category] = [];
+          grouped[item.Category].push(item);
+        }
+      });
+
+      const container = document.getElementById('menuContainer');
+
+      for (const category in grouped) {
+        const anchor = category.replace(/\s+/g, '-').toLowerCase();
+
+        const section = document.createElement('div');
+        section.className = 'menu-category';
+        section.id = anchor;
+
+        section.innerHTML = `
+          <div class="category-header" onclick="toggleCategory('${anchor}')">
+            <strong>${category}</strong>
+          </div>
+          <div class="category-items" id="items-${anchor}"></div>
+        `;
+
+        const itemsContainer = section.querySelector('.category-items');
+
+        grouped[category].forEach((item) => {
+          const row = document.createElement('div');
+          row.className = 'item-row';
+          const itemId = item.Item.replace(/\s+/g, '-').toLowerCase();
+
+          row.innerHTML = `
+            <div>
+              <div><strong>${item.Item}</strong></div>
+              <div class="text-muted small">₹${item['Price (₹)']}</div>
+            </div>
+            <div id="controls-${itemId}">
+              <button
+                class="btn btn-outline-primary btn-sm"
+                onclick="addItem('${item.Item}', ${item['Price (₹)']})"
+              >
+                Add
+              </button>
+            </div>
+          `;
+          itemsContainer.appendChild(row);
+        });
+        container.appendChild(section);
+      }
+    }
+
+    function toggleCategory(id) {
+      const items = document.getElementById(`items-${id}`);
+      items.style.display = items.style.display === 'none' ? '' : 'none';
+    }
+
+    function addItem(name, price) {
+      if (!cart[name]) cart[name] = { quantity: 0, price };
+      cart[name].quantity++;
+      updateQtyUI(name);
+      updateCartUI();
+    }
+
+    function changeQty(name, price, delta) {
+      if (!cart[name]) return;
+      cart[name].quantity += delta;
+      if (cart[name].quantity <= 0) {
+        delete cart[name];
+        showAddButton(name);
+      } else {
+        updateQtyUI(name);
+      }
+      updateCartUI();
+    }
+
+    function updateQtyUI(name) {
+      const itemId = name.replace(/\s+/g, '-').toLowerCase();
+      const container = document.getElementById(`controls-${itemId}`);
+      const quantity = cart[name]?.quantity || 0;
+      container.innerHTML = `
+        <div class="qty-controls">
+          <button
+            class="btn btn-outline-secondary btn-sm"
+            onclick="changeQty('${name}', ${cart[name].price}, -1)"
+          >−</button>
+          <span id="qty-${itemId}">${quantity}</span>
+          <button
+            class="btn btn-outline-secondary btn-sm"
+            onclick="changeQty('${name}', ${cart[name].price}, 1)"
+          >+</button>
         </div>
-        <div class="cart-items" id="cart-items"></div>
-        <div class="total" id="total-price">Total: ₹0</div>
-        <div class="special-instructions">
-            <label for="instructions">Special Instructions:</label>
-            <textarea id="instructions"></textarea>
-        </div>
-        <button id="place-order">Place Order</button>
-    </div>
+      `;
+    }
 
-    <script>
-        const menuData = [
-            { category: "Breakfast", items: [{ name: "Aloo Paratha", price: 150 }, { name: "Gobhi Paratha", price: 150 }] },
-            { category: "Lunch", items: [{ name: "Dal Makhani", price: 250 }, { name: "Paneer Butter Masala", price: 300 }] },
-        ];
+    function showAddButton(name) {
+      const itemId = name.replace(/\s+/g, '-').toLowerCase();
+      const container = document.getElementById(`controls-${itemId}`);
+      container.innerHTML = `
+        <button
+          class="btn btn-outline-primary btn-sm"
+          onclick="addItem('${name}', ${cart[name]?.price || 0})"
+        >
+          Add
+        </button>
+      `;
+    }
 
-        const menuDiv = document.getElementById("menu");
-        const searchBar = document.getElementById("search-bar");
-        const cartBtn = document.getElementById("cart-btn");
-        const cartModal = document.getElementById("cart-modal");
-        const closeCart = document.getElementById("close-cart");
-        const cartItemsDiv = document.getElementById("cart-items");
-        const totalPriceDiv = document.getElementById("total-price");
-        const placeOrderBtn = document.getElementById("place-order");
-        const instructions = document.getElementById("instructions");
+    function updateCartUI() {
+      let total = 0;
+      let count = 0;
+      for (const item in cart) {
+        total += cart[item].price * cart[item].quantity;
+        count += cart[item].quantity;
+      }
+      document.getElementById('cartBtn').innerHTML = `🛒 ${count} | ₹${total}`;
+    }
 
-        let cart = [];
+    document.getElementById('cartBtn').addEventListener('click', () => {
+      const cartItems = Object.entries(cart)
+        .map(([name, item]) => `- ${name} x ${item.quantity}`)
+        .join('\n');
 
-        function renderMenu() {
-            menuDiv.innerHTML = "";
-            menuData.forEach(category => {
-                const categoryDiv = document.createElement("div");
-                categoryDiv.classList.add("menu-category");
-                categoryDiv.textContent = category.category;
-                menuDiv.appendChild(categoryDiv);
+      const instructions = document.getElementById('instructions').value;
+      const message = `Room: ${room}\nOrder:\n${cartItems}\n\nSpecial Instructions:\n${instructions}`;
 
-                category.items.forEach(item => {
-                    const itemDiv = document.createElement("div");
-                    itemDiv.classList.add("menu-item");
-
-                    const nameDiv = document.createElement("div");
-                    nameDiv.textContent = item.name;
-                    nameDiv.classList.add("item-name");
-
-                    const priceDiv = document.createElement("div");
-                    priceDiv.textContent = `₹${item.price}`;
-                    priceDiv.classList.add("item-price");
-
-                    const controlsDiv = document.createElement("div");
-                    controlsDiv.classList.add("item-controls");
-
-                    const addButton = document.createElement("button");
-                    addButton.textContent = "Add";
-                    addButton.onclick = () => addToCart(item);
-
-                    controlsDiv.appendChild(addButton);
-                    itemDiv.appendChild(nameDiv);
-                    itemDiv.appendChild(priceDiv);
-                    itemDiv.appendChild(controlsDiv);
-                    menuDiv.appendChild(itemDiv);
-                });
-            });
-        }
-
-        function addToCart(item) {
-            const existingItem = cart.find(i => i.name === item.name);
-            if (existingItem) {
-                existingItem.quantity++;
-            } else {
-                cart.push({ ...item, quantity: 1 });
-            }
-            updateCartUI();
-        }
-
-        function updateCartUI() {
-            cartItemsDiv.innerHTML = "";
-            let total = 0;
-            cart.forEach(item => {
-                const cartItemDiv = document.createElement("div");
-                cartItemDiv.classList.add("cart-item");
-                cartItemDiv.textContent = `${item.name} x ${item.quantity} - ₹${item.price * item.quantity}`;
-                total += item.price * item.quantity;
-                cartItemsDiv.appendChild(cartItemDiv);
-            });
-            totalPriceDiv.textContent = `Total: ₹${total}`;
-            cartBtn.textContent = `Cart (${cart.length})`;
-        }
-
-        cartBtn.addEventListener("click", () => {
-            cartModal.classList.add("visible");
+      fetch(TELEGRAM_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: message }),
+      })
+        .then((res) => res.json())
+        .then(() => {
+          document.getElementById('confirmationMsg').classList.remove('d-none');
         });
+    });
 
-        closeCart.addEventListener("click", () => {
-            cartModal.classList.remove("visible");
-        });
+    document.getElementById('searchBar').addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase();
+      const items = document.querySelectorAll('.item-row');
+      items.forEach((item) => {
+        const name = item.querySelector('strong').textContent.toLowerCase();
+        item.style.display = name.includes(query) ? '' : 'none';
+      });
+    });
 
-        placeOrderBtn.addEventListener("click", () => {
-            alert("Order placed successfully!");
-            const message = cart.map(item => `${item.name} x ${item.quantity}`).join("\n") + `\nInstructions: ${instructions.value}`;
-            fetch("https://api.telegram.org/bot<YOUR_BOT_TOKEN>/sendMessage", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ chat_id: "-1002542002840", text: message })
-            });
-            cart = [];
-            updateCartUI();
-            cartModal.classList.remove("visible");
-        });
-
-        renderMenu();
-    </script>
+    loadMenu();
+  </script>
 </body>
-
 </html>
