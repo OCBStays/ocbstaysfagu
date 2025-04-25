@@ -9,196 +9,282 @@
         body {
             margin: 0;
             font-family: Arial, sans-serif;
-            background: url('https://example.com/north-indian-food-bg.jpg') no-repeat center center fixed;
+            background: url('https://example.com/north-indian-food.jpg') no-repeat center center fixed;
             background-size: cover;
             color: #fff;
         }
 
-        .overlay {
-            background-color: rgba(0, 0, 0, 0.6);
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-        }
-
-        .container {
-            padding: 20px;
-        }
-
         .header {
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 10px;
             text-align: center;
-            padding: 20px 0;
-            background: rgba(0, 0, 0, 0.8);
+            font-size: 24px;
+            font-weight: bold;
         }
 
-        .header h1 {
-            margin: 0;
-            font-size: 2rem;
-        }
-
-        .category {
-            margin-top: 20px;
+        .menu-category {
+            background-color: rgba(255, 165, 0, 0.8);
+            margin: 10px;
             padding: 10px;
-            background: rgba(255, 255, 255, 0.1);
             border-radius: 8px;
-        }
-
-        .category h2 {
             cursor: pointer;
-            margin: 0;
-            font-size: 1.5rem;
+        }
+
+        .menu-category:hover {
+            background-color: rgba(255, 140, 0, 0.9);
+        }
+
+        .menu-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: rgba(255, 255, 255, 0.1);
+            margin: 5px 10px;
             padding: 10px;
-        }
-
-        .items {
-            display: none;
-        }
-
-        .item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 10px 0;
-            padding: 10px;
-            background: rgba(255, 255, 255, 0.1);
+            background-color: rgba(0, 0, 0, 0.7);
             border-radius: 8px;
+        }
+
+        .menu-item .item-name {
+            flex: 1;
+        }
+
+        .menu-item .item-price {
+            margin-left: 10px;
+        }
+
+        .menu-item .item-controls {
+            display: flex;
+            align-items: center;
+        }
+
+        .menu-item button {
+            background-color: orange;
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .menu-item button:hover {
+            background-color: darkorange;
         }
 
         .footer-bar {
             position: fixed;
             bottom: 0;
-            left: 0;
             width: 100%;
-            background: rgba(0, 0, 0, 0.8);
             display: flex;
-            justify-content: space-between;
+            justify-content: space-around;
             align-items: center;
+            background-color: rgba(0, 0, 0, 0.8);
             padding: 10px;
         }
 
-        .footer-bar input {
-            flex: 1;
-            margin-right: 10px;
-            padding: 10px;
+        .footer-bar input[type="text"] {
+            width: 60%;
+            padding: 5px;
+            border-radius: 5px;
             border: none;
-            border-radius: 8px;
         }
 
         .footer-bar button {
-            background: #ff9800;
-            color: #fff;
+            background-color: orange;
             border: none;
-            border-radius: 8px;
+            color: white;
             padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .footer-bar button:hover {
+            background-color: darkorange;
         }
 
         .cart-modal {
-            display: none;
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.9);
+            background-color: rgba(0, 0, 0, 0.9);
             padding: 20px;
-            border-radius: 8px;
-            color: #fff;
+            border-radius: 10px;
+            display: none;
+            color: white;
+            z-index: 10;
         }
 
-        .cart-modal.active {
+        .cart-modal.visible {
             display: block;
         }
 
-        .cart-modal .close {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: #ff9800;
-            color: #fff;
-            border: none;
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
+        .cart-modal .modal-header {
             display: flex;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
+        }
+
+        .cart-modal .modal-header h2 {
+            margin: 0;
+        }
+
+        .cart-modal .close-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: white;
             cursor: pointer;
+        }
+
+        .cart-modal .cart-items {
+            margin: 20px 0;
+        }
+
+        .cart-modal .total {
+            font-size: 18px;
+            margin: 20px 0;
+        }
+
+        .cart-modal .special-instructions {
+            margin: 10px 0;
+        }
+
+        .cart-modal .special-instructions textarea {
+            width: 100%;
+            height: 50px;
+            border-radius: 5px;
+            padding: 5px;
         }
     </style>
 </head>
 
 <body>
-    <div class="overlay"></div>
-    <div class="container">
-        <div class="header">
-            <h1>OCB Stays - Food Menu</h1>
-        </div>
+    <div class="header">OCB Stays - Food Menu</div>
 
-        <div class="categories">
-            <div class="category" data-category="breakfast">
-                <h2>Breakfast <span>&#x25BC;</span></h2>
-                <div class="items">
-                    <div class="item">
-                        <span>Aloo Paratha</span>
-                        <span>₹150</span>
-                        <div>
-                            <button>-</button>
-                            <span>0</span>
-                            <button>+</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="footer-bar">
-            <input type="text" placeholder="Search items...">
-            <button>Categories</button>
-            <button>Cart (0)</button>
-        </div>
+    <div id="menu">
+        <!-- Dynamically populated menu will go here -->
     </div>
 
-    <div class="cart-modal">
-        <button class="close">&times;</button>
-        <h2>Cart</h2>
-        <div class="cart-items">
-            <!-- Cart items dynamically added here -->
+    <div class="footer-bar">
+        <input type="text" placeholder="Search items..." id="search-bar">
+        <button id="categories-btn">Categories</button>
+        <button id="cart-btn">Cart (0)</button>
+    </div>
+
+    <div class="cart-modal" id="cart-modal">
+        <div class="modal-header">
+            <h2>Your Cart</h2>
+            <button class="close-btn" id="close-cart">&times;</button>
         </div>
+        <div class="cart-items" id="cart-items"></div>
+        <div class="total" id="total-price">Total: ₹0</div>
         <div class="special-instructions">
-            <textarea placeholder="Special instructions..."></textarea>
+            <label for="instructions">Special Instructions:</label>
+            <textarea id="instructions"></textarea>
         </div>
-        <div class="total-price">
-            Total: ₹0
-        </div>
-        <button>Place Order</button>
+        <button id="place-order">Place Order</button>
     </div>
 
     <script>
-        document.querySelectorAll('.category h2').forEach(header => {
-            header.addEventListener('click', () => {
-                const items = header.nextElementSibling;
-                items.style.display = items.style.display === 'none' ? 'block' : 'none';
+        const menuData = [
+            { category: "Breakfast", items: [{ name: "Aloo Paratha", price: 150 }, { name: "Gobhi Paratha", price: 150 }] },
+            { category: "Lunch", items: [{ name: "Dal Makhani", price: 250 }, { name: "Paneer Butter Masala", price: 300 }] },
+        ];
+
+        const menuDiv = document.getElementById("menu");
+        const searchBar = document.getElementById("search-bar");
+        const cartBtn = document.getElementById("cart-btn");
+        const cartModal = document.getElementById("cart-modal");
+        const closeCart = document.getElementById("close-cart");
+        const cartItemsDiv = document.getElementById("cart-items");
+        const totalPriceDiv = document.getElementById("total-price");
+        const placeOrderBtn = document.getElementById("place-order");
+        const instructions = document.getElementById("instructions");
+
+        let cart = [];
+
+        function renderMenu() {
+            menuDiv.innerHTML = "";
+            menuData.forEach(category => {
+                const categoryDiv = document.createElement("div");
+                categoryDiv.classList.add("menu-category");
+                categoryDiv.textContent = category.category;
+                menuDiv.appendChild(categoryDiv);
+
+                category.items.forEach(item => {
+                    const itemDiv = document.createElement("div");
+                    itemDiv.classList.add("menu-item");
+
+                    const nameDiv = document.createElement("div");
+                    nameDiv.textContent = item.name;
+                    nameDiv.classList.add("item-name");
+
+                    const priceDiv = document.createElement("div");
+                    priceDiv.textContent = `₹${item.price}`;
+                    priceDiv.classList.add("item-price");
+
+                    const controlsDiv = document.createElement("div");
+                    controlsDiv.classList.add("item-controls");
+
+                    const addButton = document.createElement("button");
+                    addButton.textContent = "Add";
+                    addButton.onclick = () => addToCart(item);
+
+                    controlsDiv.appendChild(addButton);
+                    itemDiv.appendChild(nameDiv);
+                    itemDiv.appendChild(priceDiv);
+                    itemDiv.appendChild(controlsDiv);
+                    menuDiv.appendChild(itemDiv);
+                });
             });
+        }
+
+        function addToCart(item) {
+            const existingItem = cart.find(i => i.name === item.name);
+            if (existingItem) {
+                existingItem.quantity++;
+            } else {
+                cart.push({ ...item, quantity: 1 });
+            }
+            updateCartUI();
+        }
+
+        function updateCartUI() {
+            cartItemsDiv.innerHTML = "";
+            let total = 0;
+            cart.forEach(item => {
+                const cartItemDiv = document.createElement("div");
+                cartItemDiv.classList.add("cart-item");
+                cartItemDiv.textContent = `${item.name} x ${item.quantity} - ₹${item.price * item.quantity}`;
+                total += item.price * item.quantity;
+                cartItemsDiv.appendChild(cartItemDiv);
+            });
+            totalPriceDiv.textContent = `Total: ₹${total}`;
+            cartBtn.textContent = `Cart (${cart.length})`;
+        }
+
+        cartBtn.addEventListener("click", () => {
+            cartModal.classList.add("visible");
         });
 
-        document.querySelector('.footer-bar button:nth-child(2)').addEventListener('click', () => {
-            // Categories functionality
-            alert('Categories button clicked!');
+        closeCart.addEventListener("click", () => {
+            cartModal.classList.remove("visible");
         });
 
-        document.querySelector('.footer-bar button:nth-child(3)').addEventListener('click', () => {
-            document.querySelector('.cart-modal').classList.toggle('active');
+        placeOrderBtn.addEventListener("click", () => {
+            alert("Order placed successfully!");
+            const message = cart.map(item => `${item.name} x ${item.quantity}`).join("\n") + `\nInstructions: ${instructions.value}`;
+            fetch("https://api.telegram.org/bot<YOUR_BOT_TOKEN>/sendMessage", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ chat_id: "-1002542002840", text: message })
+            });
+            cart = [];
+            updateCartUI();
+            cartModal.classList.remove("visible");
         });
 
-        document.querySelector('.cart-modal .close').addEventListener('click', () => {
-            document.querySelector('.cart-modal').classList.remove('active');
-        });
+        renderMenu();
     </script>
 </body>
 
