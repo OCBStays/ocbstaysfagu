@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>OCB Stays - Food Menu</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"/>
+  <style>
+    body {
+      background-image: url('https://images.unsplash.com/photo-1496412705862-e0088f16f791?auto=format&fit=crop&w=1950&q=80');
+      background-size: cover;
+      background-attachment: fixed;
+      background-repeat: no-repeat;
+      background-position: center;
+    }
+    .menu-wrapper {
+      background-color: rgba(255, 255, 255, 0.7);
+      padding: 2rem;
+      border-radius: 1rem;
+    }
+    .menu-category {
+      margin-top: 2rem;
+    }
+    .item-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid #ddd;
+    }
+    .qty-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .qty-controls span {
+      min-width: 20px;
+      text-align: center;
+    }
+    .floating-cart {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      z-index: 999;
+      padding: 0.5rem 1rem;
+      background-color: #28a745;
+      color: #fff;
+      border-radius: 1.5rem;
+      box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    }
+    .categories-button {
+      position: fixed;
+      top: 10px;
+      right: 20px;
+      z-index: 999;
+    }
+    .cart-modal {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background-color: #fff;
+      box-shadow: 0px -4px 8px rgba(0, 0, 0, 0.2);
+      border-radius: 1rem 1rem 0 0;
+      padding: 1rem;
+      display: none;
+      flex-direction: column;
+      z-index: 1000;
+    }
+    .cart-modal.active {
+      display: flex;
+    }
+  </style>
+</head>
+<body>
+  <div class="container py-5 menu-wrapper">
+    <h1 class="mb-4">🍽️ OCB Stays – Food Menu</h1>
+    <p class="text-muted mb-4">Select items below. Orders will be delivered to your room.</p>
+    <h5 id="roomHeader" class="text-primary mb-4"></h5>
+    <div id="menuContainer"></div>
+
+    <div class="mt-4">
+      <label for="instructions" class="form-label">Special Instructions</label>
+      <textarea id="instructions" class="form-control" rows="3"></textarea>
+    </div>
+
+    <div id="confirmationMsg" class="alert alert-success mt-4 d-none">
+      ✅ Order placed successfully!
+    </div>
+  </div>
+
+  <button class="btn btn-primary categories-button" onclick="toggleCategories()">Categories</button>
+
+  <div class="floating-cart" onclick="toggleCartModal()">
+    🛒 <span id="cartCount">0</span> | ₹<span id="cartTotal">0</span>
+  </div>
+
+  <div class="cart-modal" id="cartModal">
+    <h5>🛒 Your Cart</h5>
+    <div id="cartItems"></div>
+    <div class="d-flex justify-content-between mt-3">
+      <strong>Total:</strong>
+      <span id="cartModalTotal">₹0</span>
+    </div>
+    <button class="btn btn-success mt-3" onclick="placeOrder()">Place Order</button>
+    <button class="btn btn-secondary mt-2" onclick="toggleCartModal()">Close</button>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const cart = {};
+
+    function toggleCategories() {
+      alert('Categories dropdown will be implemented.');
+    }
+
+    function toggleCartModal() {
+      const cartModal = document.getElementById('cartModal');
+      cartModal.classList.toggle('active');
+    }
+
+    function placeOrder() {
+      alert('Order placement functionality will be implemented.');
+    }
+
+    // Other existing JavaScript for loading menu and handling cart will be integrated here
+  </script>
+</body>
+</html>
