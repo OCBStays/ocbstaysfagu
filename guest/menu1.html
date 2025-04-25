@@ -7,8 +7,16 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"/>
   <style>
     body {
-      background: url('https://source.unsplash.com/featured/?restaurant') no-repeat center center fixed;
+      background-image: url('https://images.unsplash.com/photo-1600891964599-f61ba0e24092?auto=format&fit=crop&w=1950&q=80');
       background-size: cover;
+      background-attachment: fixed;
+      background-repeat: no-repeat;
+      background-position: center;
+    }
+    .menu-wrapper {
+      background-color: rgba(255, 255, 255, 0.9);
+      padding: 2rem;
+      border-radius: 1rem;
     }
     .menu-category {
       margin-top: 2rem;
@@ -17,10 +25,8 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 0.5rem;
-      border-radius: 10px;
-      background: rgba(255, 255, 255, 0.9);
-      margin-bottom: 0.5rem;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid #ddd;
     }
     .qty-controls {
       display: flex;
@@ -31,69 +37,62 @@
       min-width: 20px;
       text-align: center;
     }
-    .item-image {
-      width: 60px;
-      height: 60px;
-      object-fit: cover;
-      border-radius: 5px;
-      margin-right: 10px;
+    #categoriesBtn {
+      position: fixed;
+      bottom: 80px;
+      right: 20px;
+      z-index: 999;
     }
-    .floating-btn {
+    #floatingCart {
       position: fixed;
       bottom: 20px;
       right: 20px;
       z-index: 999;
     }
-    .category-dropdown {
-      max-height: 200px;
+    .dropdown-menu-scrollable {
+      max-height: 300px;
       overflow-y: auto;
     }
   </style>
 </head>
 <body class="bg-light">
-  <div class="container py-4">
-    <h1 class="mb-4 text-white bg-dark p-3 rounded">🍽️ OCB Stays – Food Menu</h1>
-    <p class="text-light mb-4">Select items below. Orders will be delivered to your room.</p>
-    <h5 id="roomHeader" class="text-light mb-4"></h5>
+  <div class="container py-5 menu-wrapper">
+    <h1 class="mb-4">🍽️ OCB Stays – Food Menu</h1>
+    <p class="text-muted mb-4">Select items below. Orders will be delivered to your room.</p>
+    <h5 id="roomHeader" class="text-primary mb-4"></h5>
 
     <div id="menuContainer"></div>
 
     <div class="mt-4">
-      <label for="instructions" class="form-label text-light">Special Instructions</label>
+      <label for="instructions" class="form-label">Special Instructions</label>
       <textarea id="instructions" class="form-control" rows="3"></textarea>
     </div>
-
-    <div id="cartSection" class="mt-5 d-none">
-      <h4 class="text-light">Your Order</h4>
-      <ul id="cartList" class="list-group mb-3"></ul>
-      <h5 class="text-light">Total: ₹<span id="cartTotal">0</span></h5>
-    </div>
-
-    <button id="placeOrderBtn" class="btn btn-success mt-4">Place Order</button>
 
     <div id="confirmationMsg" class="alert alert-success mt-4 d-none">
       ✅ Order placed successfully!
     </div>
   </div>
 
-  <!-- Floating Categories Button -->
-  <div class="floating-btn">
-    <div class="dropdown">
-      <button class="btn btn-primary dropdown-toggle" type="button" id="categoryDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false">
-        Categories
-      </button>
-      <ul class="dropdown-menu category-dropdown" id="categoryDropdown"></ul>
-    </div>
+  <div id="categoriesBtn" class="dropdown">
+    <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+      Categories
+    </button>
+    <ul class="dropdown-menu dropdown-menu-scrollable" id="categoryDropdown"></ul>
   </div>
 
+  <div id="floatingCart" class="btn btn-success">
+    🛒 <span id="cartCount">0</span> | ₹<span id="cartTotal">0</span>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     const MENU_SHEET_URL = 'https://opensheet.elk.sh/12TG5XURaO5WIhFH2f1z9RG9sjCMCRiVDdzZWDHIdrGs/Sheet1';
     const ORDER_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbx-uL4MHXz6dbrVAGQHzXlGJnvJ3UkvMeZT3e31eFcgM0PWYCtdJXvL7E2qa_eqvRRiOw/exec';
-    const room = new URLSearchParams(window.location.search).get('room') || '';
+    const params = new URLSearchParams(window.location.search);
+    const room = params.get('room') || '';
     document.getElementById('roomHeader').textContent = `Room: ${room}`;
 
     const cart = {};
-    const categoryLinks = {};
 
     async function loadMenu() {
       const res = await fetch(MENU_SHEET_URL);
@@ -109,28 +108,28 @@
 
       const container = document.getElementById('menuContainer');
       const dropdown = document.getElementById('categoryDropdown');
-      container.innerHTML = '';
-      dropdown.innerHTML = '';
 
       for (const category in grouped) {
-        const sectionId = category.replace(/\s+/g, '-').toLowerCase();
+        const anchor = category.replace(/\s+/g, '-').toLowerCase();
+
         const section = document.createElement('div');
-        section.id = sectionId;
         section.className = 'menu-category';
-        section.innerHTML = `<h4 class="text-white">${category}</h4>`;
+        section.id = anchor;
+        section.innerHTML = `<h4>${category}</h4>`;
+
+        const dropdownItem = document.createElement('li');
+        dropdownItem.innerHTML = `<a class="dropdown-item" href="#${anchor}">${category}</a>`;
+        dropdown.appendChild(dropdownItem);
 
         grouped[category].forEach(item => {
-          const itemId = item.Item.replace(/\s+/g, '-').toLowerCase();
-          const imageUrl = `https://source.unsplash.com/60x60/?${encodeURIComponent(item.Item)}`;
           const row = document.createElement('div');
           row.className = 'item-row';
+          const itemId = item.Item.replace(/\s+/g, '-').toLowerCase();
+
           row.innerHTML = `
-            <div class="d-flex align-items-center">
-              <img src="${imageUrl}" alt="${item.Item}" class="item-image"/>
-              <div>
-                <div><strong>${item.Item}</strong></div>
-                <div class="text-muted small">₹${item["Price (₹)"]}</div>
-              </div>
+            <div>
+              <div><strong>${item.Item}</strong></div>
+              <div class="text-muted small">₹${item["Price (₹)"]}</div>
             </div>
             <div id="controls-${itemId}">
               <button class="btn btn-outline-primary btn-sm" onclick="addItem('${item.Item}', ${item["Price (₹)"]})">Add</button>
@@ -138,12 +137,7 @@
           `;
           section.appendChild(row);
         });
-
         container.appendChild(section);
-
-        const link = document.createElement('li');
-        link.innerHTML = `<a class="dropdown-item" href="#${sectionId}">${category}</a>`;
-        dropdown.appendChild(link);
       }
     }
 
@@ -187,50 +181,42 @@
     }
 
     function updateCartUI() {
-      const cartList = document.getElementById('cartList');
-      const cartSection = document.getElementById('cartSection');
-      const cartTotal = document.getElementById('cartTotal');
-      cartList.innerHTML = '';
       let total = 0;
-
+      let count = 0;
       for (const item in cart) {
-        const { quantity, price } = cart[item];
-        total += quantity * price;
-        const li = document.createElement('li');
-        li.className = 'list-group-item d-flex justify-content-between align-items-center';
-        li.innerHTML = `
-          <div>
-            <strong>${item}</strong>
-            <span class="text-muted">× ₹${price}</span>
-          </div>
-          <div>
-            <button class="btn btn-sm btn-outline-secondary" onclick="changeQty('${item}', ${price}, -1)">−</button>
-            <span class="mx-2">${quantity}</span>
-            <button class="btn btn-sm btn-outline-secondary" onclick="changeQty('${item}', ${price}, 1)">+</button>
-          </div>
-        `;
-        cartList.appendChild(li);
+        total += cart[item].price * cart[item].quantity;
+        count += cart[item].quantity;
       }
-
-      cartTotal.textContent = total;
-      cartSection.classList.toggle('d-none', total === 0);
+      document.getElementById('cartCount').textContent = count;
+      document.getElementById('cartTotal').textContent = total;
     }
 
-    document.getElementById('placeOrderBtn').addEventListener('click', async () => {
+    document.getElementById('floatingCart').addEventListener('click', async () => {
       const instructions = document.getElementById('instructions').value;
-      const items = Object.entries(cart).map(([name, { quantity, price }]) => ({ name, quantity, price }));
+      const items = Object.entries(cart).map(([name, { quantity, price }]) => ({
+        name,
+        quantity,
+        price
+      }));
+
       if (items.length === 0) {
         alert("Cart is empty!");
         return;
       }
+
       const order = { room, instructions, cart: items };
+
       try {
         const res = await fetch(ORDER_WEBAPP_URL, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json'
+          },
           body: JSON.stringify(order)
         });
+
         const text = await res.text();
+
         if (res.ok && text.includes("Order saved")) {
           document.getElementById('confirmationMsg').classList.remove('d-none');
           Object.keys(cart).forEach(name => showAddButton(name));
@@ -246,6 +232,5 @@
 
     loadMenu();
   </script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
