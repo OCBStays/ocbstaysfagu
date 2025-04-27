@@ -45,37 +45,59 @@
       flex-direction: row;
       gap: 10px;
       z-index: 999;
-    }
-    .dropdown-menu-scrollable {
-      max-height: 300px;
-      overflow-y: auto;
-    }
-    .scroll-button {
-      position: fixed;
-      right: 10px;
-      z-index: 998;
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      display: flex;
+      width: auto;
+      max-width: 100%;
       align-items: center;
-      justify-content: center;
-      font-size: 1.2rem;
-      background-color: #f8f9fa;
-      border: 1px solid #ccc;
+      justify-content: space-between;
     }
-    #scrollTopBtn {
-      bottom: 80px;
+    #floatingSearch {
+      flex-grow: 1; /* Ensure it grows to take available space */
     }
-    #scrollBottomBtn {
-      bottom: 130px;
+    #floatingCart {
+      flex-shrink: 0; /* Prevent shrinking */
+    }
+    .dropdown {
+      flex-shrink: 0; /* Prevent shrinking */
+    }
+    /* Mobile view adjustments */
+    @media (max-width: 767px) {
+      #floatingControls {
+        gap: 8px; /* Reduce gap on smaller screens */
+        right: 10px; /* Adjust position on smaller screens */
+        justify-content: space-evenly; /* Spread items evenly */
+      }
+
+      /* Make the search bar flexible */
+      #floatingSearch {
+        width: 120px; /* Fixed width for smaller screens */
+      }
+
+      /* Ensure the cart button is still large enough */
+      #floatingCart {
+        width: auto;
+        padding: 8px 12px;
+      }
+
+      /* Adjust dropdown button width */
+      .dropdown {
+        min-width: 120px; /* Ensure the dropdown is not too wide */
+      }
+
+      /* Adjust the scroll button sizes for mobile */
+      .scroll-button {
+        font-size: 1rem;
+        width: 35px;
+        height: 35px;
+      }
+
+      #scrollTopBtn, #scrollBottomBtn {
+        bottom: 70px; /* Adjust positioning of scroll buttons */
+      }
     }
   </style>
 </head>
-<body class="bg-light">
-  <div id="floatingSearch" style="position: fixed; bottom: 80px; left: 20px; z-index: 999;">
-    <input id="menuSearch" class="form-control" type="text" placeholder="Search items..." />
-  </div>
+
+  <body class="bg-light">
   <div class="container py-5 menu-wrapper">
     <h1 class="mb-4">🍽️ OCB Stays – Food Menu</h1>
     <p class="text-muted mb-4">Select items below. Orders will be delivered to your room.</p>
@@ -88,6 +110,9 @@
   </div>
 
   <div id="floatingControls">
+    <div id="floatingSearch" style="flex-grow: 1;">
+      <input id="menuSearch" class="form-control" type="text" placeholder="Search items..." />
+    </div>
     <div class="dropdown">
       <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
         Categories
