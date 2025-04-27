@@ -261,7 +261,6 @@
       `;
     }
 
-    // Update the cart UI function to dynamically update the total
 // Update the cart UI function to dynamically update the total
 function updateCartUI() {
   let total = 0;
@@ -289,10 +288,14 @@ function updateCartUI() {
     cartItems.appendChild(row); // Append item to the cart modal
   }
 
-  // Update the cart UI with the total count and price
+  // Update the cart UI with the total count and price in the floating cart
   document.getElementById('cartCount').textContent = count;
   document.getElementById('cartTotal').textContent = total;
+
+  // Update the cart modal's total
+  document.getElementById('cartTotalModal').textContent = total;
 }
+
 
 
 document.getElementById('placeOrder').addEventListener('click', async () => {
