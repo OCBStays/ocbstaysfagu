@@ -6,6 +6,18 @@
   <title>OCB Stays - Food Menu</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"/>
   <style>
+    body {
+      background-image: url('https://images.unsplash.com/photo-1600891964599-f61ba0e24092?auto=format&fit=crop&w=1950&q=80');
+      background-size: cover;
+      background-attachment: fixed;
+      background-repeat: no-repeat;
+      background-position: center;
+    }
+    .menu-wrapper {
+      background-color: rgba(255, 255, 255, 0.9);
+      padding: 2rem;
+      border-radius: 1rem;
+    }
     .menu-category {
       margin-top: 2rem;
     }
@@ -14,7 +26,7 @@
       justify-content: space-between;
       align-items: center;
       padding: 0.5rem 0;
-      border-bottom: 1px solid #eee;
+      border-bottom: 1px solid #ddd;
     }
     .qty-controls {
       display: flex;
@@ -25,42 +37,135 @@
       min-width: 20px;
       text-align: center;
     }
+    #floatingControls {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      display: flex;
+      flex-direction: row;
+      gap: 10px;
+      z-index: 999;
+      width: auto;
+      max-width: 100%;
+      align-items: center;
+      justify-content: space-between;
+    }
+    #floatingSearch {
+      flex-grow: 1; /* Ensure it grows to take available space */
+    }
+    #floatingCart {
+      flex-shrink: 0; /* Prevent shrinking */
+    }
+    .dropdown {
+      flex-shrink: 0; /* Prevent shrinking */
+    }
+    /* Mobile view adjustments */
+    @media (max-width: 767px) {
+      #floatingControls {
+        gap: 8px; /* Reduce gap on smaller screens */
+        right: 10px; /* Adjust position on smaller screens */
+        justify-content: space-evenly; /* Spread items evenly */
+      }
+
+      /* Make the search bar flexible */
+      #floatingSearch {
+        width: 120px; /* Fixed width for smaller screens */
+      }
+
+      /* Ensure the cart button is still large enough */
+      #floatingCart {
+        width: auto;
+        padding: 8px 12px;
+      }
+
+      /* Adjust dropdown button width */
+      .dropdown {
+        min-width: 120px; /* Ensure the dropdown is not too wide */
+      }
+
+      /* Adjust the scroll button sizes for mobile */
+      .scroll-button {
+        font-size: 1rem;
+        width: 35px;
+        height: 35px;
+      }
+
+      #scrollTopBtn, #scrollBottomBtn {
+        bottom: 70px; /* Adjust positioning of scroll buttons */
+      }
+    }
   </style>
 </head>
-<body class="bg-light">
-  <div class="container py-5">
+
+  <body class="bg-light">
+  <div class="container py-5 menu-wrapper">
     <h1 class="mb-4">🍽️ OCB Stays – Food Menu</h1>
     <p class="text-muted mb-4">Select items below. Orders will be delivered to your room.</p>
     <h5 id="roomHeader" class="text-primary mb-4"></h5>
-
     <div id="menuContainer"></div>
-
-    <div class="mt-4">
-      <label for="instructions" class="form-label">Special Instructions</label>
-      <textarea id="instructions" class="form-control" rows="3"></textarea>
-    </div>
-
-    <div id="cartSection" class="mt-5 d-none">
-      <h4>Your Order</h4>
-      <ul id="cartList" class="list-group mb-3"></ul>
-      <h5>Total: ₹<span id="cartTotal">0</span></h5>
-    </div>
-
-    <button id="placeOrderBtn" class="btn btn-success mt-4">Place Order</button>
 
     <div id="confirmationMsg" class="alert alert-success mt-4 d-none">
       ✅ Order placed successfully!
     </div>
   </div>
 
+  <div id="floatingControls">
+    <div id="floatingSearch" style="flex-grow: 1;">
+      <input id="menuSearch" class="form-control" type="text" placeholder="Search items..." />
+    </div>
+    <div class="dropdown">
+      <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+        Categories
+      </button>
+      <ul class="dropdown-menu dropdown-menu-scrollable" id="categoryDropdown"></ul>
+    </div>
+    <button id="floatingCart" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#cartModal">
+      🛒 <span id="cartCount">0</span> | ₹<span id="cartTotal">0</span>
+    </button>
+  </div>
+
+  <div id="scrollTopBtn" class="scroll-button">↑</div>
+  <div id="scrollBottomBtn" class="scroll-button">↓</div>
+
+  <!-- Cart Modal -->
+  <div class="modal fade" id="cartModal" tabindex="-1" aria-labelledby="cartModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="cartModalLabel">🛒 Your Cart</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <!-- Confirmation Message -->
+        <div id="confirmationMsg" class="alert alert-success mt-2 d-none">
+          ✅ Order placed successfully!
+        </div>
+          <div id="cartItems"></div>
+          <div class="mt-3">
+            <label for="instructions" class="form-label">Special Instructions</label>
+            <textarea id="instructions" class="form-control" rows="3"></textarea>
+          </div>
+          <div class="mt-3">
+          <strong>Total: ₹<span id="cartTotalModal">0</span></strong>
+        </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button id="placeOrder" class="btn btn-primary">Place Order</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     const MENU_SHEET_URL = 'https://opensheet.elk.sh/12TG5XURaO5WIhFH2f1z9RG9sjCMCRiVDdzZWDHIdrGs/Sheet1';
-    const ORDER_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbx-uL4MHXz6dbrVAGQHzXlGJnvJ3UkvMeZT3e31eFcgM0PWYCtdJXvL7E2qa_eqvRRiOw/exec';
+    const TELEGRAM_BOT_TOKEN = '7519042380:AAEuIMpdUkXJnBoH_xAvFk8vUjS25cdO0i0';
+    const TELEGRAM_CHAT_ID = '-1002542002840';
     const params = new URLSearchParams(window.location.search);
     const room = params.get('room') || '';
     document.getElementById('roomHeader').textContent = `Room: ${room}`;
-
-    const cart = {};
+    let cart = {};
 
     async function loadMenu() {
       const res = await fetch(MENU_SHEET_URL);
@@ -75,10 +180,24 @@
       });
 
       const container = document.getElementById('menuContainer');
+      const dropdown = document.getElementById('categoryDropdown');
+
       for (const category in grouped) {
+        const anchor = category.replace(/\s+/g, '-').toLowerCase();
+
         const section = document.createElement('div');
         section.className = 'menu-category';
-        section.innerHTML = `<h4>${category}</h4>`;
+        section.id = anchor;
+        section.innerHTML = `
+          <h4 class="collapsible">${category} <button class="btn btn-sm btn-outline-secondary toggle-section">Toggle</button></h4>
+          <div class="category-items"></div>
+        `;
+
+        const dropdownItem = document.createElement('li');
+        dropdownItem.innerHTML = `<a class="dropdown-item" href="#${anchor}">${category}</a>`;
+        dropdown.appendChild(dropdownItem);
+
+        const itemsContainer = section.querySelector('.category-items');
 
         grouped[category].forEach(item => {
           const row = document.createElement('div');
@@ -94,15 +213,21 @@
               <button class="btn btn-outline-primary btn-sm" onclick="addItem('${item.Item}', ${item["Price (₹)"]})">Add</button>
             </div>
           `;
-          section.appendChild(row);
+          itemsContainer.appendChild(row);
         });
-
         container.appendChild(section);
       }
+
+      document.querySelectorAll('.toggle-section').forEach(btn => {
+        btn.addEventListener('click', e => {
+          const categoryItems = e.target.closest('h4').nextElementSibling;
+          categoryItems.style.display = categoryItems.style.display === 'none' ? '' : 'none';
+        });
+      });
     }
 
     function addItem(name, price) {
-      cart[name] = { quantity: 1, price };
+      if (!cart[name]) cart[name] = { quantity: 1, price };
       updateQtyUI(name);
       updateCartUI();
     }
@@ -123,7 +248,6 @@
       const itemId = name.replace(/\s+/g, '-').toLowerCase();
       const container = document.getElementById(`controls-${itemId}`);
       const quantity = cart[name]?.quantity || 0;
-
       container.innerHTML = `
         <div class="qty-controls">
           <button class="btn btn-outline-secondary btn-sm" onclick="changeQty('${name}', ${cart[name].price}, -1)">−</button>
@@ -141,77 +265,107 @@
       `;
     }
 
-    function updateCartUI() {
-      const cartList = document.getElementById('cartList');
-      const cartSection = document.getElementById('cartSection');
-      const cartTotal = document.getElementById('cartTotal');
-      cartList.innerHTML = '';
-      let total = 0;
+// Update the cart UI function to dynamically update the total
+function updateCartUI() {
+  let total = 0;
+  let count = 0;
+  const cartItems = document.getElementById('cartItems');
+  cartItems.innerHTML = ''; // Clear the cart items before updating
 
-      for (const item in cart) {
-        const { quantity, price } = cart[item];
-        total += quantity * price;
-        const li = document.createElement('li');
-        li.className = 'list-group-item d-flex justify-content-between align-items-center';
-        li.innerHTML = `
-          <div>
-            <strong>${item}</strong>
-            <span class="text-muted">× ₹${price}</span>
-          </div>
-          <div>
-            <button class="btn btn-sm btn-outline-secondary" onclick="changeQty('${item}', ${price}, -1)">−</button>
-            <span class="mx-2">${quantity}</span>
-            <button class="btn btn-sm btn-outline-secondary" onclick="changeQty('${item}', ${price}, 1)">+</button>
-          </div>
-        `;
-        cartList.appendChild(li);
-      }
+  for (const item in cart) {
+    total += cart[item].price * cart[item].quantity; // Calculate total
+    count += cart[item].quantity; // Count items in the cart
 
-      cartTotal.textContent = total;
-      cartSection.classList.toggle('d-none', total === 0);
+    const itemId = item.replace(/\s+/g, '-').toLowerCase();
+    const row = document.createElement('div');
+    row.className = 'item-row';
+    row.innerHTML = `
+      <div>
+        <strong>${item}</strong> x <span id="qty-${itemId}">${cart[item].quantity}</span>
+      </div>
+      <div class="qty-controls">
+        <button class="btn btn-outline-secondary btn-sm" onclick="changeQty('${item}', ${cart[item].price}, -1)">−</button>
+        <span>₹${cart[item].price * cart[item].quantity}</span>
+        <button class="btn btn-outline-secondary btn-sm" onclick="changeQty('${item}', ${cart[item].price}, 1)">+</button>
+      </div>
+    `;
+    cartItems.appendChild(row); // Append item to the cart modal
+  }
+
+  // Update the cart UI with the total count and price in the floating cart
+  document.getElementById('cartCount').textContent = count;
+  document.getElementById('cartTotal').textContent = total;
+
+  // Update the cart modal's total
+  document.getElementById('cartTotalModal').textContent = total;
+}
+
+document.getElementById('placeOrder').addEventListener('click', async () => {
+  const orderDetails = Object.entries(cart).map(([name, item]) => `- ${name} x ${item.quantity}`).join('\n');
+  const instructions = document.getElementById('instructions').value;
+  const message = `Room: ${room}\nOrder Date/Time: ${new Date().toLocaleString()}\nOrdered Items:\n${orderDetails}\nSpecial Instructions: ${instructions}`;
+
+  try {
+    const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: message })
+    });
+
+    let data;
+    try {
+        data = await response.json();
+    } catch (error) {
+        console.error('Error parsing Telegram API response:', error);
+        alert('Failed to place order due to an unexpected server error. Please try again.');
+        return;
     }
 
-    document.getElementById('placeOrderBtn').addEventListener('click', async () => {
-      const instructions = document.getElementById('instructions').value;
-      const items = Object.entries(cart).map(([name, { quantity, price }]) => ({
-        name,
-        quantity,
-        price
-      }));
+    if (data.ok) {
+      // Order was placed successfully, show success message and clear cart
+      document.getElementById('confirmationMsg').classList.remove('d-none');
+      setTimeout(() => document.getElementById('confirmationMsg').classList.add('d-none'), 5000);
+      
+      // Clear the cart
+      cart = {}; 
+      updateCartUI(); // Update the UI to reflect the cart is empty
+      
+      // Close the cart modal after placing the order
+      const modal = bootstrap.Modal.getInstance(document.getElementById('cartModal'));
+      modal.hide(); 
+    } else {
+      // If the response is not successful, show error message
+      console.error('Telegram API Error:', data);
+      alert(`Failed to place order. Error: ${data.description || 'Unknown error'}`);
+    }
+  } catch (error) {
+    alert('Failed to place order. Please try again.');
+    console.error(error); // Log the error for debugging
+  }
+});
 
-      if (items.length === 0) {
-        alert("Cart is empty!");
-        return;
-      }
 
-      const order = { room, instructions, cart: items };
-
-      try {
-        const res = await fetch("https://thingproxy.freeboard.io/fetch/https://script.google.com/macros/s/AKfycbx-uL4MHXz6dbrVAGQHzXlGJnvJ3UkvMeZT3e31eFcgM0PWYCtdJXvL7E2qa_eqvRRiOw/exec", {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(order)
-      });
-
-
-        const text = await res.text();
-
-        if (res.ok && text.includes("Order saved")) {
-          document.getElementById('confirmationMsg').classList.remove('d-none');
-          Object.keys(cart).forEach(name => showAddButton(name));
-          Object.keys(cart).forEach(name => delete cart[name]);
-          updateCartUI();
-        } else {
-          alert("Order failed: " + text);
-        }
-      } catch (err) {
-        alert('Error: ' + err.message);
-      }
-    });
+    document.getElementById('scrollTopBtn').addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+    document.getElementById('scrollBottomBtn').addEventListener('click', () => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }));
 
     loadMenu();
   </script>
+  <script>
+    document.getElementById('menuSearch').addEventListener('input', function () {
+      const query = this.value.toLowerCase();
+      document.querySelectorAll('.menu-category').forEach(category => {
+        const items = category.querySelectorAll('.item-row');
+        let visibleItems = 0;
+        items.forEach(item => {
+          const name = item.querySelector('strong').textContent.toLowerCase();
+          const match = name.includes(query);
+          item.style.display = match ? '' : 'none';
+          if (match) visibleItems++;
+        });
+        category.style.display = visibleItems > 0 ? '' : 'none';
+      });
+    });
+  </script>
+
 </body>
 </html>
