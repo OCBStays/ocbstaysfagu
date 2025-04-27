@@ -73,6 +73,9 @@
   </style>
 </head>
 <body class="bg-light">
+  <div id="floatingSearch" style="position: fixed; bottom: 80px; left: 20px; z-index: 999;">
+    <input id="menuSearch" class="form-control" type="text" placeholder="Search items..." />
+  </div>
   <div class="container py-5 menu-wrapper">
     <h1 class="mb-4">🍽️ OCB Stays – Food Menu</h1>
     <p class="text-muted mb-4">Select items below. Orders will be delivered to your room.</p>
@@ -85,9 +88,6 @@
   </div>
 
   <div id="floatingControls">
-    <div id="floatingSearch" style="flex-grow: 1;">
-      <input id="menuSearch" class="form-control" type="text" placeholder="Search items..." />
-    </div>
     <div class="dropdown">
       <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
         Categories
