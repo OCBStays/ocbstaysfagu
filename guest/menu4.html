@@ -259,15 +259,16 @@
     }
 
     // Update the cart UI function to dynamically update the total
+// Update the cart UI function to dynamically update the total
 function updateCartUI() {
   let total = 0;
   let count = 0;
   const cartItems = document.getElementById('cartItems');
-  cartItems.innerHTML = '';
+  cartItems.innerHTML = ''; // Clear the cart items before updating
 
   for (const item in cart) {
-    total += cart[item].price * cart[item].quantity;
-    count += cart[item].quantity;
+    total += cart[item].price * cart[item].quantity; // Calculate total
+    count += cart[item].quantity; // Count items in the cart
 
     const itemId = item.replace(/\s+/g, '-').toLowerCase();
     const row = document.createElement('div');
@@ -282,12 +283,14 @@ function updateCartUI() {
         <button class="btn btn-outline-secondary btn-sm" onclick="changeQty('${item}', ${cart[item].price}, 1)">+</button>
       </div>
     `;
-    cartItems.appendChild(row);
+    cartItems.appendChild(row); // Append item to the cart modal
   }
 
+  // Update the cart UI with the total count and price
   document.getElementById('cartCount').textContent = count;
   document.getElementById('cartTotal').textContent = total;
 }
+
 
 document.getElementById('placeOrder').addEventListener('click', async () => {
   const orderDetails = Object.entries(cart).map(([name, item]) => `- ${name} x ${item.quantity}`).join('\n');
@@ -301,10 +304,11 @@ document.getElementById('placeOrder').addEventListener('click', async () => {
       body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: message })
     });
 
-    const data = await response.json(); // Check the response from Telegram API
-    console.log(data); // Log the entire response to see what's returned
+    const data = await response.json();
+    console.log("Telegram API Response:", data); // Log the full response to see any errors or status
 
     if (data.ok) {
+      // Success: Show confirmation message and reset the cart
       document.getElementById('confirmationMsg').classList.remove('d-none');
       setTimeout(() => document.getElementById('confirmationMsg').classList.add('d-none'), 5000);
       cart = {}; // Clear the cart
@@ -312,13 +316,15 @@ document.getElementById('placeOrder').addEventListener('click', async () => {
       const modal = bootstrap.Modal.getInstance(document.getElementById('cartModal'));
       modal.hide(); // Hide the cart modal after placing the order
     } else {
-      alert('Failed to place order. Telegram API returned an error.');
+      // Failure: Show the exact error returned from the API
+      alert(`Failed to place order. Telegram API returned an error: ${data.description}`);
     }
   } catch (error) {
     alert('Failed to place order. Please try again.');
-    console.error(error); // Log the error for debugging
+    console.error("Order Placement Error:", error); // Log any errors for debugging
   }
 });
+
 
 
     document.getElementById('scrollTopBtn').addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
