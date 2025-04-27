@@ -296,8 +296,6 @@ function updateCartUI() {
   document.getElementById('cartTotalModal').textContent = total;
 }
 
-
-
 document.getElementById('placeOrder').addEventListener('click', async () => {
   const orderDetails = Object.entries(cart).map(([name, item]) => `- ${name} x ${item.quantity}`).join('\n');
   const instructions = document.getElementById('instructions').value;
@@ -310,27 +308,28 @@ document.getElementById('placeOrder').addEventListener('click', async () => {
       body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: message })
     });
 
-    const data = await response.json();
-    console.log("Telegram API Response:", data); // Log the full response to see any errors or status
-
+    const data = await response.json(); // Check the response from Telegram API
     if (data.ok) {
-      // Success: Show confirmation message and reset the cart
+      // Order was placed successfully, show success message and clear cart
       document.getElementById('confirmationMsg').classList.remove('d-none');
       setTimeout(() => document.getElementById('confirmationMsg').classList.add('d-none'), 5000);
-      cart = {}; // Clear the cart
+      
+      // Clear the cart
+      cart = {}; 
       updateCartUI(); // Update the UI to reflect the cart is empty
+      
+      // Close the cart modal after placing the order
       const modal = bootstrap.Modal.getInstance(document.getElementById('cartModal'));
-      modal.hide(); // Hide the cart modal after placing the order
+      modal.hide(); 
     } else {
-      // Failure: Show the exact error returned from the API
-      alert(`Failed to place order. Telegram API returned an error: ${data.description}`);
+      // If the response is not successful, show error message
+      alert('Failed to place order. Telegram API returned an error.');
     }
   } catch (error) {
     alert('Failed to place order. Please try again.');
-    console.error("Order Placement Error:", error); // Log any errors for debugging
+    console.error(error); // Log the error for debugging
   }
 });
-
 
 
     document.getElementById('scrollTopBtn').addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
