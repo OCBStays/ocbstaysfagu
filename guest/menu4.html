@@ -165,7 +165,7 @@
     const params = new URLSearchParams(window.location.search);
     const room = params.get('room') || '';
     document.getElementById('roomHeader').textContent = `Room: ${room}`;
-    const cart = {};
+    let cart = {};
 
     async function loadMenu() {
       const res = await fetch(MENU_SHEET_URL);
@@ -312,7 +312,15 @@ document.getElementById('placeOrder').addEventListener('click', async () => {
       body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: message })
     });
 
-    const data = await response.json(); // Check the response from Telegram API
+    let data;
+    try {
+        data = await response.json();
+    } catch (error) {
+        console.error('Error parsing Telegram API response:', error);
+        alert('Failed to place order due to an unexpected server error. Please try again.');
+        return;
+    }
+
     if (data.ok) {
       // Order was placed successfully, show success message and clear cart
       document.getElementById('confirmationMsg').classList.remove('d-none');
@@ -327,7 +335,8 @@ document.getElementById('placeOrder').addEventListener('click', async () => {
       modal.hide(); 
     } else {
       // If the response is not successful, show error message
-      alert('Failed to place order. Telegram API returned an error.');
+      console.error('Telegram API Error:', data);
+      alert(`Failed to place order. Error: ${data.description || 'Unknown error'}`);
     }
   } catch (error) {
     alert('Failed to place order. Please try again.');
