@@ -102,9 +102,8 @@
     function loadActiveGuests() {
       // Fetch active guests from Google Sheets via Apps Script
       // This function should be implemented to retrieve data and populate the dropdown
-      // Example:
-      /*
-      fetch('YOUR_APPS_SCRIPT_URL')
+
+      fetch('https://script.google.com/macros/s/AKfycbxMzloNwE-vcbBQYGgZij_yD3WMl9BmqzySe4GsdZNOivCTyGaG0VGsGPelR0mFpfBt/exec')
         .then(response => response.json())
         .then(data => {
           const guestSelect = document.getElementById('guestSelect');
@@ -118,7 +117,7 @@
             }
           });
         });
-      */
+      
     }
 
     document.getElementById('guestForm').addEventListener('submit', function(e) {
@@ -130,9 +129,7 @@
       const guestID = generateGuestID();
 
       // Send data to Google Sheets via Apps Script
-      // Example:
-      /*
-      fetch('YOUR_APPS_SCRIPT_URL', {
+      fetch('https://script.google.com/macros/s/AKfycbxMzloNwE-vcbBQYGgZij_yD3WMl9BmqzySe4GsdZNOivCTyGaG0VGsGPelR0mFpfBt/exec', {
         method: 'POST',
         body: JSON.stringify({ guestID, room, checkin, name, mobile, status: 'Active' }),
         headers: { 'Content-Type': 'application/json' }
@@ -147,7 +144,7 @@
         `;
         loadActiveGuests();
       });
-      */
+      
 
       // For demonstration purposes, we'll display the link without actual submission
       document.getElementById('linkOutput').innerHTML = `
@@ -166,9 +163,7 @@
       }
 
       // Fetch and display bill details from Google Sheets via Apps Script
-      // Example:
-      /*
-      fetch(`YOUR_APPS_SCRIPT_URL?guestID=${guestID}`)
+      fetch(`https://script.google.com/macros/s/AKfycbxMzloNwE-vcbBQYGgZij_yD3WMl9BmqzySe4GsdZNOivCTyGaG0VGsGPelR0mFpfBt/exec?guestID=${guestID}`)
         .then(response => response.json())
         .then(data => {
           // Display bill details
@@ -178,7 +173,6 @@
             <!-- Add more details as needed -->
           `;
         });
-      */
     });
 
     document.getElementById('checkoutGuest').addEventListener('click', function() {
@@ -189,9 +183,7 @@
       }
 
       // Update guest status to 'Checked Out' in Google Sheets via Apps Script
-      // Example:
-      /*
-      fetch('YOUR_APPS_SCRIPT_URL', {
+      fetch('https://script.google.com/macros/s/AKfycbxMzloNwE-vcbBQYGgZij_yD3WMl9BmqzySe4GsdZNOivCTyGaG0VGsGPelR0mFpfBt/exec', {
         method: 'POST',
         body: JSON.stringify({ guestID, status: 'Checked Out' }),
         headers: { 'Content-Type': 'application/json' }
@@ -200,7 +192,6 @@
         alert('Guest checked out successfully.');
         loadActiveGuests();
       });
-      */
     });
 
     // Load active guests on page load
