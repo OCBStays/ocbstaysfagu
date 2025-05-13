@@ -111,21 +111,23 @@
       });
   }
 
-  document.getElementById('guestForm').addEventListener('submit', function (e) {
-    e.preventDefault();
-    const room = document.getElementById('room').value;
-    const checkin = document.getElementById('checkin').value;
-    const name = document.getElementById('name').value;
-    const mobile = document.getElementById('mobile').value;
-    const guestID = generateGuestID();
+document.getElementById('guestForm').addEventListener('submit', function (e) {
+  e.preventDefault();
 
-    fetch('https://script.google.com/macros/s/AKfycbxMzloNwE-vcbBQYGgZij_yD3WMl9BmqzySe4GsdZNOivCTyGaG0VGsGPelR0mFpfBt/exec', {
-      method: 'POST',
-      body: JSON.stringify({ guestID, room, checkin, name, mobile, status: 'Active' }),
-      headers: { 'Content-Type': 'application/json' }
-    })
-      .then(response => response.json())
-      .then(() => {
+  const room = document.getElementById('room').value;
+  const checkin = document.getElementById('checkin').value;
+  const name = document.getElementById('name').value;
+  const mobile = document.getElementById('mobile').value;
+  const guestID = generateGuestID();
+
+  fetch('https://script.google.com/macros/s/AKfycbxMzloNwE-vcbBQYGgZij_yD3WMl9BmqzySe4GsdZNOivCTyGaG0VGsGPelR0mFpfBt/exec', {
+    method: 'POST',
+    body: JSON.stringify({ guestID, room, checkin, name, mobile, status: 'Active' }),
+    headers: { 'Content-Type': 'application/json' }
+  })
+    .then(response => response.json())
+    .then(result => {
+      if (result.success) {
         const link = `https://ocbstays.github.io/ocbstaysfagu/guest/index.html?guestID=${guestID}`;
         document.getElementById('linkOutput').innerHTML = `
           <strong>Guest Link:</strong><br>
@@ -135,8 +137,16 @@
           </div>
         `;
         loadActiveGuests();
-      });
-  });
+      } else {
+        alert("Failed to register guest: " + (result.message || "Unknown error"));
+      }
+    })
+    .catch(error => {
+      console.error("Error:", error);
+      alert("Something went wrong while registering the guest.");
+    });
+});
+
 
   function copyLink() {
     const input = document.getElementById('guestLink');
