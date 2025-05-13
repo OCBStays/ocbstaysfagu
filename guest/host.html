@@ -97,7 +97,7 @@
   }
 
   function loadActiveGuests() {
-    fetch('https://script.google.com/macros/s/AKfycbxMzloNwE-vcbBQYGgZij_yD3WMl9BmqzySe4GsdZNOivCTyGaG0VGsGPelR0mFpfBt/exec')
+    fetch('https://script.google.com/macros/s/AKfycbzKLZQJEZr7DfJWJoh6eB4UwYAR7KJ4-cI2vXcHcuLiye4vduSYoVoj81HP5VqggNtu/exec')
       .then(response => response.json())
       .then(data => {
         const guestSelect = document.getElementById('guestSelect');
@@ -105,7 +105,7 @@
         data.forEach(guest => {
           const option = document.createElement('option');
           option.value = guest.guestID;
-          option.textContent = `${guest.name || 'Unnamed'} (${guest.guestID})`;
+          option.textContent = '${guest.name || 'Unnamed'} (${guest.guestID})';
           guestSelect.appendChild(option);
         });
       });
@@ -120,22 +120,23 @@ document.getElementById('guestForm').addEventListener('submit', function (e) {
   const mobile = document.getElementById('mobile').value;
   const guestID = generateGuestID();
 
-  fetch('https://script.google.com/macros/s/AKfycbxMzloNwE-vcbBQYGgZij_yD3WMl9BmqzySe4GsdZNOivCTyGaG0VGsGPelR0mFpfBt/exec', {
+  fetch('https://script.google.com/macros/s/AKfycbzKLZQJEZr7DfJWJoh6eB4UwYAR7KJ4-cI2vXcHcuLiye4vduSYoVoj81HP5VqggNtu/exec', {
     method: 'POST',
     body: JSON.stringify({ guestID, room, checkin, name, mobile, status: 'Active' }),
     headers: { 'Content-Type': 'application/json' }
+    mode: 'cors' // Ensure CORS mode
   })
     .then(response => response.json())
     .then(result => {
       if (result.success) {
-        const link = `https://ocbstays.github.io/ocbstaysfagu/guest/index.html?guestID=${guestID}`;
-        document.getElementById('linkOutput').innerHTML = `
+        const link = 'https://ocbstays.github.io/ocbstaysfagu/guest/index.html?guestID=${guestID}';
+        document.getElementById('linkOutput').innerHTML = '
           <strong>Guest Link:</strong><br>
           <div class="input-group">
             <input type="text" class="form-control" id="guestLink" value="${link}" readonly>
             <button class="btn btn-outline-secondary" type="button" onclick="copyLink()">📋</button>
           </div>
-        `;
+        ';
         loadActiveGuests();
       } else {
         alert("Failed to register guest: " + (result.message || "Unknown error"));
@@ -163,13 +164,13 @@ document.getElementById('guestForm').addEventListener('submit', function (e) {
       return;
     }
 
-    fetch(`https://script.google.com/macros/s/AKfycbxMzloNwE-vcbBQYGgZij_yD3WMl9BmqzySe4GsdZNOivCTyGaG0VGsGPelR0mFpfBt/exec?guestID=${guestID}`)
+    fetch('https://script.google.com/macros/s/AKfycbzKLZQJEZr7DfJWJoh6eB4UwYAR7KJ4-cI2vXcHcuLiye4vduSYoVoj81HP5VqggNtu/exec?guestID=${guestID}')
       .then(response => response.json())
       .then(data => {
-        document.getElementById('billOutput').innerHTML = `
+        document.getElementById('billOutput').innerHTML = '
           <h4>Bill for ${data.name || 'Unnamed'} (${guestID})</h4>
           <p>Total Amount: ₹${data.total}</p>
-        `;
+        ';
       });
   });
 
@@ -180,10 +181,11 @@ document.getElementById('guestForm').addEventListener('submit', function (e) {
       return;
     }
 
-    fetch('https://script.google.com/macros/s/AKfycbxMzloNwE-vcbBQYGgZij_yD3WMl9BmqzySe4GsdZNOivCTyGaG0VGsGPelR0mFpfBt/exec', {
+    fetch('https://script.google.com/macros/s/AKfycbzKLZQJEZr7DfJWJoh6eB4UwYAR7KJ4-cI2vXcHcuLiye4vduSYoVoj81HP5VqggNtu/exec', {
       method: 'POST',
       body: JSON.stringify({ guestID, status: 'Checked Out' }),
       headers: { 'Content-Type': 'application/json' }
+      mode: 'cors' // Ensure CORS mode
     })
       .then(() => {
         alert('Guest checked out successfully.');
