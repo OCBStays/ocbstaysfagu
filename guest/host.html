@@ -157,7 +157,7 @@
       .then(response => response.json())
       .then(data => {
         document.getElementById('billOutput').innerHTML = `
-          <h4>Bill for ${data.guestName || 'Unnamed'} (${guestID})</h4>
+          <h4>Bill for ${data.name || 'Unnamed'} (${guestID})</h4>
           <p>Total Amount: ₹${data.total}</p>
         `;
       });
