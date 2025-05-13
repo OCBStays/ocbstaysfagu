@@ -123,27 +123,27 @@ document.getElementById('guestForm').addEventListener('submit', function (e) {
   fetch('https://script.google.com/macros/s/AKfycbzKLZQJEZr7DfJWJoh6eB4UwYAR7KJ4-cI2vXcHcuLiye4vduSYoVoj81HP5VqggNtu/exec', {
     method: 'POST',
     body: JSON.stringify({ guestID, room, checkin, name, mobile, status: 'Active' }),
-    headers: { 'Content-Type': 'application/json' }
-    mode: 'cors' // Ensure CORS mode
+    headers: { 'Content-Type': 'application/json' },
+    mode: 'cors'
   })
     .then(response => response.json())
     .then(result => {
       if (result.success) {
-        const link = 'https://ocbstays.github.io/ocbstaysfagu/guest/index.html?guestID=${guestID}';
-        document.getElementById('linkOutput').innerHTML = '
+        const link = `https://ocbstays.github.io/ocbstaysfagu/guest/index.html?guestID=${guestID}`;
+        document.getElementById('linkOutput').innerHTML = `
           <strong>Guest Link:</strong><br>
           <div class="input-group">
             <input type="text" class="form-control" id="guestLink" value="${link}" readonly>
             <button class="btn btn-outline-secondary" type="button" onclick="copyLink()">📋</button>
           </div>
-        ';
+        `;
         loadActiveGuests();
       } else {
         alert("Failed to register guest: " + (result.message || "Unknown error"));
       }
     })
     .catch(error => {
-      console.error("Error:", error);
+      console.error("Error registering guest:", error);
       alert("Something went wrong while registering the guest.");
     });
 });
@@ -158,21 +158,25 @@ document.getElementById('guestForm').addEventListener('submit', function (e) {
   }
 
   document.getElementById('generateBill').addEventListener('click', function () {
-    const guestID = document.getElementById('guestSelect').value;
-    if (!guestID) {
-      alert('Please select a guest.');
-      return;
-    }
+  const guestID = document.getElementById('guestSelect').value;
+  if (!guestID) {
+    alert('Please select a guest.');
+    return;
+  }
 
-    fetch('https://script.google.com/macros/s/AKfycbzKLZQJEZr7DfJWJoh6eB4UwYAR7KJ4-cI2vXcHcuLiye4vduSYoVoj81HP5VqggNtu/exec?guestID=${guestID}')
-      .then(response => response.json())
-      .then(data => {
-        document.getElementById('billOutput').innerHTML = '
-          <h4>Bill for ${data.name || 'Unnamed'} (${guestID})</h4>
-          <p>Total Amount: ₹${data.total}</p>
-        ';
-      });
-  });
+  fetch(`https://script.google.com/macros/s/AKfycbzKLZQJEZr7DfJWJoh6eB4UwYAR7KJ4-cI2vXcHcuLiye4vduSYoVoj81HP5VqggNtu/exec?guestID=${guestID}`)
+    .then(response => response.json())
+    .then(data => {
+      document.getElementById('billOutput').innerHTML = `
+        <h4>Bill for ${data.guestName || 'Unnamed'} (${guestID})</h4>
+        <p>Total Amount: ₹${data.total}</p>
+      `;
+    })
+    .catch(error => {
+      console.error("Error fetching bill:", error);
+      alert('Failed to generate bill. Please try again.');
+    });
+});
 
   document.getElementById('checkoutGuest').addEventListener('click', function () {
     const guestID = document.getElementById('guestSelect').value;
