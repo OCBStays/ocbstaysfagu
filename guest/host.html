@@ -1,50 +1,151 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Generate Guest Link – OCB Stays</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Host Dashboard – OCB Stays</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
   <style>
-    body { font-family: sans-serif; padding: 2rem; max-width: 500px; margin: auto; }
-    label, input, button { display: block; margin-bottom: 1rem; width: 100%; }
-    input, button { padding: 0.5rem; font-size: 1rem; }
-    .output { margin-top: 1.5rem; background: #eef; padding: 1rem; border-radius: 6px; }
+    body {
+      background-color: #f9f9f9;
+      padding: 2rem;
+      max-width: 800px;
+      margin: auto;
+      font-family: 'Segoe UI', sans-serif;
+    }
+    h1 {
+      color: #2c3e50;
+      margin-bottom: 2rem;
+    }
+    .section {
+      background-color: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+    .form-label {
+      font-weight: 500;
+    }
+    .guest-link {
+      word-break: break-all;
+    }
   </style>
 </head>
 <body>
-  <h1>OCB Stays – Generate Guest Link</h1>
-  <label>Room Number: <input type="text" id="room" placeholder="e.g. 102"></label>
-  <label>Check-in Date: <input type="date" id="date"></label>
-  <button onclick="generateLink()">Generate Link</button>
 
-  <div class="output" id="result" style="display:none;">
-    <p><strong>Guest Homepage Link:</strong></p>
-    <input type="text" id="linkOutput" readonly style="width:100%; font-size:1rem;">
-    <button onclick="copyLink()">Copy Link</button>
+  <h1>OCB Stays – Host Dashboard 🛎️</h1>
+
+  <!-- Guest Link Generator -->
+  <div class="section">
+    <h4>Generate Guest Link</h4>
+    <form id="guestForm">
+      <div class="mb-3">
+        <label for="room" class="form-label">Room</label>
+        <select class="form-select" id="room" required>
+          <option value="">Select Room</option>
+          <option value="Stargazing Deck (0)">Stargazing Deck (0)</option>
+          <option value="Stargazing Cabin (1)">Stargazing Cabin (1)</option>
+        </select>
+      </div>
+      <div class="mb-3">
+        <label for="checkin" class="form-label">Check-in Date</label>
+        <input type="date" class="form-control" id="checkin" required>
+      </div>
+      <div class="mb-3">
+        <label for="guestName" class="form-label">Guest Name (Optional)</label>
+        <input type="text" class="form-control" id="guestName">
+      </div>
+      <div class="mb-3">
+        <label for="mobile" class="form-label">Mobile Number (Optional)</label>
+        <input type="tel" class="form-control" id="mobile">
+      </div>
+      <button type="submit" class="btn btn-primary">Generate Link</button>
+    </form>
+    <div id="linkOutput" class="mt-3"></div>
+  </div>
+
+  <!-- Generate Bill -->
+  <div class="section">
+    <h4>Generate Guest Bill</h4>
+    <div class="mb-3">
+      <label for="guestSelect" class="form-label">Select Guest</label>
+      <select class="form-select" id="guestSelect">
+        <!-- Will be populated dynamically -->
+      </select>
+    </div>
+    <button class="btn btn-success mb-2" onclick="generateBill()">Generate Bill</button>
+    <button class="btn btn-outline-danger" onclick="checkoutGuest()">Checkout Guest</button>
   </div>
 
   <script>
-    function generateLink() {
-      const room = document.getElementById('room').value.trim();
-      const date = document.getElementById('date').value;
-      if (!room || !date) {
-        alert("Please enter both room number and check-in date.");
-        return;
-      }
+    // Simulated storage for demo (use real DB in production)
+    const guestData = JSON.parse(localStorage.getItem("ocb_guests") || "[]");
 
-      const formattedDate = date.replace(/-/g, '');
-      const guestID = `ocb-R${room}-${formattedDate}`;
-      const fullLink = `guest-home.html?guest=${guestID}`;
-      document.getElementById('linkOutput').value = fullLink;
-      document.getElementById('result').style.display = 'block';
+    function saveGuests() {
+      localStorage.setItem("ocb_guests", JSON.stringify(guestData));
     }
 
-    function copyLink() {
-      const copyText = document.getElementById("linkOutput");
-      copyText.select();
-      copyText.setSelectionRange(0, 99999);
-      document.execCommand("copy");
-      alert("Link copied!");
+    function refreshGuestDropdown() {
+      const select = document.getElementById("guestSelect");
+      select.innerHTML = "";
+      guestData.filter(g => !g.checkedOut).forEach(guest => {
+        const option = document.createElement("option");
+        option.value = guest.id;
+        option.text = `${guest.name || 'Guest'} – ${guest.room}`;
+        select.appendChild(option);
+      });
     }
+
+    function generateGuestId() {
+      return 'G' + Date.now().toString(36).toUpperCase();
+    }
+
+    document.getElementById("guestForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const room = document.getElementById("room").value;
+      const checkin = document.getElementById("checkin").value;
+      const name = document.getElementById("guestName").value.trim();
+      const mobile = document.getElementById("mobile").value.trim();
+      const id = generateGuestId();
+
+      const guest = { id, room, checkin, name, mobile, checkedOut: false };
+      guestData.push(guest);
+      saveGuests();
+      refreshGuestDropdown();
+
+      const link = `guest.html?guestId=${id}`;
+      document.getElementById("linkOutput").innerHTML = `
+        <div class="alert alert-info">
+          Guest Link: <a href="${link}" target="_blank" class="guest-link">${link}</a>
+        </div>
+      `;
+
+      this.reset();
+    });
+
+    function generateBill() {
+      const guestId = document.getElementById("guestSelect").value;
+      const guest = guestData.find(g => g.id === guestId);
+      if (!guest) return alert("Please select a valid guest.");
+
+      // Replace with real billing logic or redirect
+      alert(`Generating bill for ${guest.name || 'Guest'} (${guest.id})...`);
+    }
+
+    function checkoutGuest() {
+      const guestId = document.getElementById("guestSelect").value;
+      const guest = guestData.find(g => g.id === guestId);
+      if (!guest) return alert("Select a guest to checkout.");
+
+      guest.checkedOut = true;
+      saveGuests();
+      refreshGuestDropdown();
+      alert(`${guest.name || 'Guest'} has been checked out.`);
+    }
+
+    // Initialize dropdown on load
+    window.onload = refreshGuestDropdown;
   </script>
 </body>
 </html>
