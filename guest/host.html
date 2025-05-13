@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Generate Guest Link – OCB Stays</title>
+  <style>
+    body { font-family: sans-serif; padding: 2rem; max-width: 500px; margin: auto; }
+    label, input, button { display: block; margin-bottom: 1rem; width: 100%; }
+    input, button { padding: 0.5rem; font-size: 1rem; }
+    .output { margin-top: 1.5rem; background: #eef; padding: 1rem; border-radius: 6px; }
+  </style>
+</head>
+<body>
+  <h1>OCB Stays – Generate Guest Link</h1>
+  <label>Room Number: <input type="text" id="room" placeholder="e.g. 102"></label>
+  <label>Check-in Date: <input type="date" id="date"></label>
+  <button onclick="generateLink()">Generate Link</button>
+
+  <div class="output" id="result" style="display:none;">
+    <p><strong>Guest Homepage Link:</strong></p>
+    <input type="text" id="linkOutput" readonly style="width:100%; font-size:1rem;">
+    <button onclick="copyLink()">Copy Link</button>
+  </div>
+
+  <script>
+    function generateLink() {
+      const room = document.getElementById('room').value.trim();
+      const date = document.getElementById('date').value;
+      if (!room || !date) {
+        alert("Please enter both room number and check-in date.");
+        return;
+      }
+
+      const formattedDate = date.replace(/-/g, '');
+      const guestID = `ocb-R${room}-${formattedDate}`;
+      const fullLink = `guest-home.html?guest=${guestID}`;
+      document.getElementById('linkOutput').value = fullLink;
+      document.getElementById('result').style.display = 'block';
+    }
+
+    function copyLink() {
+      const copyText = document.getElementById("linkOutput");
+      copyText.select();
+      copyText.setSelectionRange(0, 99999);
+      document.execCommand("copy");
+      alert("Link copied!");
+    }
+  </script>
+</body>
+</html>
