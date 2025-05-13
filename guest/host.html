@@ -86,117 +86,105 @@
     <button id="checkoutGuest" class="btn btn-danger">Checkout Guest</button>
     <div id="billOutput" class="mt-3"></div>
   </div>
-
-  <script>
-    // Function to generate a unique 6-character alphanumeric Guest ID
-    function generateGuestID() {
-      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-      let id = 'G';
-      for (let i = 0; i < 6; i++) {
-        id += chars.charAt(Math.floor(Math.random() * chars.length));
-      }
-      return id;
+<script>
+  function generateGuestID() {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let id = 'G';
+    for (let i = 0; i < 6; i++) {
+      id += chars.charAt(Math.floor(Math.random() * chars.length));
     }
+    return id;
+  }
 
-    // Function to load active guests into the dropdown
-    function loadActiveGuests() {
-      // Fetch active guests from Google Sheets via Apps Script
-      // This function should be implemented to retrieve data and populate the dropdown
-
-      fetch('https://script.google.com/macros/s/AKfycbxMzloNwE-vcbBQYGgZij_yD3WMl9BmqzySe4GsdZNOivCTyGaG0VGsGPelR0mFpfBt/exec')
-        .then(response => response.json())
-        .then(data => {
-          const guestSelect = document.getElementById('guestSelect');
-          guestSelect.innerHTML = '<option value="">Select Guest</option>';
-          data.forEach(guest => {
-            if (guest.status === 'Active') {
-              const option = document.createElement('option');
-              option.value = guest.guestID;
-              option.textContent = `${guest.name || 'Unnamed'} (${guest.guestID})`;
-              guestSelect.appendChild(option);
-            }
-          });
+  function loadActiveGuests() {
+    fetch('https://script.google.com/macros/s/AKfycbxMzloNwE-vcbBQYGgZij_yD3WMl9BmqzySe4GsdZNOivCTyGaG0VGsGPelR0mFpfBt/exec')
+      .then(response => response.json())
+      .then(data => {
+        const guestSelect = document.getElementById('guestSelect');
+        guestSelect.innerHTML = '<option value="">Select Guest</option>';
+        data.forEach(guest => {
+          const option = document.createElement('option');
+          option.value = guest.guestID;
+          option.textContent = `${guest.name || 'Unnamed'} (${guest.guestID})`;
+          guestSelect.appendChild(option);
         });
-      
-    }
+      });
+  }
 
-    document.getElementById('guestForm').addEventListener('submit', function(e) {
-      e.preventDefault();
-      const room = document.getElementById('room').value;
-      const checkin = document.getElementById('checkin').value;
-      const name = document.getElementById('name').value;
-      const mobile = document.getElementById('mobile').value;
-      const guestID = generateGuestID();
+  document.getElementById('guestForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    const room = document.getElementById('room').value;
+    const checkin = document.getElementById('checkin').value;
+    const name = document.getElementById('name').value;
+    const mobile = document.getElementById('mobile').value;
+    const guestID = generateGuestID();
 
-      // Send data to Google Sheets via Apps Script
-      fetch('https://script.google.com/macros/s/AKfycbxMzloNwE-vcbBQYGgZij_yD3WMl9BmqzySe4GsdZNOivCTyGaG0VGsGPelR0mFpfBt/exec', {
-        method: 'POST',
-        body: JSON.stringify({ guestID, room, checkin, name, mobile, status: 'Active' }),
-        headers: { 'Content-Type': 'application/json' }
-      })
+    fetch('https://script.google.com/macros/s/AKfycbxMzloNwE-vcbBQYGgZij_yD3WMl9BmqzySe4GsdZNOivCTyGaG0VGsGPelR0mFpfBt/exec', {
+      method: 'POST',
+      body: JSON.stringify({ guestID, room, checkin, name, mobile, status: 'Active' }),
+      headers: { 'Content-Type': 'application/json' }
+    })
       .then(response => response.json())
       .then(() => {
+        const link = `https://ocbstays.github.io/ocbstaysfagu/guest/index.html?guestID=${guestID}`;
         document.getElementById('linkOutput').innerHTML = `
           <strong>Guest Link:</strong><br>
-          <a href="https://ocbstays.github.io/ocbstaysfagu/guest/index.html?guestID=${guestID}" target="_blank">
-            https://ocbstays.github.io/ocbstaysfagu/guest/index.html?guestID=${guestID}
-          </a>
+          <div class="input-group">
+            <input type="text" class="form-control" id="guestLink" value="${link}" readonly>
+            <button class="btn btn-outline-secondary" type="button" onclick="copyLink()">📋</button>
+          </div>
         `;
         loadActiveGuests();
       });
-      
+  });
 
-      // For demonstration purposes, we'll display the link without actual submission
-      document.getElementById('linkOutput').innerHTML = `
-        <strong>Guest Link:</strong><br>
-        <a href="https://ocbstays.github.io/ocbstaysfagu/guest/index.html?guestID=${guestID}" target="_blank">
-          https://ocbstays.github.io/ocbstaysfagu/guest/index.html?guestID=${guestID}
-        </a>
-      `;
-    });
+  function copyLink() {
+    const input = document.getElementById('guestLink');
+    input.select();
+    input.setSelectionRange(0, 99999); // For mobile
+    document.execCommand('copy');
+    alert('Link copied to clipboard!');
+  }
 
-    document.getElementById('generateBill').addEventListener('click', function() {
-      const guestID = document.getElementById('guestSelect').value;
-      if (!guestID) {
-        alert('Please select a guest.');
-        return;
-      }
+  document.getElementById('generateBill').addEventListener('click', function () {
+    const guestID = document.getElementById('guestSelect').value;
+    if (!guestID) {
+      alert('Please select a guest.');
+      return;
+    }
 
-      // Fetch and display bill details from Google Sheets via Apps Script
-      fetch(`https://script.google.com/macros/s/AKfycbxMzloNwE-vcbBQYGgZij_yD3WMl9BmqzySe4GsdZNOivCTyGaG0VGsGPelR0mFpfBt/exec?guestID=${guestID}`)
-        .then(response => response.json())
-        .then(data => {
-          // Display bill details
-          document.getElementById('billOutput').innerHTML = `
-            <h4>Bill for ${data.name || 'Unnamed'} (${guestID})</h4>
-            <p>Total Amount: ₹${data.total}</p>
-            <!-- Add more details as needed -->
-          `;
-        });
-    });
+    fetch(`https://script.google.com/macros/s/AKfycbxMzloNwE-vcbBQYGgZij_yD3WMl9BmqzySe4GsdZNOivCTyGaG0VGsGPelR0mFpfBt/exec?guestID=${guestID}`)
+      .then(response => response.json())
+      .then(data => {
+        document.getElementById('billOutput').innerHTML = `
+          <h4>Bill for ${data.guestName || 'Unnamed'} (${guestID})</h4>
+          <p>Total Amount: ₹${data.total}</p>
+        `;
+      });
+  });
 
-    document.getElementById('checkoutGuest').addEventListener('click', function() {
-      const guestID = document.getElementById('guestSelect').value;
-      if (!guestID) {
-        alert('Please select a guest.');
-        return;
-      }
+  document.getElementById('checkoutGuest').addEventListener('click', function () {
+    const guestID = document.getElementById('guestSelect').value;
+    if (!guestID) {
+      alert('Please select a guest.');
+      return;
+    }
 
-      // Update guest status to 'Checked Out' in Google Sheets via Apps Script
-      fetch('https://script.google.com/macros/s/AKfycbxMzloNwE-vcbBQYGgZij_yD3WMl9BmqzySe4GsdZNOivCTyGaG0VGsGPelR0mFpfBt/exec', {
-        method: 'POST',
-        body: JSON.stringify({ guestID, status: 'Checked Out' }),
-        headers: { 'Content-Type': 'application/json' }
-      })
+    fetch('https://script.google.com/macros/s/AKfycbxMzloNwE-vcbBQYGgZij_yD3WMl9BmqzySe4GsdZNOivCTyGaG0VGsGPelR0mFpfBt/exec', {
+      method: 'POST',
+      body: JSON.stringify({ guestID, status: 'Checked Out' }),
+      headers: { 'Content-Type': 'application/json' }
+    })
       .then(() => {
         alert('Guest checked out successfully.');
         loadActiveGuests();
+        document.getElementById('billOutput').innerHTML = '';
       });
-    });
+  });
 
-    // Load active guests on page load
-    window.onload = loadActiveGuests;
-  </script>
+  window.onload = loadActiveGuests;
+</script>
+
 
 </body>
 </html>
