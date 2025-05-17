@@ -37,6 +37,9 @@
     .link-output {
       word-break: break-all;
     }
+    .alert {
+      margin-top: 1rem;
+    }
   </style>
 </head>
 <body>
@@ -88,8 +91,9 @@
   </div>
 
   <script>
+    // IMPORTANT: In production, this should be handled server-side
     const AIRTABLE_TOKEN = 'patWo5RyRmRCbKXp3.afc1eefc274991a91c14b6b95b2f5bb726cfb14deee85b57e10e5b0f84bc2980';
-    const BASE_ID = 'app2UvEfKduRwGjfR'; // Replace with your actual Base ID
+    const BASE_ID = 'app2UvEfKduRwGjfR';
     const TABLE_NAME = 'Guests';
 
     function generateGuestID() {
@@ -102,54 +106,116 @@
     }
 
     async function loadActiveGuests() {
-      const response = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${TABLE_NAME}?filterByFormula=Status="Active"`, {
-        headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` }
-      });
-      const data = await response.json();
-      const guestSelect = document.getElementById('guestSelect');
-      guestSelect.innerHTML = '<option value="">Select Guest</option>';
-      data.records.forEach(record => {
-        const guest = record.fields;
-        const option = document.createElement('option');
-        option.value = record.id;
-        option.textContent = `${guest.Name || 'Unnamed'} (${guest.GuestID})`;
-        guestSelect.appendChild(option);
-      });
+      try {
+        const response = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${TABLE_NAME}?filterByFormula={status}="Active"`, {
+          headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Failed to load guests: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        const guestSelect = document.getElementById('guestSelect');
+        guestSelect.innerHTML = '<option value="">Select Guest</option>';
+        
+        data.records.forEach(record => {
+          const guest = record.fields;
+          const option = document.createElement('option');
+          option.value = record.id;
+          option.textContent = `${guest.name || 'Unnamed'} (${guest.guestID}) - ${guest.room}`;
+          guestSelect.appendChild(option);
+        });
+      } catch (error) {
+        console.error('Error loading guests:', error);
+        document.getElementById('billOutput').innerHTML = `
+          <div class="alert alert-danger">Failed to load active guests. Please try again.</div>
+        `;
+      }
     }
 
     document.getElementById('guestForm').addEventListener('submit', async function (e) {
       e.preventDefault();
 
+      // Get form values
       const room = document.getElementById('room').value;
       const checkin = document.getElementById('checkin').value;
-      const name = document.getElementById('name').value;
-      const mobile = document.getElementById('mobile').value;
+      const name = document.getElementById('name').value || ''; // Optional field
+      const mobile = document.getElementById('mobile').value || ''; // Optional field
       const guestID = generateGuestID();
+      const linkOutput = document.getElementById('linkOutput');
 
-      const response = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${TABLE_NAME}`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${AIRTABLE_TOKEN}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          fields: { GuestID: guestID, Room: room, CheckInDate: checkin, Name: name, Mobile: mobile, Status: 'Active' }
-        })
-      });
+      // Clear previous messages
+      linkOutput.innerHTML = '';
 
-      const result = await response.json();
-      if (response.ok) {
+      // Validate required fields
+      if (!room || !checkin) {
+        linkOutput.innerHTML = `
+          <div class="alert alert-danger">Please fill in all required fields (Room and Check-in Date)</div>
+        `;
+        return;
+      }
+
+      // Validate date
+      if (isNaN(new Date(checkin).getTime())) {
+        linkOutput.innerHTML = `
+          <div class="alert alert-danger">Please enter a valid check-in date</div>
+        `;
+        return;
+      }
+
+      // Format check-in date properly (YYYY-MM-DD)
+      const formattedCheckin = new Date(checkin).toISOString().split('T')[0];
+
+      try {
+        const response = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${TABLE_NAME}`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${AIRTABLE_TOKEN}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            fields: {
+              guestID: guestID,
+              room: room,
+              checkin: formattedCheckin,
+              name: name,
+              mobile: mobile,
+              status: "Active" // Set default status
+            }
+          })
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error('API Error:', errorData);
+          throw new Error(`Failed to register guest: ${response.status}`);
+        }
+
+        const result = await response.json();
         const link = `https://ocbstays.github.io/ocbstaysfagu/guest/index.html?guestID=${guestID}`;
-        document.getElementById('linkOutput').innerHTML = `
+        linkOutput.innerHTML = `
+          <div class="alert alert-success">Guest registered successfully!</div>
           <strong>Guest Link:</strong><br>
-          <div class="input-group">
+          <div class="input-group mt-2">
             <input type="text" class="form-control" id="guestLink" value="${link}" readonly>
-            <button class="btn btn-outline-secondary" type="button" onclick="copyLink()">📋</button>
+            <button class="btn btn-outline-secondary" type="button" onclick="copyLink()">📋 Copy</button>
           </div>
         `;
+        
+        // Reload active guests list
         loadActiveGuests();
-      } else {
-        alert('Failed to register guest.');
+        
+        // Reset form
+        document.getElementById('guestForm').reset();
+      } catch (error) {
+        console.error('Registration Error:', error);
+        linkOutput.innerHTML = `
+          <div class="alert alert-danger">
+            <strong>Error:</strong> ${error.message}<br>
+            Please check console for details.
+          </div>
+        `;
       }
     });
 
@@ -157,37 +223,65 @@
       const input = document.getElementById('guestLink');
       input.select();
       document.execCommand('copy');
-      alert('Link copied to clipboard!');
+      
+      // Show feedback
+      const originalText = input.nextElementSibling.textContent;
+      input.nextElementSibling.textContent = '✓ Copied!';
+      setTimeout(() => {
+        input.nextElementSibling.textContent = originalText;
+      }, 2000);
     }
 
     document.getElementById('checkoutGuest').addEventListener('click', async function () {
-      const guestID = document.getElementById('guestSelect').value;
-      if (!guestID) {
-        alert('Please select a guest.');
+      const guestId = document.getElementById('guestSelect').value;
+      const billOutput = document.getElementById('billOutput');
+      
+      if (!guestId) {
+        billOutput.innerHTML = `
+          <div class="alert alert-danger">Please select a guest to check out</div>
+        `;
         return;
       }
 
-      const response = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${TABLE_NAME}/${guestID}`, {
-        method: 'PATCH',
-        headers: {
-          Authorization: `Bearer ${AIRTABLE_TOKEN}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          fields: { Status: 'Checked Out' }
-        })
-      });
+      if (!confirm('Are you sure you want to check out this guest?')) {
+        return;
+      }
 
-      if (response.ok) {
-        alert('Guest checked out successfully.');
+      try {
+        const response = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${TABLE_NAME}/${guestId}`, {
+          method: 'PATCH',
+          headers: {
+            Authorization: `Bearer ${AIRTABLE_TOKEN}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            fields: { status: "Checked Out" }
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to check out guest: ${response.status}`);
+        }
+
+        billOutput.innerHTML = `
+          <div class="alert alert-success">Guest checked out successfully</div>
+        `;
+        
+        // Reload active guests list
         loadActiveGuests();
-      } else {
-        alert('Failed to check out guest.');
+      } catch (error) {
+        console.error('Checkout Error:', error);
+        billOutput.innerHTML = `
+          <div class="alert alert-danger">
+            <strong>Error:</strong> ${error.message}<br>
+            Please check console for details.
+          </div>
+        `;
       }
     });
 
+    // Initialize the page
     window.onload = loadActiveGuests;
   </script>
-
 </body>
 </html>
