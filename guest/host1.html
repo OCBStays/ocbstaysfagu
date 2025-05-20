@@ -120,7 +120,7 @@
     const AIRTABLE_TOKEN = 'patWo5RyRmRCbKXp3.afc1eefc274991a91c14b6b95b2f5bb726cfb14deee85b57e10e5b0f84bc2980';
     const BASE_ID = 'app2UvEfKduRwGjfR';
     const GUESTS_TABLE = 'Guests';
-    const ORDERS_TABLE = 'Orders';
+    const BILLS_TABLE = 'Bills';
 
     async function loadActiveGuests() {
       const guestSelect = document.getElementById('guestSelect');
@@ -140,8 +140,8 @@
         data.records.forEach(record => {
           const guest = record.fields;
           const option = document.createElement('option');
-          option.value = record.id; // Use Airtable's record ID
-          option.textContent = `${guest.Name || 'Unnamed'} (${guest.GuestID})`;
+          option.value = record.id; // Use record ID for Airtable linking
+          option.textContent = `${guest.Name || 'Unnamed'} (${guest.GuestID || 'undefined'}) - ${guest.Room}`;
           guestSelect.appendChild(option);
         });
       } catch (error) {
@@ -152,8 +152,10 @@
     }
 
     document.getElementById('generateBill').addEventListener('click', async function () {
-      const guestId = document.getElementById('guestSelect').value;
+      const guestSelect = document.getElementById('guestSelect');
+      const guestId = guestSelect.value;
       const billOutput = document.getElementById('billOutput');
+      const btn = this;
       const spinner = document.getElementById('billSpinner');
 
       if (!guestId) {
@@ -161,29 +163,67 @@
         return;
       }
 
+      btn.disabled = true;
       spinner.style.display = 'inline-block';
 
       try {
-        const ordersResponse = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${ORDERS_TABLE}?filterByFormula={Guest}="${guestId}"`, {
+        const guestRes = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${GUESTS_TABLE}/${guestId}`, {
           headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` }
         });
 
-        if (!ordersResponse.ok) throw new Error('Failed to fetch orders');
-        const ordersData = await ordersResponse.json();
+        if (!guestRes.ok) throw new Error('Failed to fetch guest details');
+        const guest = (await guestRes.json()).fields;
 
-        const totalAmount = ordersData.records.reduce((sum, record) => {
-          return sum + record.fields.TotalAmount;
-        }, 0);
+        const checkinDate = new Date(guest.CheckInDate);
+        const checkoutDate = new Date();
+        const nightsStayed = Math.ceil((checkoutDate - checkinDate) / (1000 * 60 * 60 * 24));
+        const roomRate = guest.Room.includes("Deck") ? 1500 : 1800;
+        const subtotal = nightsStayed * roomRate;
+        const taxes = Math.round(subtotal * 0.1);
+        const totalAmount = subtotal + taxes;
+
+        const billRes = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${BILLS_TABLE}`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${AIRTABLE_TOKEN}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            fields: {
+              BillID: `BIL-${Date.now().toString().slice(-6)}`,
+              Guest: [guestId], // Use Airtable record ID
+              Room: guest.Room,
+              CheckInDate: guest.CheckInDate,
+              CheckOutDate: checkoutDate.toISOString().split('T')[0],
+              NightsStayed: nightsStayed,
+              RoomRate: roomRate,
+              Subtotal: subtotal,
+              Taxes: taxes,
+              TotalAmount: totalAmount,
+              Status: "Pending"
+            }
+          })
+        });
+
+        if (!billRes.ok) throw new Error('Failed to create bill');
 
         billOutput.innerHTML = `
+          <div class="alert alert-success">Bill generated successfully!</div>
           <div class="bill-details">
-            <h5>Bill Summary</h5>
-            <p><strong>Total Amount:</strong> ₹${totalAmount}</p>
+            <h5>Bill Details</h5>
+            <p><strong>Guest:</strong> ${guest.Name || 'Unnamed'} (${guest.GuestID})</p>
+            <p><strong>Room:</strong> ${guest.Room}</p>
+            <p><strong>Period:</strong> ${checkinDate.toLocaleDateString()} to ${checkoutDate.toLocaleDateString()}</p>
+            <p><strong>Nights:</strong> ${nightsStayed} × ₹${roomRate} = ₹${subtotal}</p>
+            <p><strong>Taxes:</strong> ₹${taxes}</p>
+            <hr>
+            <h5>Total Due: ₹${totalAmount}</h5>
           </div>
         `;
       } catch (error) {
         billOutput.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
       } finally {
+        btn.disabled = false;
         spinner.style.display = 'none';
       }
     });
