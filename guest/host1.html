@@ -247,7 +247,7 @@
       
       try {
         // Get guest details
-        const guestRes = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${GUESTS_TABLE}/${guestId}`, {
+        const guestRes = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${GUESTS_TABLE}/${id}`, {
           headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` }
         });
         
