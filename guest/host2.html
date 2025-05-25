@@ -192,7 +192,8 @@
       try {
         console.log("Fetching orders for guest:", guestID);
         const response = await fetch(
-          `https://api.airtable.com/v0/${BASE_ID}/${ORDERS_TABLE}?filterByFormula=({guestID} = '${guestID}')`, 
+          // replaced guestID with Guest in filterByFormula=({Guest}
+          `https://api.airtable.com/v0/${BASE_ID}/${ORDERS_TABLE}?filterByFormula=({Guest} = '${guestID}')`, 
           {
             headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` }
           }
