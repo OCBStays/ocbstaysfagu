@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Welcome to OCB Stays</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY"></script>
   <style>
     body {
@@ -33,6 +34,7 @@
       height: 300px;
       width: 100%;
       margin-bottom: 1.5rem;
+      border-radius: 8px;
     }
     .contact-icons {
       display: inline-flex;
@@ -42,13 +44,32 @@
     .card-container {
       display: flex;
       gap: 1rem;
+      flex-wrap: wrap;
     }
     .card {
       flex: 1;
+      min-width: 250px;
       background-color: #fff;
       border-radius: 12px;
       box-shadow: 0 4px 8px rgba(0,0,0,0.05);
       padding: 1.5rem;
+    }
+    .contact-btn {
+      background: none;
+      border: none;
+      color: #6c757d;
+      font-size: 1.2rem;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+    .contact-btn:hover {
+      color: #2c3e50;
+    }
+    .call-btn:hover {
+      color: #0d6efd;
+    }
+    .whatsapp-btn:hover {
+      color: #25D366;
     }
   </style>
 </head>
@@ -67,9 +88,18 @@
   <!-- Contact Section -->
   <div class="section">
     <h2>Contact Your Hosts</h2>
-    <p>Host: Prateek <span class="contact-icons"><button class="btn btn-primary btn-sm" onclick="makeCall('+919066905581')">📞</button><button class="btn btn-success btn-sm" onclick="openWhatsApp('+919066905581')">💬</button></span></p>
-    <p>Co-Host: Neev <span class="contact-icons"><button class="btn btn-primary btn-sm" onclick="makeCall('+919066905581')">📞</button><button class="btn btn-success btn-sm" onclick="openWhatsApp('+919066905581')">💬</button></span></p>
-    <p>Co-Host: Gaurav <span class="contact-icons"><button class="btn btn-primary btn-sm" onclick="makeCall('+919066905581')">📞</button><button class="btn btn-success btn-sm" onclick="openWhatsApp('+919066905581')">💬</button></span></p>
+    <p>Host: Prateek <span class="contact-icons">
+      <button class="contact-btn call-btn" onclick="makeCall('+919066905581')"><i class="fas fa-phone"></i></button>
+      <button class="contact-btn whatsapp-btn" onclick="openWhatsApp('+919066905581')"><i class="fab fa-whatsapp"></i></button>
+    </span></p>
+    <p>Co-Host: Neev <span class="contact-icons">
+      <button class="contact-btn call-btn" onclick="makeCall('+919066905581')"><i class="fas fa-phone"></i></button>
+      <button class="contact-btn whatsapp-btn" onclick="openWhatsApp('+919066905581')"><i class="fab fa-whatsapp"></i></button>
+    </span></p>
+    <p>Co-Host: Gaurav <span class="contact-icons">
+      <button class="contact-btn call-btn" onclick="makeCall('+919066905581')"><i class="fas fa-phone"></i></button>
+      <button class="contact-btn whatsapp-btn" onclick="openWhatsApp('+919066905581')"><i class="fab fa-whatsapp"></i></button>
+    </span></p>
   </div>
 
   <!-- Property Location Section -->
@@ -95,7 +125,7 @@
     </div>
     <div class="card">
       <h2>Food & Café Menu</h2>
-      <a href="menu.html" id="menuLink" class="btn btn-primary">View Menu</a>
+      <button id="menuButton" class="btn btn-outline-primary">View Menu</button>
     </div>
   </div>
 
@@ -113,38 +143,61 @@
 
     const params = new URLSearchParams(window.location.search);
     const guestID = params.get('guestID');
+    const room = params.get('room');
 
-    if (!guestID) {
-      alert('Invalid guest link!');
-      document.body.innerHTML = '<h1>Invalid Link</h1>';
-      return;
+    if (!guestID || !room) {
+      alert('Invalid guest link! Missing guestID or room parameter.');
+      document.body.innerHTML = '<h1>Invalid Link</h1><p>Please use the correct link provided by your host.</p>';
+      throw new Error('Missing required parameters');
     }
 
-    fetch(`https://api.airtable.com/v0/${BASE_ID}/${GUESTS_TABLE}?filterByFormula={guestID}='${guestID}'`, {
-      headers: {
-        Authorization: `Bearer ${AIRTABLE_TOKEN}`,
-      },
-    })
-      .then(response => response.json())
-      .then(data => {
+    async function fetchGuestData() {
+      try {
+        const response = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${GUESTS_TABLE}?filterByFormula=AND({guestID}='${guestID}',{room}='${room}',{status}='Active')`, {
+          headers: {
+            Authorization: `Bearer ${AIRTABLE_TOKEN}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
         const guest = data.records[0]?.fields;
 
-        if (!guest || guest.status === 'Checked Out') {
-          alert('This link is no longer valid.');
-          document.body.innerHTML = '<h1>Checked Out</h1>';
+        if (!guest) {
+          alert('Guest not found or no longer active. Please contact your host.');
+          document.body.innerHTML = `
+            <h1>Access Denied</h1>
+            <p>Your stay is not active or the link is invalid.</p>
+            <p>Please contact your host if you believe this is an error.</p>
+          `;
           return;
         }
 
+        // Update the page with guest data
         document.getElementById('guestName').textContent = guest.name;
         document.getElementById('guestID').textContent = guest.guestID;
         document.getElementById('room').textContent = guest.room;
         document.getElementById('checkin').textContent = new Date(guest.checkin).toLocaleString();
         document.getElementById('welcomeMessage').textContent = `Hello, ${guest.name}! Welcome to OCB Stays 🌲`;
 
-        const menuLink = document.getElementById('menuLink');
-        menuLink.href = `menu.html?guestID=${guest.guestID}&room=${encodeURIComponent(guest.room)}`;
-      })
-      .catch(error => console.error('Error fetching guest data:', error));
+        // Set up menu button with guest parameters
+        const menuButton = document.getElementById('menuButton');
+        menuButton.onclick = () => {
+          window.location.href = `menu.html?guestID=${guest.guestID}&room=${encodeURIComponent(guest.room)}`;
+        };
+
+      } catch (error) {
+        console.error('Error fetching guest data:', error);
+        document.body.innerHTML = `
+          <h1>Error Loading Data</h1>
+          <p>We couldn't load your stay information. Please try again later.</p>
+          <p>If the problem persists, contact your host.</p>
+        `;
+      }
+    }
 
     function makeCall(phone) {
       window.location.href = `tel:${phone}`;
@@ -175,7 +228,11 @@
       });
     }
 
-    window.onload = initMap;
+    // Initialize the page
+    document.addEventListener('DOMContentLoaded', () => {
+      fetchGuestData();
+      initMap();
+    });
   </script>
 </body>
 </html>
