@@ -314,7 +314,7 @@ async function createFoodBill(guestRecordId, guestDetails, orders) {
           throw new Error(errorData.error?.message || 'Failed to register guest');
         }
         
-        const link = `${window.location.origin}/index.html?guestID=${guestID}&room=${encodeURIComponent(room)}`;
+        const link = `${window.location.origin}ocbstaysfagu/guest/index.html?guestID=${guestID}&room=${encodeURIComponent(room)}`;
         document.getElementById('linkOutput').innerHTML = `
           <div class="alert alert-success">Guest registered successfully!</div>
           <strong>Guest Link:</strong><br>
