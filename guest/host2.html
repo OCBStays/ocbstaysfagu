@@ -369,53 +369,44 @@ async function createFoodBill(guestRecordId, guestDetails, orders) {
         const guestData = await guestRes.json();
         const guestDetails = guestData.fields;
         
-        // Get all food orders for this guest
-        const orders = await getGuestOrders(guestID);
-        console.log("Raw orders data:", orders); 
-        
-        if (orders.length === 0) {
-          billOutput.innerHTML = '<div class="alert alert-warning">No food orders found for this guest</div>';
-          return;
-        }
-        
     // Get all food orders for this guest
-const orders = await getGuestOrders(guestID);
-
-if (orders.length === 0) {
-  billOutput.innerHTML = '<div class="alert alert-warning">No food orders found for this guest</div>';
-  return;
-}
-
-// Create food bill
-const billResult = await createFoodBill(recordId, guestDetails, orders);
-
-// Display food bill
-let ordersHTML = '';
-billResult.orders.forEach(order => {
-  ordersHTML += `
-    <div class="order-item">
-      <span>${order.item}</span>
-      <span>₹${order.amount.toFixed(2)}</span>
-    </div>
-  `;
-});
-
-// Add the TOTAL after all items
-ordersHTML += `
-  <div class="order-total">
-    <span>Total:</span>
-    <span>₹${billResult.totalAmount.toFixed(2)}</span>
-  </div>
-`;
-
-billOutput.innerHTML = `
-  <div class="alert alert-success">Food bill generated successfully!</div>
-  <div class="bill-details">
-    <h5>Guest: ${billResult.guest.name || 'Unnamed'} (${billResult.guest.guestID})</h5>
-    <h6>Order Items:</h6>
-    ${ordersHTML}
-  </div>
-`;
+    const orders = await getGuestOrders(guestID);
+    
+    if (orders.length === 0) {
+      billOutput.innerHTML = '<div class="alert alert-warning">No food orders found for this guest</div>';
+      return;
+    }
+    
+    // Create food bill
+    const billResult = await createFoodBill(recordId, guestDetails, orders);
+    
+    // Display food bill
+    let ordersHTML = '';
+    billResult.orders.forEach(order => {
+      ordersHTML += `
+        <div class="order-item">
+          <span>${order.item}</span>
+          <span>₹${order.amount.toFixed(2)}</span>
+        </div>
+      `;
+    });
+    
+    // Add the TOTAL after all items
+    ordersHTML += `
+      <div class="order-total">
+        <span>Total:</span>
+        <span>₹${billResult.totalAmount.toFixed(2)}</span>
+      </div>
+    `;
+    
+    billOutput.innerHTML = `
+      <div class="alert alert-success">Food bill generated successfully!</div>
+      <div class="bill-details">
+        <h5>Guest: ${billResult.guest.name || 'Unnamed'} (${billResult.guest.guestID})</h5>
+        <h6>Order Items:</h6>
+        ${ordersHTML}
+      </div>
+    `;
         
       } catch (error) {
         console.error("Food bill generation error:", error);
