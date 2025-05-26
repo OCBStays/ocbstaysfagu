@@ -6,7 +6,6 @@
   <title>Welcome to OCB Stays</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY"></script>
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
@@ -28,12 +27,6 @@
       margin-bottom: 1.5rem;
     }
     .btn {
-      border-radius: 8px;
-    }
-    #map {
-      height: 300px;
-      width: 100%;
-      margin-bottom: 1.5rem;
       border-radius: 8px;
     }
     .contact-icons {
@@ -111,9 +104,69 @@
     .wifi-connect-btn {
       margin-top: 1rem;
     }
+    .location-timeline {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 2rem 0;
+      position: relative;
+    }
+    .location-dot {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background-color: #2c3e50;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      z-index: 2;
+      transition: all 0.3s;
+    }
+    .location-dot:hover {
+      transform: scale(1.2);
+      background-color: #0d6efd;
+    }
+    .timeline-line {
+      position: absolute;
+      height: 2px;
+      background-color: #2c3e50;
+      width: 100%;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 1;
+    }
+    .location-label {
+      position: absolute;
+      top: 100%;
+      margin-top: 8px;
+      text-align: center;
+      width: 100px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.9rem;
+    }
+    .location-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+    .location-actions {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
     @media (max-width: 576px) {
       .guest-details {
         grid-template-columns: 1fr;
+      }
+      .location-label {
+        font-size: 0.8rem;
+        width: 80px;
       }
     }
   </style>
@@ -174,7 +227,26 @@
   <!-- Property Location Section -->
   <div class="section">
     <h2>Property Location</h2>
-    <div id="map"></div>
+    <div class="location-timeline">
+      <div class="timeline-line"></div>
+      <div class="location-container">
+        <div class="location-dot" onclick="openLocation('cheog')">1</div>
+        <div class="location-label">Cheog Market</div>
+      </div>
+      <div class="location-container">
+        <div class="location-dot" onclick="openLocation('temple')">2</div>
+        <div class="location-label">Banga Pani Temple</div>
+      </div>
+      <div class="location-container">
+        <div class="location-dot" onclick="openLocation('property')">3</div>
+        <div class="location-label">OCB Stays</div>
+      </div>
+    </div>
+    <div class="location-actions">
+      <button class="btn btn-outline-primary" onclick="openAllLocations()">
+        <i class="fas fa-map-marked-alt"></i> View All Locations
+      </button>
+    </div>
     <p><strong>Address:</strong> OCB Stays, Bhani, Himachal Pradesh - 171209</p>
     <p>
       <strong>Landmarks:</strong>
@@ -234,6 +306,13 @@
     const ORDERS_TABLE = 'Orders';
     const BILLS_TABLE = 'Bills';
 
+    // Location coordinates
+    const LOCATIONS = {
+      cheog: { lat: 31.0562, lng: 77.1766, title: "Cheog Market (Last Market Stop)" },
+      temple: { lat: 31.0372, lng: 77.1538, title: "Banga Pani Temple (Meet Gaurav)" },
+      property: { lat: 31.0201, lng: 77.1412, title: "OCB Stays" }
+    };
+
     const params = new URLSearchParams(window.location.search);
     const guestID = params.get('guestID');
     const room = params.get('room');
@@ -244,6 +323,33 @@
       alert('Invalid guest link! Missing guestID or room parameter.');
       document.body.innerHTML = '<h1>Invalid Link</h1><p>Please use the correct link provided by your host.</p>';
       throw new Error('Missing required parameters');
+    }
+
+    // Open individual location in maps
+    function openLocation(locationKey) {
+      const loc = LOCATIONS[locationKey];
+      if (!loc) return;
+      
+      // Try to detect iOS
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      
+      if (isIOS) {
+        // Apple Maps link
+        window.open(`http://maps.apple.com/?q=${loc.lat},${loc.lng}&t=m`);
+      } else {
+        // Google Maps link
+        window.open(`https://www.google.com/maps/search/?api=1&query=${loc.lat},${loc.lng}`);
+      }
+    }
+
+    // Open all locations in a single map
+    function openAllLocations() {
+      // Create a Google Maps URL with all locations as waypoints
+      const waypoints = Object.values(LOCATIONS)
+        .map(loc => `${loc.lat},${loc.lng}`)
+        .join('|');
+      
+      window.open(`https://www.google.com/maps/dir/?api=1&travelmode=driving&waypoints=${waypoints}`);
     }
 
     async function fetchGuestData() {
@@ -608,31 +714,9 @@
       window.location.href = `https://wa.me/${phone.replace('+', '')}`;
     }
 
-    function initMap() {
-      const locations = [
-        { title: 'Cheog', lat: 31.0562, lng: 77.1766 },
-        { title: 'Banga Pani Temple', lat: 31.0372, lng: 77.1538 },
-        { title: 'OCB Stays', lat: 31.0201, lng: 77.1412 },
-      ];
-
-      const map = new google.maps.Map(document.getElementById('map'), {
-        center: locations[1],
-        zoom: 12,
-      });
-
-      locations.forEach(location => {
-        new google.maps.Marker({
-          position: { lat: location.lat, lng: location.lng },
-          map,
-          title: location.title,
-        });
-      });
-    }
-
     // Initialize the page
     document.addEventListener('DOMContentLoaded', () => {
       fetchGuestData();
-      initMap();
       
       // Set up WiFi connect button
       document.getElementById('connectWifiBtn').addEventListener('click', connectToWifi);
