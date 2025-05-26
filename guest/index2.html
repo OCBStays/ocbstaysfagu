@@ -374,6 +374,9 @@
   <div class="section" id="stayDetails">
     <div class="collapsible-header" onclick="toggleCollapse('guestDetailsCollapse')">
       <h2><img src="../img/stay_details_icon.png" alt="Stay Details" width="35" height="35"> Your Stay Details</h2>
+      <button class="btn btn-outline-primary rules-btn" data-bs-toggle="modal" data-bs-target="#rulesModal">
+        House Rules
+      </button>
       <i class="fas fa-chevron-down toggle-icon" id="guestDetailsToggle"></i>
     </div>
     <div class="collapsible-content" id="guestDetailsCollapse">
@@ -384,17 +387,6 @@
         <p><strong>Check-In:</strong> <span id="checkin">Loading...</span> (Check-out: 11:00 AM)</p>
       </div>
     </div>
-  </div>
-
-  <!-- Rules Button -->
-  <div class="section">
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-      <h2><img src="../img/rules_icon.png" alt="Rules" width="35" height="35"> House Rules</h2>
-      <button class="btn btn-outline-primary rules-btn" data-bs-toggle="modal" data-bs-target="#rulesModal">
-        View Rules
-      </button>
-    </div>
-    <p>Please review the house rules for a pleasant stay.</p>
   </div>
 
   <!-- Property Location Section -->
