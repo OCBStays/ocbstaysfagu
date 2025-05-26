@@ -18,6 +18,9 @@
     }
     h1, h2 {
       color: #2c3e50;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
     }
     .section {
       background-color: #fff;
@@ -112,22 +115,14 @@
       position: relative;
     }
     .location-dot {
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      background-color: #2c3e50;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      color: white;
-      font-weight: bold;
+      width: 30px;
+      height: 30px;
       cursor: pointer;
       z-index: 2;
       transition: all 0.3s;
     }
     .location-dot:hover {
       transform: scale(1.2);
-      background-color: #0d6efd;
     }
     .timeline-line {
       position: absolute;
@@ -158,7 +153,21 @@
       display: flex;
       justify-content: center;
       gap: 1rem;
-      margin-top: 1rem;
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+    }
+    .contact-person {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+    .contact-person-name {
+      flex-grow: 1;
+    }
+    .contact-person-buttons {
+      display: flex;
+      gap: 0.5rem;
     }
     @media (max-width: 576px) {
       .guest-details {
@@ -168,15 +177,18 @@
         font-size: 0.8rem;
         width: 80px;
       }
+      .card {
+        min-width: 100%;
+      }
     }
   </style>
 </head>
 <body>
-  <h1 id="welcomeMessage">Welcome to OCB Stays 🌲</h1>
+  <h1 id="welcomeMessage"><img src="img/welcome_icon.png" alt="Welcome" width="30" height="30"> Welcome to OCB Stays 🌲</h1>
 
   <!-- Guest Details Section -->
   <div class="section" id="guestDetails">
-    <h2>Your Stay Details</h2>
+    <h2><img src="img/stay_details_icon.png" alt="Stay Details" width="25" height="25"> Your Stay Details</h2>
     <div class="guest-details">
       <div>
         <p><strong>Name:</strong> <span id="guestName">Loading...</span></p>
@@ -189,71 +201,34 @@
     </div>
   </div>
 
-  <!-- Contact and WiFi Section -->
-  <div class="card-container">
-    <div class="card">
-      <h2>Team OCB</h2>
-      <p>Host: Prateek <span class="contact-icons">
-        <button class="contact-btn call-btn" onclick="makeCall('+918708480965')"><i class="fas fa-phone"></i></button>
-        <button class="contact-btn whatsapp-btn" onclick="openWhatsApp('+918708480965')"><i class="fab fa-whatsapp"></i></button>
-      </span></p>
-      <p>Co-Host: Neev <span class="contact-icons">
-        <button class="contact-btn call-btn" onclick="makeCall('+918553200001')"><i class="fas fa-phone"></i></button>
-        <button class="contact-btn whatsapp-btn" onclick="openWhatsApp('+918553200001')"><i class="fab fa-whatsapp"></i></button>
-      </span></p>
-      <p>Co-Host: Gaurav <span class="contact-icons">
-        <button class="contact-btn call-btn" onclick="makeCall('+917018148652')"><i class="fas fa-phone"></i></button>
-        <button class="contact-btn whatsapp-btn" onclick="openWhatsApp('+917018148652')"><i class="fab fa-whatsapp"></i></button>
-      </span></p>
-      <p>Chef: Deepak <span class="contact-icons">
-        <button class="contact-btn call-btn" onclick="makeCall('+919519437416')"><i class="fas fa-phone"></i></button>
-        <button class="contact-btn whatsapp-btn" onclick="openWhatsApp('+9179519437416')"><i class="fab fa-whatsapp"></i></button>
-      </span></p>
-      <p>Caretaker: Prakash <span class="contact-icons">
-        <button class="contact-btn call-btn" onclick="makeCall('+918091296204')"><i class="fas fa-phone"></i></button>
-        <button class="contact-btn whatsapp-btn" onclick="openWhatsApp('+918091296204')"><i class="fab fa-whatsapp"></i></button>
-      </span></p>
-    </div>
-    <div class="card">
-      <h2>Wi-Fi Details</h2>
-      <p><strong>Network:</strong> OCB Stays</p>
-      <p><strong>Password:</strong> CozyBalcony!</p>
-      <button id="connectWifiBtn" class="btn btn-outline-primary wifi-connect-btn">
-        <i class="fas fa-wifi"></i> Connect Automatically
-      </button>
-    </div>
-  </div>
-
   <!-- Property Location Section -->
   <div class="section">
-    <h2>Property Location</h2>
+    <h2><img src="img/location_icon.png" alt="Location" width="25" height="25"> Property Location</h2>
     <div class="location-timeline">
       <div class="timeline-line"></div>
       <div class="location-container">
-        <div class="location-dot" onclick="openLocation('cheog')"><img src="location_tag.png" alt="tag1" width="30" height="30"></div>
+        <img src="img/location_tag.png" alt="Cheog Market" class="location-dot" onclick="openLocation('cheog')">
         <div class="location-label">Cheog Market
-        <label for="Cheog">(Last market for cosmetibles)</label>
+          <div>(Last market for cosmetibles)</div>
         </div>
       </div>
       <div class="location-container">
-        <div class="location-dot" onclick="openLocation('temple')"><img src="location_tag.png" alt="tag2" width="30" height="30"></div>
+        <img src="img/location_tag.png" alt="Banga Pani Temple" class="location-dot" onclick="openLocation('temple')">
         <div class="location-label">Banga Pani Temple
-      <p><span class="contact-icons">
-        <label for="Temple">(Meet Gaurav here)</label>
-        <br></br>
-        <button class="contact-btn call-btn" onclick="makeCall('+917018148652')"><i class="fas fa-phone"></i></button>
-        <button class="contact-btn whatsapp-btn" onclick="openWhatsApp('+917018148652')"><i class="fab fa-whatsapp"></i></button>
-      </span></p>
+          <div>(Meet Gaurav here)</div>
+          <div class="contact-icons">
+            <button class="contact-btn call-btn" onclick="makeCall('+917018148652')"><i class="fas fa-phone"></i></button>
+            <button class="contact-btn whatsapp-btn" onclick="openWhatsApp('+917018148652')"><i class="fab fa-whatsapp"></i></button>
+          </div>
         </div>
       </div>
       <div class="location-container">
-        <div class="location-dot" onclick="openLocation('property')"><img src="location_tag.png" alt="tag3" width="30" height="30"></div>
+        <img src="img/location_tag.png" alt="Cottage" class="location-dot" onclick="openLocation('property')">
         <div class="location-label">Cottage
-        <label for="Cottage">(OCB Stays)</label>
+          <div>(OCB Stays)</div>
         </div>
       </div>
     </div>
-    <br></br>
     <div class="location-actions">
       <button class="btn btn-outline-primary" onclick="openAllLocations()">
         <i class="fas fa-map-marked-alt"></i> View All Locations
@@ -269,9 +244,59 @@
     </p>
   </div>
 
+  <!-- Contact and WiFi Section -->
+  <div class="card-container">
+    <div class="card">
+      <h2><img src="img/team_icon.png" alt="Team" width="25" height="25"> Team OCB</h2>
+      <div class="contact-person">
+        <div class="contact-person-name">Host: Prateek</div>
+        <div class="contact-person-buttons">
+          <button class="contact-btn call-btn" onclick="makeCall('+918708480965')"><i class="fas fa-phone"></i></button>
+          <button class="contact-btn whatsapp-btn" onclick="openWhatsApp('+918708480965')"><i class="fab fa-whatsapp"></i></button>
+        </div>
+      </div>
+      <div class="contact-person">
+        <div class="contact-person-name">Co-Host: Neev</div>
+        <div class="contact-person-buttons">
+          <button class="contact-btn call-btn" onclick="makeCall('+918553200001')"><i class="fas fa-phone"></i></button>
+          <button class="contact-btn whatsapp-btn" onclick="openWhatsApp('+918553200001')"><i class="fab fa-whatsapp"></i></button>
+        </div>
+      </div>
+      <div class="contact-person">
+        <div class="contact-person-name">Co-Host: Gaurav</div>
+        <div class="contact-person-buttons">
+          <button class="contact-btn call-btn" onclick="makeCall('+917018148652')"><i class="fas fa-phone"></i></button>
+          <button class="contact-btn whatsapp-btn" onclick="openWhatsApp('+917018148652')"><i class="fab fa-whatsapp"></i></button>
+        </div>
+      </div>
+      <div class="contact-person">
+        <div class="contact-person-name">Chef: Deepak</div>
+        <div class="contact-person-buttons">
+          <button class="contact-btn call-btn" onclick="makeCall('+919519437416')"><i class="fas fa-phone"></i></button>
+          <button class="contact-btn whatsapp-btn" onclick="openWhatsApp('+9179519437416')"><i class="fab fa-whatsapp"></i></button>
+        </div>
+      </div>
+      <div class="contact-person">
+        <div class="contact-person-name">Caretaker: Prakash</div>
+        <div class="contact-person-buttons">
+          <button class="contact-btn call-btn" onclick="makeCall('+918091296204')"><i class="fas fa-phone"></i></button>
+          <button class="contact-btn whatsapp-btn" onclick="openWhatsApp('+918091296204')"><i class="fab fa-whatsapp"></i></button>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h2><img src="img/wifi_icon.png" alt="WiFi" width="25" height="25"> Wi-Fi Details</h2>
+      <p><strong>Network:</strong> OCB Stays</p>
+      <p><strong>Password:</strong> CozyBalcony!</p>
+      <button id="connectWifiBtn" class="btn btn-outline-primary wifi-connect-btn">
+        <i class="fas fa-wifi"></i> Connect Automatically
+      </button>
+    </div>
+  </div>
+
   <!-- Food Menu and Orders Section -->
   <div class="section">
-    <h2>Food & Café</h2>
+    <h2><img src="img/food_icon.png" alt="Food" width="25" height="25"> Food & Café</h2>
     <button id="menuButton" class="btn btn-primary mb-3">View Menu & Place Order</button>
     
     <div id="ordersContainer">
@@ -284,7 +309,7 @@
 
   <!-- Checkout Info Section -->
   <div class="section">
-    <h2>Check-Out Information</h2>
+    <h2><img src="img/checkout_icon.png" alt="Checkout" width="25" height="25"> Check-Out Information</h2>
     <p><strong>Check-Out Time:</strong> 11:00 AM</p>
     <div id="billDetails">
       <p>Loading bill information...</p>
