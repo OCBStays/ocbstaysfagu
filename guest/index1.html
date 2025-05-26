@@ -914,3 +914,20 @@
       
       // Highlight the current section in footer when scrolling
       window.addEventListener('scroll', function() {
+        const sections = ['stayDetails', 'houseRules', 'propertyLocation', 'teamWifi', 'foodOrders', 'checkoutInfo'];
+        const scrollPosition = window.scrollY + 100;
+        
+        for (const section of sections) {
+          const element = document.getElementById(section);
+          if (element && element.offsetTop <= scrollPosition && 
+              element.offsetTop + element.offsetHeight > scrollPosition) {
+            navTabs.forEach(tab => tab.classList.remove('active'));
+            document.querySelector(`.nav-tab[href="#${section}"]`).classList.add('active');
+            break;
+          }
+        }
+      });
+    });
+  </script>
+</body>
+</html>
