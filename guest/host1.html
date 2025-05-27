@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>OCB Stays – Host Dashboard</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
@@ -91,6 +92,14 @@
       flex-wrap: wrap;
       margin-top: 1rem;
     }
+    .whatsapp-btn {
+      background-color: #25D366;
+      color: white;
+    }
+    .whatsapp-btn:hover {
+      background-color: #128C7E;
+      color: white;
+    }
   </style>
 </head>
 <body>
@@ -114,6 +123,10 @@
         <input type="date" class="form-control" id="checkin" required>
       </div>
       <div class="mb-3">
+        <label for="checkout" class="form-label">Check-out Date</label>
+        <input type="date" class="form-control" id="checkout" required>
+      </div>
+      <div class="mb-3">
         <label for="name" class="form-label">Name</label>
         <input type="text" class="form-control" id="name" required>
       </div>
@@ -121,14 +134,22 @@
         <label for="mobile" class="form-label">Mobile Number</label>
         <input type="tel" class="form-control" id="mobile" required>
       </div>
+      <div class="mb-3">
+        <label for="advanceAmount" class="form-label">Advance Payment (₹)</label>
+        <input type="number" class="form-control" id="advanceAmount" required>
+      </div>
       <div class="button-group">
         <button type="submit" class="btn btn-primary" id="registerBtn">
           Generate Guest Link
           <span id="registerSpinner" class="loading-spinner" style="display: none;"></span>
         </button>
         <button type="button" class="btn btn-success" id="sendEmailBtn" disabled>
-          Send Email
+          <i class="fas fa-envelope"></i> Email
           <span id="emailSpinner" class="loading-spinner" style="display: none;"></span>
+        </button>
+        <button type="button" class="btn whatsapp-btn" id="sendWhatsappBtn" disabled>
+          <i class="fab fa-whatsapp"></i> WhatsApp
+          <span id="whatsappSpinner" class="loading-spinner" style="display: none;"></span>
         </button>
       </div>
     </form>
@@ -190,6 +211,11 @@
       return id;
     }
 
+    function formatDate(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
     async function loadActiveGuests() {
       const guestSelect = document.getElementById('guestSelect');
       guestSelect.disabled = true;
@@ -215,6 +241,10 @@
           option.dataset.guestId = guest.guestID;
           option.dataset.room = guest.room;
           option.dataset.name = guest.name;
+          option.dataset.checkin = guest.checkin;
+          option.dataset.checkout = guest.checkout;
+          option.dataset.advanceAmount = guest.advanceAmount;
+          option.dataset.homeLink = guest.homeLink;
           option.textContent = `${guest.name || 'Unnamed'} (${guest.guestID}) - ${guest.room}`;
           guestSelect.appendChild(option);
         });
@@ -318,9 +348,12 @@
       
       const room = document.getElementById('room').value;
       const checkin = document.getElementById('checkin').value;
+      const checkout = document.getElementById('checkout').value;
       const name = document.getElementById('name').value;
       const mobile = document.getElementById('mobile').value;
+      const advanceAmount = document.getElementById('advanceAmount').value;
       const guestID = generateGuestID();
+      const homeLink = `https://ocbstays.github.io/ocbstaysfagu/guest/index.html?guestID=${guestID}&room=${encodeURIComponent(room)}`;
       
       registerBtn.disabled = true;
       spinner.style.display = 'inline-block';
@@ -337,9 +370,12 @@
               guestID: guestID,
               room: room,
               checkin: checkin,
+              checkout: checkout,
               name: name,
               mobile: mobile,
-              status: "Active"
+              advanceAmount: parseFloat(advanceAmount),
+              status: "Active",
+              homeLink: homeLink
             }
           })
         });
@@ -349,7 +385,6 @@
           throw new Error(errorData.error?.message || 'Failed to register guest');
         }
         
-        const link = `https://ocbstays.github.io/ocbstaysfagu/guest/index.html?guestID=${guestID}&room=${encodeURIComponent(room)}`;
         const menuLink = `https://ocbstays.github.io/ocbstaysfagu/guest/menu.html?guestID=${guestID}&room=${encodeURIComponent(room)}`;
         
         document.getElementById('linkOutput').innerHTML = `
@@ -357,7 +392,7 @@
           <div class="guest-link-container">
             <h5>Guest Links:</h5>
             <div class="input-group mb-2">
-              <input type="text" class="form-control" id="guestLink" value="${link}" readonly>
+              <input type="text" class="form-control" id="guestLink" value="${homeLink}" readonly>
               <button class="btn btn-outline-secondary" type="button" onclick="copyToClipboard('guestLink')">📋 Copy</button>
             </div>
             <div class="input-group">
@@ -367,26 +402,42 @@
           </div>
         `;
         
-        // Enable send email button
+        // Enable send email and WhatsApp buttons
         document.getElementById('sendEmailBtn').disabled = false;
+        document.getElementById('sendWhatsappBtn').disabled = false;
+        
         document.getElementById('sendEmailBtn').onclick = function() {
-          const checkinDate = new Date(checkin);
-          const formattedDate = checkinDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
           const emailBody = `Hi ${name},
-Greetings!
-
 Thank you for choosing OCB Stays for your upcoming trip to Fagu. 
 
-Your booking for ${room} for ${formattedDate} is confirmed with advance payment of Rs 16K (non-refundable), balance 16K to be transferred on arrival.
+Your booking for ${room} for ${formatDate(checkin)} is confirmed with advance payment of ₹${advanceAmount} (non-refundable), balance 16K to be transferred on arrival.
 
-You can access your guest portal here: ${link}
+Check-in : ${formatDate(checkin)} 1pm || Check Out: ${formatDate(checkout)} 11am
 
-Looking forward to hosting you!
+Please follow the below link for CheckIn instructions and other important info:
+${homeLink}
 
-Best regards,
-OCB Stays Team`;
+Please share your Id's for the record purpose & feel free to get in touch anytime in case you have any queries or need any assistance. 
+
+Hope you have a great time !! 
+
+Thanks, 
+Prateek & Ishika 
+OCB Stays, Curated with Love..`;
           
           window.open(`mailto:?subject=OCB Stays Booking Confirmation&body=${encodeURIComponent(emailBody)}`);
+        };
+        
+        document.getElementById('sendWhatsappBtn').onclick = function() {
+          const whatsappMessage = `Hi ${name},
+Thank you for choosing OCB Stays for your upcoming trip to Fagu.
+Please follow the below link:
+${homeLink}
+
+Cheers,
+Team OCB Stays`;
+          
+          window.open(`https://wa.me/?text=${encodeURIComponent(whatsappMessage)}`);
         };
         
         await loadActiveGuests();
@@ -409,10 +460,10 @@ OCB Stays Team`;
       if (this.value) {
         const guestID = selectedOption.dataset.guestId;
         const room = selectedOption.dataset.room;
-        const guestLink = `https://ocbstays.github.io/ocbstaysfagu/guest/index.html?guestID=${guestID}&room=${encodeURIComponent(room)}`;
+        const homeLink = selectedOption.dataset.homeLink;
         const menuLink = `https://ocbstays.github.io/ocbstaysfagu/guest/menu.html?guestID=${guestID}&room=${encodeURIComponent(room)}`;
         
-        document.getElementById('selectedGuestLink').value = guestLink;
+        document.getElementById('selectedGuestLink').value = homeLink;
         document.getElementById('selectedGuestMenuLink').value = menuLink;
         guestInfoDiv.style.display = 'block';
       } else {
