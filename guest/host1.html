@@ -80,20 +80,8 @@
       background-color: #f0f0f0;
       border-radius: 4px;
     }
-    .guest-link-container {
-      margin-top: 1rem;
-      padding: 1rem;
-      background-color: #f8f9fa;
-      border-radius: 8px;
-    }
-    .button-group {
-      display: flex;
-      gap: 0.5rem;
-      flex-wrap: wrap;
-      margin-top: 1rem;
-    }
     .action-icon {
-      font-size: 1.2rem;
+      font-size: 1rem;
       padding: 0.5rem;
       border-radius: 50%;
       width: 2.5rem;
@@ -115,16 +103,51 @@
       background-color: #6c757d;
       color: white;
     }
+    .food-icon {
+      background-color: #ff6b6b;
+      color: white;
+    }
+    .bill-icon {
+      background-color: #6c757d;
+      color: white;
+    }
+    .checkout-icon {
+      background-color: #dc3545;
+      color: white;
+    }
+    .contact-icon-container {
+      position: relative;
+    }
     .contact-icon {
       position: absolute;
       right: 10px;
-      top: 50%;
-      transform: translateY(-50%);
+      top: 32px;
       cursor: pointer;
       color: #6c757d;
+      font-size: 1.2rem;
+      padding: 8px;
+      z-index: 10;
     }
-    .input-group-contact {
-      position: relative;
+    .compact-btn {
+      padding: 0.375rem 0.75rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .compact-btn i {
+      font-size: 1rem;
+    }
+    .action-buttons {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-top: 1rem;
+    }
+    .guest-links {
+      margin-top: 1rem;
+    }
+    .guest-links .input-group {
+      margin-bottom: 0.5rem;
     }
   </style>
 </head>
@@ -153,7 +176,7 @@
         <label for="name" class="form-label">Name</label>
         <input type="text" class="form-control" id="name" required>
       </div>
-      <div class="mb-3 input-group-contact">
+      <div class="mb-3 contact-icon-container">
         <label for="mobile" class="form-label">Mobile Number</label>
         <input type="tel" class="form-control" id="mobile" required>
         <i class="fas fa-address-book contact-icon" id="openContacts"></i>
@@ -166,9 +189,9 @@
         <label for="balanceAmount" class="form-label">Balance Amount (₹)</label>
         <input type="number" class="form-control" id="balanceAmount">
       </div>
-      <div class="button-group">
+      <div class="action-buttons">
         <button type="submit" class="btn btn-primary" id="registerBtn">
-          Generate Guest Link
+          Register
           <span id="registerSpinner" class="loading-spinner" style="display: none;"></span>
         </button>
         <div class="action-icon email-icon" id="sendEmailBtn" disabled title="Send Email">
@@ -179,7 +202,7 @@
         </div>
       </div>
     </form>
-    <div id="linkOutput" class="mt-3 link-output"></div>
+    <div id="linkOutput" class="mt-3"></div>
   </div>
 
   <!-- Billing and Checkout Section -->
@@ -193,7 +216,7 @@
     </div>
     
     <div id="selectedGuestInfo" style="display: none;">
-      <div class="button-group">
+      <div class="action-buttons">
         <div class="action-icon email-icon" id="sendEmailToGuest" title="Send Email">
           <i class="fas fa-envelope"></i>
         </div>
@@ -203,17 +226,16 @@
       </div>
     </div>
     
-    <div class="button-group">
-      <button id="placeOrder" class="btn btn-info">
-        Place Food Order
-        <span id="orderSpinner" class="loading-spinner" style="display: none;"></span>
-      </button>
-      <button id="generateBill" class="btn btn-secondary">
-        Generate Food Bill
+    <div class="action-buttons">
+      <div class="action-icon food-icon" id="placeOrder" title="Place Food Order">
+        <i class="fas fa-utensils"></i>
+      </div>
+      <button id="generateBill" class="btn btn-secondary compact-btn">
+        <i class="fas fa-file-invoice"></i> Bill
         <span id="billSpinner" class="loading-spinner" style="display: none;"></span>
       </button>
-      <button id="checkoutGuest" class="btn btn-danger">
-        Checkout Guest
+      <button id="checkoutGuest" class="btn btn-danger compact-btn">
+        <i class="fas fa-sign-out-alt"></i> Checkout
         <span id="checkoutSpinner" class="loading-spinner" style="display: none;"></span>
       </button>
     </div>
@@ -246,7 +268,6 @@
       roomSelect.disabled = true;
       
       try {
-        // Get all rooms that are not currently active
         const response = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${GUESTS_TABLE}?filterByFormula={status}="Active"`, {
           headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` }
         });
@@ -256,7 +277,6 @@
         const data = await response.json();
         const occupiedRooms = new Set(data.records.map(record => record.fields.room));
         
-        // All possible rooms
         const allRooms = [
           "Stargazing Deck (0)",
           "Stargazing Cabin (1)",
@@ -327,8 +347,6 @@
 
     async function getGuestOrders(guestID) {
       try {
-        console.log("Fetching orders for guest:", guestID);
-        // Only include orders that are not cancelled
         const response = await fetch(
           `https://api.airtable.com/v0/${BASE_ID}/${ORDERS_TABLE}?filterByFormula=AND({Guest} = '${guestID}', {Status} != 'Cancelled')`, 
           {
@@ -342,7 +360,6 @@
         }
         
         const data = await response.json();
-        console.log("Found orders:", data.records);
         return data.records;
       } catch (error) {
         console.error('Error fetching orders:', error);
@@ -357,7 +374,6 @@
         return;
       }
 
-      // Create a temporary canvas to draw the bill
       html2canvas(billDetails).then(canvas => {
         const link = document.createElement('a');
         link.download = 'food-bill.png';
@@ -386,9 +402,6 @@
             });
           }
         }
-
-        console.log("Total amount calculated:", totalAmount);
-        console.log("Order items:", allOrderItems);
 
         const billData = {
           fields: {
@@ -471,24 +484,16 @@
           throw new Error(errorData.error?.message || 'Failed to register guest');
         }
         
-        const menuLink = `https://ocbstays.github.io/ocbstaysfagu/guest/menu.html?guestID=${guestID}&room=${encodeURIComponent(room)}`;
-        
         document.getElementById('linkOutput').innerHTML = `
           <div class="alert alert-success">Guest registered successfully!</div>
-          <div class="guest-link-container">
-            <h5>Guest Links:</h5>
-            <div class="input-group mb-2">
+          <div class="guest-links">
+            <div class="input-group">
               <input type="text" class="form-control" id="guestLink" value="${homeLink}" readonly>
               <button class="btn btn-outline-secondary" type="button" onclick="copyToClipboard('guestLink')">📋 Copy</button>
-            </div>
-            <div class="input-group">
-              <input type="text" class="form-control" id="menuLink" value="${menuLink}" readonly>
-              <button class="btn btn-outline-secondary" type="button" onclick="copyToClipboard('menuLink')">📋 Copy</button>
             </div>
           </div>
         `;
         
-        // Enable action buttons
         document.getElementById('sendEmailBtn').disabled = false;
         document.getElementById('sendWhatsappBtn').disabled = false;
         
@@ -496,7 +501,7 @@
           const emailBody = `Hi ${name},
 Thank you for choosing OCB Stays for your upcoming trip to Fagu. 
 
-Your booking for ${room} for ${formatDate(checkin)} is confirmed with advance payment of ₹${advanceAmount} (non-refundable), balance 16K to be transferred on arrival.
+Your booking for ${room} for ${formatDate(checkin)} is confirmed with advance payment of ₹${advanceAmount} (non-refundable), balance ₹${balanceAmount} to be transferred on arrival.
 
 Check-in : ${formatDate(checkin)} 1pm || Check Out: ${formatDate(checkout)} 11am
 
@@ -550,7 +555,6 @@ Team OCB Stays`;
         const mobile = selectedOption.dataset.mobile;
         const homeLink = selectedOption.dataset.homeLink;
         
-        // Set up action buttons for selected guest
         document.getElementById('sendEmailToGuest').onclick = function() {
           const emailBody = `Hi ${name},
 Thank you for choosing OCB Stays for your upcoming trip to Fagu.
@@ -582,7 +586,6 @@ Team OCB Stays`;
     });
 
     document.getElementById('openContacts').addEventListener('click', function() {
-      // This will trigger the native contacts picker on mobile devices
       document.getElementById('mobile').focus();
     });
 
@@ -664,7 +667,7 @@ Team OCB Stays`;
             <h6>Order Items:</h6>
             ${ordersHTML}
           </div>
-          <div class="button-group mt-3">
+          <div class="action-buttons mt-3">
             <div class="action-icon download-icon" onclick="downloadBillAsImage()" title="Download Bill">
               <i class="fas fa-download"></i>
             </div>
