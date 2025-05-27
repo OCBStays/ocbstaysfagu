@@ -236,7 +236,7 @@
       });
     });
 
-    // Check kitchen status
+    // Check kitchen status (visual only, no functional restrictions)
     function checkKitchenStatus() {
       const now = new Date();
       const hours = now.getHours();
@@ -252,9 +252,6 @@
       const statusBadge = document.getElementById('kitchenStatusBadge');
       statusBadge.textContent = isKitchenOpen ? 'Kitchen Open' : 'Kitchen Closed';
       statusBadge.className = isKitchenOpen ? 'kitchen-status kitchen-open' : 'kitchen-status kitchen-closed';
-      
-      // Disable cart buttons if kitchen is closed
-      document.getElementById('floatingCart').disabled = !isKitchenOpen;
     }
 
     // Validate guest access
@@ -368,8 +365,7 @@
                 ${item.Description ? `<div class="text-muted small">${item.Description}</div>` : ''}
               </div>
               <div id="controls-${itemId}">
-                <button class="btn btn-outline-primary btn-sm" onclick="addItem('${item.Item}', ${item["Price (₹)"]}, '${itemId}')" 
-                  ${!isKitchenOpen ? 'disabled' : ''}>Add</button>
+                <button class="btn btn-outline-primary btn-sm" onclick="addItem('${item.Item}', ${item["Price (₹)"]}, '${itemId}')">Add</button>
               </div>
             `;
             itemsContainer.appendChild(row);
@@ -394,8 +390,6 @@
     }
 
     function addItem(name, price, itemId) {
-      if (!isKitchenOpen) return;
-      
       if (!cart[itemId]) {
         cart[itemId] = { 
           name: name,
@@ -428,9 +422,9 @@
       const quantity = cart[itemId]?.quantity || 0;
       container.innerHTML = `
         <div class="qty-controls">
-          <button class="btn btn-outline-secondary btn-sm" onclick="changeQty('${itemId}', -1)" ${!isKitchenOpen ? 'disabled' : ''}>−</button>
+          <button class="btn btn-outline-secondary btn-sm" onclick="changeQty('${itemId}', -1)">−</button>
           <span id="qty-${itemId}">${quantity}</span>
-          <button class="btn btn-outline-secondary btn-sm" onclick="changeQty('${itemId}', 1)" ${!isKitchenOpen ? 'disabled' : ''}>+</button>
+          <button class="btn btn-outline-secondary btn-sm" onclick="changeQty('${itemId}', 1)">+</button>
         </div>
       `;
     }
@@ -439,7 +433,7 @@
       const item = cart[itemId] || { name: '', price: 0 };
       const container = document.getElementById(`controls-${itemId}`);
       container.innerHTML = `
-        <button class="btn btn-outline-primary btn-sm" onclick="addItem('${item.name}', ${item.price}, '${itemId}')" ${!isKitchenOpen ? 'disabled' : ''}>Add</button>
+        <button class="btn btn-outline-primary btn-sm" onclick="addItem('${item.name}', ${item.price}, '${itemId}')">Add</button>
       `;
     }
 
@@ -623,7 +617,7 @@
       });
     });
 
-    // Check kitchen status every minute
+    // Check kitchen status every minute (visual only)
     setInterval(checkKitchenStatus, 60000);
 
     // Initialize
