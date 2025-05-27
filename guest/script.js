@@ -102,44 +102,46 @@ const helpers = {
 
 // API Functions
 const api = {
-  fetchGuestData: async () => {
-    const params = new URLSearchParams(window.location.search);
-    const guestID = params.get('guestID');
-    const room = params.get('room');
+  // In script.js - Update the fetchGuestData function
+fetchGuestData: async () => {
+  const params = new URLSearchParams(window.location.search);
+  const guestID = params.get('guestID');
+  const room = params.get('room');
 
-    if (!guestID || !room) {
-      throw new Error('Missing required parameters');
-    }
+  if (!guestID || !room) {
+    throw new Error('Missing required parameters');
+  }
 
-    const [guestResponse, ordersResponse, billResponse] = await Promise.all([
-      fetch(`${config.airtable.baseId}/${config.airtable.tables.guests}?filterByFormula=AND({guestID}='${guestID}',{room}='${room}',{status}='Active')`, {
-        headers: { Authorization: `Bearer ${config.airtable.token}` }
-      }),
-      fetch(`${config.airtable.baseId}/${config.airtable.tables.orders}?filterByFormula=AND({Guest}='${guestID}')&sort[0][field]=OrderDate&sort[0][direction]=desc`, {
-        headers: { Authorization: `Bearer ${config.airtable.token}` }
-      }),
-      fetch(`${config.airtable.baseId}/${config.airtable.tables.bills}?filterByFormula={guestID}='${guestID}'`, {
-        headers: { Authorization: `Bearer ${config.airtable.token}` }
-      })
-    ]);
+  const baseUrl = 'https://api.airtable.com/v0';
+  
+  const [guestResponse, ordersResponse, billResponse] = await Promise.all([
+    fetch(`${baseUrl}/${config.airtable.baseId}/${config.airtable.tables.guests}?filterByFormula=AND({guestID}='${guestID}',{room}='${room}',{status}='Active')`, {
+      headers: { Authorization: `Bearer ${config.airtable.token}` }
+    }),
+    fetch(`${baseUrl}/${config.airtable.baseId}/${config.airtable.tables.orders}?filterByFormula=AND({Guest}='${guestID}')&sort[0][field]=OrderDate&sort[0][direction]=desc`, {
+      headers: { Authorization: `Bearer ${config.airtable.token}` }
+    }),
+    fetch(`${baseUrl}/${config.airtable.baseId}/${config.airtable.tables.bills}?filterByFormula={guestID}='${guestID}'`, {
+      headers: { Authorization: `Bearer ${config.airtable.token}` }
+    })
+  ]);
 
-    if (!guestResponse.ok) throw new Error(`Guest data error: ${guestResponse.status}`);
-    if (!ordersResponse.ok) throw new Error(`Orders error: ${ordersResponse.status}`);
-    if (!billResponse.ok) throw new Error(`Bill error: ${billResponse.status}`);
+  if (!guestResponse.ok) throw new Error(`Guest data error: ${guestResponse.status}`);
+  if (!ordersResponse.ok) throw new Error(`Orders error: ${ordersResponse.status}`);
+  if (!billResponse.ok) throw new Error(`Bill error: ${billResponse.status}`);
 
-    const [guestData, ordersData, billData] = await Promise.all([
-      guestResponse.json(),
-      ordersResponse.json(),
-      billResponse.json()
-    ]);
+  const [guestData, ordersData, billData] = await Promise.all([
+    guestResponse.json(),
+    ordersResponse.json(),
+    billResponse.json()
+  ]);
 
-    return {
-      guest: guestData.records[0]?.fields,
-      orders: ordersData.records,
-      bill: billData.records[0]?.fields
-    };
-  },
-
+  return {
+    guest: guestData.records[0]?.fields,
+    orders: ordersData.records,
+    bill: billData.records[0]?.fields
+  };
+},
   cancelOrder: async (orderId) => {
     const response = await fetch(`${config.airtable.baseId}/${config.airtable.tables.orders}/${orderId}`, {
       method: 'PATCH',
