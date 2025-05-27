@@ -54,67 +54,21 @@ const modals = {
 
 // Helper Functions
 const helpers = {
-// Toggle collapse function with animation
-function toggleCollapse(id) {
-  const content = document.getElementById(id);
-  const toggleIcon = document.getElementById(`${id}Toggle`);
-  content.classList.toggle('expanded');
-  toggleIcon.classList.toggle('expanded');
-}
+  toggleCollapse: (id) => {
+    const content = document.getElementById(id);
+    const toggleIcon = document.getElementById(`${id}Toggle`);
+    content.classList.toggle('expanded');
+    toggleIcon.classList.toggle('expanded');
+  },
 
   openLocation: (locationKey) => {
     const url = config.locations[locationKey];
     if (url) window.open(url, '_blank');
   },
 
-// Open all locations with waypoints
-function openAllLocations() {
-  const waypoints = [
-    'Fagu@31.0562,77.1766',
-    'Cheog Market@31.0562,77.1766',
-    'Banga Pani Temple@31.0372,77.1538',
-    'OCB Stays@31.0201,77.1412'
-  ].join('/');
-  
-  window.open(`https://www.google.com/maps/dir/${waypoints}/`, '_blank');
-}
-
-  // Toast notification function
-  function showToast(message, type = 'success') {
-    const toastContainer = document.getElementById('toastContainer');
-    const toastEl = document.createElement('div');
-    toastEl.className = `toast show align-items-center text-white bg-${type} border-0`;
-    toastEl.setAttribute('role', 'alert');
-    toastEl.setAttribute('aria-live', 'assertive');
-    toastEl.setAttribute('aria-atomic', 'true');
-    
-    toastEl.innerHTML = `
-      <div class="d-flex">
-        <div class="toast-body">
-          ${message}
-        </div>
-        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-      </div>
-    `;
-    
-    toastContainer.appendChild(toastEl);
-    
-    // Auto remove after 3 seconds
-    setTimeout(() => {
-      toastEl.classList.remove('show');
-      setTimeout(() => toastEl.remove(), 300);
-    }, 3000);
-  }
-
-  // Copy to clipboard function
-  function copyToClipboard(text, message) {
-    navigator.clipboard.writeText(text).then(() => {
-      showToast(message || 'Copied to clipboard!');
-    }).catch(err => {
-      console.error('Failed to copy:', err);
-      showToast('Failed to copy', 'danger');
-    });
-  }
+  openAllLocations: () => {
+    window.open(config.locations.property, '_blank');
+  },
 
   highlightSection: (sectionId) => {
     const section = document.getElementById(sectionId);
@@ -148,46 +102,44 @@ function openAllLocations() {
 
 // API Functions
 const api = {
-  // In script.js - Update the fetchGuestData function
-fetchGuestData: async () => {
-  const params = new URLSearchParams(window.location.search);
-  const guestID = params.get('guestID');
-  const room = params.get('room');
+  fetchGuestData: async () => {
+    const params = new URLSearchParams(window.location.search);
+    const guestID = params.get('guestID');
+    const room = params.get('room');
 
-  if (!guestID || !room) {
-    throw new Error('Missing required parameters');
-  }
+    if (!guestID || !room) {
+      throw new Error('Missing required parameters');
+    }
 
-  const baseUrl = 'https://api.airtable.com/v0';
-  
-  const [guestResponse, ordersResponse, billResponse] = await Promise.all([
-    fetch(`${baseUrl}/${config.airtable.baseId}/${config.airtable.tables.guests}?filterByFormula=AND({guestID}='${guestID}',{room}='${room}',{status}='Active')`, {
-      headers: { Authorization: `Bearer ${config.airtable.token}` }
-    }),
-    fetch(`${baseUrl}/${config.airtable.baseId}/${config.airtable.tables.orders}?filterByFormula=AND({Guest}='${guestID}')&sort[0][field]=OrderDate&sort[0][direction]=desc`, {
-      headers: { Authorization: `Bearer ${config.airtable.token}` }
-    }),
-    fetch(`${baseUrl}/${config.airtable.baseId}/${config.airtable.tables.bills}?filterByFormula={guestID}='${guestID}'`, {
-      headers: { Authorization: `Bearer ${config.airtable.token}` }
-    })
-  ]);
+    const [guestResponse, ordersResponse, billResponse] = await Promise.all([
+      fetch(`${config.airtable.baseId}/${config.airtable.tables.guests}?filterByFormula=AND({guestID}='${guestID}',{room}='${room}',{status}='Active')`, {
+        headers: { Authorization: `Bearer ${config.airtable.token}` }
+      }),
+      fetch(`${config.airtable.baseId}/${config.airtable.tables.orders}?filterByFormula=AND({Guest}='${guestID}')&sort[0][field]=OrderDate&sort[0][direction]=desc`, {
+        headers: { Authorization: `Bearer ${config.airtable.token}` }
+      }),
+      fetch(`${config.airtable.baseId}/${config.airtable.tables.bills}?filterByFormula={guestID}='${guestID}'`, {
+        headers: { Authorization: `Bearer ${config.airtable.token}` }
+      })
+    ]);
 
-  if (!guestResponse.ok) throw new Error(`Guest data error: ${guestResponse.status}`);
-  if (!ordersResponse.ok) throw new Error(`Orders error: ${ordersResponse.status}`);
-  if (!billResponse.ok) throw new Error(`Bill error: ${billResponse.status}`);
+    if (!guestResponse.ok) throw new Error(`Guest data error: ${guestResponse.status}`);
+    if (!ordersResponse.ok) throw new Error(`Orders error: ${ordersResponse.status}`);
+    if (!billResponse.ok) throw new Error(`Bill error: ${billResponse.status}`);
 
-  const [guestData, ordersData, billData] = await Promise.all([
-    guestResponse.json(),
-    ordersResponse.json(),
-    billResponse.json()
-  ]);
+    const [guestData, ordersData, billData] = await Promise.all([
+      guestResponse.json(),
+      ordersResponse.json(),
+      billResponse.json()
+    ]);
 
-  return {
-    guest: guestData.records[0]?.fields,
-    orders: ordersData.records,
-    bill: billData.records[0]?.fields
-  };
-},
+    return {
+      guest: guestData.records[0]?.fields,
+      orders: ordersData.records,
+      bill: billData.records[0]?.fields
+    };
+  },
+
   cancelOrder: async (orderId) => {
     const response = await fetch(`${config.airtable.baseId}/${config.airtable.tables.orders}/${orderId}`, {
       method: 'PATCH',
@@ -436,17 +388,14 @@ const ui = {
     modals.orderModal.show();
   },
 
-// Download bill with room name
-function downloadBill() {
-  const room = document.getElementById('room').textContent;
-  html2canvas(document.getElementById('billDetails')).then(canvas => {
-    const link = document.createElement('a');
-    link.download = `${room}_bill.png`;
-    link.href = canvas.toDataURL('image/png');
-    link.click();
-    showToast('Bill downloaded successfully!');
-  });
-}
+  downloadBill: () => {
+    html2canvas(elements.billDetails).then(canvas => {
+      const link = document.createElement('a');
+      link.download = `OCB-Stays-Bill-${state.currentGuest.name}-${new Date().toISOString().slice(0,10)}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    });
+  },
 
   connectToWifi: () => {
     if (navigator.connection && navigator.connection.type === 'wifi') {
@@ -552,37 +501,6 @@ const app = {
 // Initialize the app
 document.addEventListener('DOMContentLoaded', app.init);
 
-// Initialize the page
-document.addEventListener('DOMContentLoaded', () => {
-  // Set up menu button
-  document.getElementById('menuButton').onclick = () => {
-    const guestID = new URLSearchParams(window.location.search).get('guestID');
-    const room = document.getElementById('room').textContent;
-    window.location.href = `menu.html?guestID=${guestID}&room=${encodeURIComponent(room)}`;
-  };
-
-  // Set up bill modal
-  const billModal = new bootstrap.Modal(document.getElementById('billModal'));
-  document.querySelector('[data-bs-target="#billModal"]').addEventListener('click', () => {
-    document.getElementById('billModalBody').innerHTML = document.getElementById('billDetails').innerHTML;
-    billModal.show();
-  });
-
-  // Set up footer navigation
-  const navTabs = document.querySelectorAll('.nav-tab');
-  navTabs.forEach(tab => {
-    tab.addEventListener('click', function(e) {
-      e.preventDefault();
-      const target = this.getAttribute('href');
-      document.querySelector(target).scrollIntoView({
-        behavior: 'smooth'
-      });
-      navTabs.forEach(t => t.classList.remove('active'));
-      this.classList.add('active');
-    });
-  });
-});
-  
 // Expose app to global scope for HTML onclick handlers
 window.app = app;
 window.makeCall = helpers.makeCall;
