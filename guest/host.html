@@ -52,11 +52,18 @@
     .whatsapp-icon { background-color: #25D366; color: white; }
     .copy-icon { background-color: #6c757d; color: white; }
     .food-icon { background-color: #ff6b6b; color: white; }
-    .contact-icon { color: #6c757d; cursor: pointer; margin-left: 0.5rem; }
+    .contact-icon { 
+      color: #6c757d; 
+      cursor: pointer; 
+      margin-left: 0.5rem;
+      font-size: 1.5rem;
+      padding: 0.5rem;
+    }
     .input-group-copy { margin-bottom: 0.5rem; }
     .compact-btn { padding: 0.375rem 0.75rem; display: inline-flex; align-items: center; gap: 0.5rem; }
     .action-buttons { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem; }
     .mobile-input-group { display: flex; align-items: center; }
+    .mobile-input-group input { flex: 1; }
   </style>
 </head>
 <body>
@@ -198,25 +205,40 @@
         month: 'short', day: 'numeric', year: 'numeric' 
       }),
       
-      fetchAirtable: async (table, params = '') => {
-        const url = `https://api.airtable.com/v0/${config.airtable.baseId}/${table}${params}`;
-        const response = await fetch(url, {
-          headers: { Authorization: `Bearer ${config.airtable.token}` }
-        });
-        if (!response.ok) throw new Error(await response.text());
-        return await response.json();
+      fetchAirtable: async (endpoint, options = {}) => {
+        const url = `https://api.airtable.com/v0/${config.airtable.baseId}/${endpoint}`;
+        try {
+          const response = await fetch(url, {
+            headers: { 
+              'Authorization': `Bearer ${config.airtable.token}`,
+              'Content-Type': 'application/json'
+            },
+            ...options
+          });
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error.message || 'API request failed');
+          }
+          return await response.json();
+        } catch (error) {
+          console.error('Airtable API error:', error);
+          throw error;
+        }
       },
       
       toggleSpinner: (elementId, show) => {
         const spinner = document.getElementById(elementId);
-        spinner.style.display = show ? 'inline-block' : 'none';
+        if (spinner) spinner.style.display = show ? 'inline-block' : 'none';
       },
       
       showAlert: (containerId, message, type = 'success') => {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        
         const alert = document.createElement('div');
-        alert.className = `alert alert-${type}`;
+        alert.className = `alert alert-${type} mt-3`;
         alert.textContent = message;
-        document.getElementById(containerId).prepend(alert);
+        container.prepend(alert);
         setTimeout(() => alert.remove(), 5000);
       }
     };
@@ -225,15 +247,22 @@
     const app = {
       async loadAvailableRooms() {
         const roomSelect = document.getElementById('room');
+        if (!roomSelect) return;
+        
         try {
           roomSelect.disabled = true;
-          const data = await helpers.fetchAirtable(config.airtable.tables.guests, '?filterByFormula={status}="Active"');
+          const data = await helpers.fetchAirtable(
+            `${config.airtable.tables.guests}?filterByFormula={status}="Active"`
+          );
           const occupiedRooms = new Set(data.records.map(r => r.fields.room));
           
           roomSelect.innerHTML = '<option value="">Select Room</option>';
           config.rooms.forEach(room => {
             if (!occupiedRooms.has(room)) {
-              roomSelect.innerHTML += `<option value="${room}">${room}</option>`;
+              const option = document.createElement('option');
+              option.value = room;
+              option.textContent = room;
+              roomSelect.appendChild(option);
             }
           });
         } catch (error) {
@@ -246,10 +275,14 @@
       
       async loadActiveGuests() {
         const guestSelect = document.getElementById('guestSelect');
+        if (!guestSelect) return;
+        
         try {
           guestSelect.disabled = true;
           guestSelect.innerHTML = '<option value="">Loading guests...</option>';
-          const data = await helpers.fetchAirtable(config.airtable.tables.guests, '?filterByFormula={status}="Active"');
+          const data = await helpers.fetchAirtable(
+            `${config.airtable.tables.guests}?filterByFormula={status}="Active"`
+          );
           
           guestSelect.innerHTML = '<option value="">Select Guest</option>';
           data.records.forEach(record => {
@@ -271,8 +304,9 @@
       
       async getGuestOrders(guestID) {
         try {
-          const params = `?filterByFormula=AND({Guest} = '${guestID}', {Status} != 'Cancelled')`;
-          const data = await helpers.fetchAirtable(config.airtable.tables.orders, params);
+          const data = await helpers.fetchAirtable(
+            `${config.airtable.tables.orders}?filterByFormula=AND({Guest} = '${guestID}', {Status} != 'Cancelled')`
+          );
           return data.records;
         } catch (error) {
           console.error('Error fetching orders:', error);
@@ -305,9 +339,8 @@
             }
           };
 
-          await helpers.fetchAirtable(config.airtable.tables.bills, '', {
+          await helpers.fetchAirtable(config.airtable.tables.bills, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(billData)
           });
 
@@ -364,7 +397,7 @@ Team OCB Stays`;
     const handlers = {
       async registerGuest(e) {
         e.preventDefault();
-        const btn = e.target;
+        const btn = e.target.querySelector('button[type="submit"]') || e.target;
         btn.disabled = true;
         helpers.toggleSpinner('registerSpinner', true);
         
@@ -382,9 +415,9 @@ Team OCB Stays`;
           const guestID = helpers.generateGuestId();
           const homeLink = `${config.urls.guestPortal}?guestID=${guestID}&room=${encodeURIComponent(formData.room)}`;
           
-          await helpers.fetchAirtable(config.airtable.tables.guests, '', {
+          // Create guest in Airtable
+          const response = await helpers.fetchAirtable(config.airtable.tables.guests, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               fields: {
                 ...formData,
@@ -397,8 +430,10 @@ Team OCB Stays`;
             })
           });
 
+          if (!response.id) throw new Error('Failed to create guest record');
+          
           document.getElementById('linkOutput').innerHTML = `
-            <div class="alert alert-success">Guest registered successfully!</div>
+            <div class="alert alert-success">Guest registered successfully! Record ID: ${response.id}</div>
             <div class="input-group-copy">
               <input type="text" class="form-control" value="${homeLink}" readonly>
               <button class="btn btn-outline-secondary" onclick="navigator.clipboard.writeText('${homeLink}');alert('Copied!')">📋 Copy</button>
@@ -430,7 +465,9 @@ Team OCB Stays`;
       async generateBill() {
         const guestSelect = document.getElementById('guestSelect');
         const btn = document.getElementById('generateBill');
-        if (!guestSelect.value) return helpers.showAlert('billOutput', 'Please select a guest', 'danger');
+        if (!guestSelect || !guestSelect.value) {
+          return helpers.showAlert('billOutput', 'Please select a guest', 'danger');
+        }
         
         btn.disabled = true;
         helpers.toggleSpinner('billSpinner', true);
@@ -481,16 +518,15 @@ Team OCB Stays`;
       
       async checkoutGuest() {
         const guestId = document.getElementById('guestSelect').value;
-        if (!guestId || !confirm('Check out this guest?')) return;
+        if (!guestId || !confirm('Are you sure you want to check out this guest?')) return;
         
         const btn = document.getElementById('checkoutGuest');
         btn.disabled = true;
         helpers.toggleSpinner('checkoutSpinner', true);
         
         try {
-          await helpers.fetchAirtable(config.airtable.tables.guests, `/${guestId}`, {
+          await helpers.fetchAirtable(`${config.airtable.tables.guests}/${guestId}`, {
             method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ fields: { status: "Checked Out" } })
           });
           
@@ -509,9 +545,10 @@ Team OCB Stays`;
       
       setupGuestSelection() {
         const guestSelect = document.getElementById('guestSelect');
-        const guestInfoDiv = document.getElementById('selectedGuestInfo');
+        if (!guestSelect) return;
         
         guestSelect.addEventListener('change', function() {
+          const guestInfoDiv = document.getElementById('selectedGuestInfo');
           if (!this.value) return guestInfoDiv.style.display = 'none';
           
           const guest = JSON.parse(this.options[this.selectedIndex].dataset.guest);
@@ -535,9 +572,14 @@ Team OCB Stays`;
       },
       
       setupPlaceOrder() {
-        document.getElementById('placeOrder').addEventListener('click', () => {
+        const placeOrderBtn = document.getElementById('placeOrder');
+        if (!placeOrderBtn) return;
+        
+        placeOrderBtn.addEventListener('click', () => {
           const guestSelect = document.getElementById('guestSelect');
-          if (!guestSelect.value) return helpers.showAlert('billOutput', 'Please select a guest', 'danger');
+          if (!guestSelect || !guestSelect.value) {
+            return helpers.showAlert('billOutput', 'Please select a guest', 'danger');
+          }
           
           const guest = JSON.parse(guestSelect.options[guestSelect.selectedIndex].dataset.guest);
           const menuLink = `${config.urls.guestMenu}?guestID=${guest.guestID}&room=${encodeURIComponent(guest.room)}`;
@@ -546,8 +588,16 @@ Team OCB Stays`;
       },
       
       setupContactIcon() {
-        document.getElementById('openContacts').addEventListener('click', () => {
-          document.getElementById('mobile').focus();
+        const contactIcon = document.getElementById('openContacts');
+        if (!contactIcon) return;
+        
+        contactIcon.addEventListener('click', () => {
+          const mobileInput = document.getElementById('mobile');
+          mobileInput.focus();
+          // This will trigger native contact picker on mobile devices
+          if (typeof mobileInput.select === 'function') {
+            mobileInput.select();
+          }
         });
       }
     };
@@ -555,9 +605,9 @@ Team OCB Stays`;
     // Initialize
     window.addEventListener('DOMContentLoaded', async () => {
       // Setup event listeners
-      document.getElementById('guestForm').addEventListener('submit', handlers.registerGuest);
-      document.getElementById('generateBill').addEventListener('click', handlers.generateBill);
-      document.getElementById('checkoutGuest').addEventListener('click', handlers.checkoutGuest);
+      document.getElementById('guestForm')?.addEventListener('submit', handlers.registerGuest);
+      document.getElementById('generateBill')?.addEventListener('click', handlers.generateBill);
+      document.getElementById('checkoutGuest')?.addEventListener('click', handlers.checkoutGuest);
       handlers.setupGuestSelection();
       handlers.setupPlaceOrder();
       handlers.setupContactIcon();
@@ -566,7 +616,7 @@ Team OCB Stays`;
       await app.loadAvailableRooms();
       await app.loadActiveGuests();
       
-      // Make functions available globally
+      // Make app functions available globally
       window.app = app;
     });
   </script>
