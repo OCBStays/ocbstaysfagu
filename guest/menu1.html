@@ -276,7 +276,7 @@
         if (!response.ok) throw new Error("Failed to fetch guest record");
         
         const data = await response.json();
-        if (data.records.length === 0 || data.records[0].fields.Status !== 'Active') {
+        if (data.records.length === 0 || data.records[0].fields.status !== 'Active') {
           throw new Error("Guest not found or inactive");
         }
         
