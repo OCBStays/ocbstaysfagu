@@ -6,6 +6,8 @@
   <title>OCB Stays – Host Dashboard</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <!-- Add flatpickr for calendar -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
@@ -52,11 +54,38 @@
     .whatsapp-icon { background-color: #25D366; color: white; }
     .copy-icon { background-color: #6c757d; color: white; }
     .food-icon { background-color: #ff6b6b; color: white; }
-    .contact-icon { color: #6c757d; cursor: pointer; margin-left: 0.5rem; }
+    .contact-icon { 
+      color: #6c757d; 
+      cursor: pointer; 
+      margin-left: 0.5rem;
+      font-size: 1.5rem;
+      padding: 0.5rem;
+    }
     .input-group-copy { margin-bottom: 0.5rem; }
     .compact-btn { padding: 0.375rem 0.75rem; display: inline-flex; align-items: center; gap: 0.5rem; }
     .action-buttons { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem; }
     .mobile-input-group { display: flex; align-items: center; }
+    .mobile-input-group input { flex: 1; }
+    /* Calendar styling */
+    .date-selection {
+      background: #f8f9fa;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+    }
+    .flatpickr-input {
+      background-color: white;
+    }
+    .availability-status {
+      margin-top: 1rem;
+      font-weight: bold;
+    }
+    .available {
+      color: #28a745;
+    }
+    .unavailable {
+      color: #dc3545;
+    }
   </style>
 </head>
 <body>
@@ -79,19 +108,31 @@
     <!-- Registration Tab -->
     <div class="tab-pane fade show active" id="register" role="tabpanel">
       <form id="guestForm">
+        <!-- Date Selection Section -->
+        <div class="date-selection">
+          <h5>Select Dates</h5>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label for="checkin" class="form-label">Check-in Date</label>
+              <input type="text" class="form-control flatpickr-input" id="checkin" placeholder="Select check-in" required>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label for="checkout" class="form-label">Check-out Date</label>
+              <input type="text" class="form-control flatpickr-input" id="checkout" placeholder="Select check-out" required>
+            </div>
+          </div>
+          <button type="button" class="btn btn-secondary" id="checkAvailability">
+            Check Room Availability
+            <span id="availabilitySpinner" class="loading-spinner" style="display: none;"></span>
+          </button>
+          <div id="availabilityStatus" class="availability-status"></div>
+        </div>
+        
         <div class="mb-3">
           <label for="room" class="form-label">Room</label>
-          <select class="form-select" id="room" required>
-            <option value="">Loading available rooms...</option>
+          <select class="form-select" id="room" required disabled>
+            <option value="">First select dates and check availability</option>
           </select>
-        </div>
-        <div class="mb-3">
-          <label for="checkin" class="form-label">Check-in Date</label>
-          <input type="date" class="form-control" id="checkin" required>
-        </div>
-        <div class="mb-3">
-          <label for="checkout" class="form-label">Check-out Date</label>
-          <input type="date" class="form-control" id="checkout" required>
         </div>
         <div class="mb-3">
           <label for="name" class="form-label">Name</label>
@@ -170,6 +211,8 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+  <!-- Add flatpickr for calendar -->
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <script>
     // Configuration
     const config = {
@@ -198,26 +241,51 @@
         month: 'short', day: 'numeric', year: 'numeric' 
       }),
       
-      fetchAirtable: async (table, params = '') => {
-        const url = `https://api.airtable.com/v0/${config.airtable.baseId}/${table}${params}`;
-        const response = await fetch(url, {
-          headers: { Authorization: `Bearer ${config.airtable.token}` }
-        });
-        if (!response.ok) throw new Error(await response.text());
-        return await response.json();
+      fetchAirtable: async (endpoint, options = {}) => {
+        const url = `https://api.airtable.com/v0/${config.airtable.baseId}/${endpoint}`;
+        try {
+          const response = await fetch(url, {
+            headers: { 
+              'Authorization': `Bearer ${config.airtable.token}`,
+              'Content-Type': 'application/json'
+            },
+            ...options
+          });
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error.message || 'API request failed');
+          }
+          return await response.json();
+        } catch (error) {
+          console.error('Airtable API error:', error);
+          throw error;
+        }
       },
       
       toggleSpinner: (elementId, show) => {
         const spinner = document.getElementById(elementId);
-        spinner.style.display = show ? 'inline-block' : 'none';
+        if (spinner) spinner.style.display = show ? 'inline-block' : 'none';
       },
       
       showAlert: (containerId, message, type = 'success') => {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        
         const alert = document.createElement('div');
-        alert.className = `alert alert-${type}`;
+        alert.className = `alert alert-${type} mt-3`;
         alert.textContent = message;
-        document.getElementById(containerId).prepend(alert);
+        container.prepend(alert);
         setTimeout(() => alert.remove(), 5000);
+      },
+      
+      // New function to check date overlap
+      datesOverlap: (start1, end1, start2, end2) => {
+        const d1 = new Date(start1);
+        const d2 = new Date(end1);
+        const d3 = new Date(start2);
+        const d4 = new Date(end2);
+        
+        return (d1 < d4) && (d3 < d2);
       }
     };
 
@@ -225,15 +293,22 @@
     const app = {
       async loadAvailableRooms() {
         const roomSelect = document.getElementById('room');
+        if (!roomSelect) return;
+        
         try {
           roomSelect.disabled = true;
-          const data = await helpers.fetchAirtable(config.airtable.tables.guests, '?filterByFormula={status}="Active"');
+          const data = await helpers.fetchAirtable(
+            `${config.airtable.tables.guests}?filterByFormula={status}="Active"`
+          );
           const occupiedRooms = new Set(data.records.map(r => r.fields.room));
           
           roomSelect.innerHTML = '<option value="">Select Room</option>';
           config.rooms.forEach(room => {
             if (!occupiedRooms.has(room)) {
-              roomSelect.innerHTML += `<option value="${room}">${room}</option>`;
+              const option = document.createElement('option');
+              option.value = room;
+              option.textContent = room;
+              roomSelect.appendChild(option);
             }
           });
         } catch (error) {
@@ -244,12 +319,81 @@
         }
       },
       
+      // New function to check room availability for selected dates
+      async checkRoomAvailability() {
+        const checkin = document.getElementById('checkin').value;
+        const checkout = document.getElementById('checkout').value;
+        const roomSelect = document.getElementById('room');
+        const statusDiv = document.getElementById('availabilityStatus');
+        const btn = document.getElementById('checkAvailability');
+        
+        if (!checkin || !checkout) {
+          statusDiv.innerHTML = '<span class="unavailable">Please select both check-in and check-out dates</span>';
+          return;
+        }
+        
+        btn.disabled = true;
+        helpers.toggleSpinner('availabilitySpinner', true);
+        statusDiv.innerHTML = '<span>Checking availability...</span>';
+        
+        try {
+          // Get all active bookings
+          const data = await helpers.fetchAirtable(
+            `${config.airtable.tables.guests}?filterByFormula={status}="Active"`
+          );
+          
+          // Find rooms that are booked during the selected dates
+          const bookedRooms = new Set();
+          data.records.forEach(record => {
+            const guest = record.fields;
+            if (helpers.datesOverlap(
+              guest.checkin, guest.checkout, 
+              checkin, checkout
+            )) {
+              bookedRooms.add(guest.room);
+            }
+          });
+          
+          // Update room select with available rooms
+          roomSelect.innerHTML = '<option value="">Select Room</option>';
+          let availableCount = 0;
+          
+          config.rooms.forEach(room => {
+            if (!bookedRooms.has(room)) {
+              const option = document.createElement('option');
+              option.value = room;
+              option.textContent = room;
+              roomSelect.appendChild(option);
+              availableCount++;
+            }
+          });
+          
+          if (availableCount === 0) {
+            statusDiv.innerHTML = '<span class="unavailable">No rooms available for selected dates</span>';
+            roomSelect.disabled = true;
+          } else {
+            statusDiv.innerHTML = `<span class="available">${availableCount} room(s) available for selected dates</span>`;
+            roomSelect.disabled = false;
+          }
+        } catch (error) {
+          console.error('Error checking availability:', error);
+          statusDiv.innerHTML = '<span class="unavailable">Error checking availability</span>';
+        } finally {
+          btn.disabled = false;
+          helpers.toggleSpinner('availabilitySpinner', false);
+        }
+      },
+      
       async loadActiveGuests() {
         const guestSelect = document.getElementById('guestSelect');
+        if (!guestSelect) return;
+        
         try {
           guestSelect.disabled = true;
           guestSelect.innerHTML = '<option value="">Loading guests...</option>';
-          const data = await helpers.fetchAirtable(config.airtable.tables.guests, '?filterByFormula={status}="Active"');
+          const data = await helpers.fetchAirtable(
+            `${config.airtable.tables.guests}?filterByFormula={status}="Active"`
+          );
           
           guestSelect.innerHTML = '<option value="">Select Guest</option>';
           data.records.forEach(record => {
@@ -271,8 +415,9 @@
       
       async getGuestOrders(guestID) {
         try {
-          const params = `?filterByFormula=AND({Guest} = '${guestID}', {Status} != 'Cancelled')`;
-          const data = await helpers.fetchAirtable(config.airtable.tables.orders, params);
+          const data = await helpers.fetchAirtable(
+            `${config.airtable.tables.orders}?filterByFormula=AND({Guest} = '${guestID}', {Status} != 'Cancelled')`
+          );
           return data.records;
         } catch (error) {
           console.error('Error fetching orders:', error);
@@ -305,9 +450,8 @@
             }
           };
 
-          await helpers.fetchAirtable(config.airtable.tables.bills, '', {
+          await helpers.fetchAirtable(config.airtable.tables.bills, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(billData)
           });
 
@@ -357,6 +501,25 @@ ${link}
 
 Cheers,
 Team OCB Stays`;
+      },
+      
+      // New function to initialize calendar
+      initCalendar() {
+        flatpickr("#checkin", {
+          minDate: "today",
+          dateFormat: "Y-m-d",
+          onChange: function(selectedDates, dateStr) {
+            const checkoutPicker = document.getElementById('checkout')._flatpickr;
+            if (selectedDates.length) {
+              checkoutPicker.set('minDate', new Date(selectedDates[0].getTime() + 86400000)); // +1 day
+            }
+          }
+        });
+        
+        flatpickr("#checkout", {
+          minDate: new Date().fp_incr(1), // Tomorrow
+          dateFormat: "Y-m-d"
+        });
       }
     };
 
@@ -364,7 +527,7 @@ Team OCB Stays`;
     const handlers = {
       async registerGuest(e) {
         e.preventDefault();
-        const btn = e.target;
+        const btn = e.target.querySelector('button[type="submit"]') || e.target;
         btn.disabled = true;
         helpers.toggleSpinner('registerSpinner', true);
         
@@ -382,9 +545,9 @@ Team OCB Stays`;
           const guestID = helpers.generateGuestId();
           const homeLink = `${config.urls.guestPortal}?guestID=${guestID}&room=${encodeURIComponent(formData.room)}`;
           
-          await helpers.fetchAirtable(config.airtable.tables.guests, '', {
+          // Create guest in Airtable
+          const response = await helpers.fetchAirtable(config.airtable.tables.guests, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               fields: {
                 ...formData,
@@ -397,8 +560,10 @@ Team OCB Stays`;
             })
           });
 
+          if (!response.id) throw new Error('Failed to create guest record');
+          
           document.getElementById('linkOutput').innerHTML = `
-            <div class="alert alert-success">Guest registered successfully!</div>
+            <div class="alert alert-success">Guest registered successfully! Record ID: ${response.id}</div>
             <div class="input-group-copy">
               <input type="text" class="form-control" value="${homeLink}" readonly>
               <button class="btn btn-outline-secondary" onclick="navigator.clipboard.writeText('${homeLink}');alert('Copied!')">📋 Copy</button>
@@ -430,7 +595,9 @@ Team OCB Stays`;
       async generateBill() {
         const guestSelect = document.getElementById('guestSelect');
         const btn = document.getElementById('generateBill');
-        if (!guestSelect.value) return helpers.showAlert('billOutput', 'Please select a guest', 'danger');
+        if (!guestSelect || !guestSelect.value) {
+          return helpers.showAlert('billOutput', 'Please select a guest', 'danger');
+        }
         
         btn.disabled = true;
         helpers.toggleSpinner('billSpinner', true);
@@ -481,16 +648,15 @@ Team OCB Stays`;
       
       async checkoutGuest() {
         const guestId = document.getElementById('guestSelect').value;
-        if (!guestId || !confirm('Check out this guest?')) return;
+        if (!guestId || !confirm('Are you sure you want to check out this guest?')) return;
         
         const btn = document.getElementById('checkoutGuest');
         btn.disabled = true;
         helpers.toggleSpinner('checkoutSpinner', true);
         
         try {
-          await helpers.fetchAirtable(config.airtable.tables.guests, `/${guestId}`, {
+          await helpers.fetchAirtable(`${config.airtable.tables.guests}/${guestId}`, {
             method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ fields: { status: "Checked Out" } })
           });
           
@@ -509,9 +675,10 @@ Team OCB Stays`;
       
       setupGuestSelection() {
         const guestSelect = document.getElementById('guestSelect');
-        const guestInfoDiv = document.getElementById('selectedGuestInfo');
+        if (!guestSelect) return;
         
         guestSelect.addEventListener('change', function() {
+          const guestInfoDiv = document.getElementById('selectedGuestInfo');
           if (!this.value) return guestInfoDiv.style.display = 'none';
           
           const guest = JSON.parse(this.options[this.selectedIndex].dataset.guest);
@@ -535,9 +702,14 @@ Team OCB Stays`;
       },
       
       setupPlaceOrder() {
-        document.getElementById('placeOrder').addEventListener('click', () => {
+        const placeOrderBtn = document.getElementById('placeOrder');
+        if (!placeOrderBtn) return;
+        
+        placeOrderBtn.addEventListener('click', () => {
           const guestSelect = document.getElementById('guestSelect');
-          if (!guestSelect.value) return helpers.showAlert('billOutput', 'Please select a guest', 'danger');
+          if (!guestSelect || !guestSelect.value) {
+            return helpers.showAlert('billOutput', 'Please select a guest', 'danger');
+          }
           
           const guest = JSON.parse(guestSelect.options[guestSelect.selectedIndex].dataset.guest);
           const menuLink = `${config.urls.guestMenu}?guestID=${guest.guestID}&room=${encodeURIComponent(guest.room)}`;
@@ -546,27 +718,46 @@ Team OCB Stays`;
       },
       
       setupContactIcon() {
-        document.getElementById('openContacts').addEventListener('click', () => {
-          document.getElementById('mobile').focus();
+        const contactIcon = document.getElementById('openContacts');
+        if (!contactIcon) return;
+        
+        contactIcon.addEventListener('click', () => {
+          const mobileInput = document.getElementById('mobile');
+          mobileInput.focus();
+          // This will trigger native contact picker on mobile devices
+          if (typeof mobileInput.select === 'function') {
+            mobileInput.select();
+          }
         });
+      },
+      
+      // New handler for availability check
+      setupAvailabilityCheck() {
+        const checkBtn = document.getElementById('checkAvailability');
+        if (!checkBtn) return;
+        
+        checkBtn.addEventListener('click', app.checkRoomAvailability);
       }
     };
 
     // Initialize
     window.addEventListener('DOMContentLoaded', async () => {
       // Setup event listeners
-      document.getElementById('guestForm').addEventListener('submit', handlers.registerGuest);
-      document.getElementById('generateBill').addEventListener('click', handlers.generateBill);
-      document.getElementById('checkoutGuest').addEventListener('click', handlers.checkoutGuest);
+      document.getElementById('guestForm')?.addEventListener('submit', handlers.registerGuest);
+      document.getElementById('generateBill')?.addEventListener('click', handlers.generateBill);
+      document.getElementById('checkoutGuest')?.addEventListener('click', handlers.checkoutGuest);
       handlers.setupGuestSelection();
       handlers.setupPlaceOrder();
       handlers.setupContactIcon();
+      handlers.setupAvailabilityCheck();
+      
+      // Initialize calendar
+      app.initCalendar();
       
       // Load initial data
-      await app.loadAvailableRooms();
       await app.loadActiveGuests();
       
-      // Make functions available globally
+      // Make app functions available globally
       window.app = app;
     });
   </script>
