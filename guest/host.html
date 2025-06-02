@@ -6,22 +6,15 @@
   <title>OCB Stays – Host Dashboard</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
       background-color: #f9f9f9;
       padding: 1rem;
-      max-width: 800px;
+      max-width: 1000px;
       margin: auto;
-    }
-    .nav-tabs {
-      margin-bottom: 1rem;
-    }
-    .tab-content {
-      background-color: #fff;
-      border-radius: 0 0 12px 12px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.05);
-      padding: 1.5rem;
+      padding-bottom: 80px; /* Space for fixed footer */
     }
     .loading-spinner {
       display: inline-block;
@@ -52,6 +45,7 @@
     .whatsapp-icon { background-color: #25D366; color: white; }
     .copy-icon { background-color: #6c757d; color: white; }
     .food-icon { background-color: #ff6b6b; color: white; }
+    .call-icon { background-color: #4caf50; color: white; }
     .contact-icon { 
       color: #6c757d; 
       cursor: pointer; 
@@ -64,41 +58,344 @@
     .action-buttons { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem; }
     .mobile-input-group { display: flex; align-items: center; }
     .mobile-input-group input { flex: 1; }
+    /* Calendar styling */
+    .flatpickr-input {
+      background-color: white;
+    }
+    .availability-status {
+      margin-top: 1rem;
+      font-weight: bold;
+    }
+    .available {
+      color: #28a745;
+    }
+    .unavailable {
+      color: #dc3545;
+    }
+    /* Fixed footer tabs */
+    .footer-tabs {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+      z-index: 1000;
+      padding: 0.5rem 1rem;
+    }
+    .footer-tabs .nav-link {
+      padding: 0.5rem;
+      font-size: 0.9rem;
+    }
+    .footer-tabs .nav-link i {
+      margin-right: 0.3rem;
+    }
+    /* Guest cards */
+    .guest-card {
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      background: white;
+    }
+    .guest-card h5 {
+      margin-bottom: 0.5rem;
+    }
+    .guest-meta {
+      font-size: 0.9rem;
+      color: #6c757d;
+      margin-bottom: 0.5rem;
+    }
+    /* Date fields in one row */
+    .date-fields-row {
+      display: flex;
+      gap: 0.5rem;
+      align-items: flex-end;
+    }
+    .date-fields-row .form-group {
+      flex: 1;
+      margin-bottom: 0;
+    }
+    /* Fix for contact button */
+    .contact-button-wrapper {
+      display: flex;
+      align-items: center;
+    }
+    .contact-button-wrapper input {
+      flex: 1;
+    }
+    .contact-button-wrapper .contact-icon {
+      margin-left: 0.5rem;
+      cursor: pointer;
+      padding: 0.5rem;
+      background: #f0f0f0;
+      border-radius: 50%;
+    }
+    /* New calendar styles */
+    .month-calendar {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+    .month-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    .month-title {
+      font-weight: bold;
+      font-size: 1.2rem;
+    }
+    .weekdays {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      text-align: center;
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+      font-size: 0.85rem;
+      color: #6c757d;
+    }
+    .days-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 0.2rem;
+    }
+    .calendar-day {
+      aspect-ratio: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 0.25rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+      font-size: 0.9rem;
+      border: 1px solid #f0f0f0;
+    }
+    .calendar-day:hover {
+      background-color: #f0f0f0;
+    }
+    .day-number {
+      font-weight: bold;
+      margin-bottom: 0.1rem;
+    }
+    .day-events {
+      font-size: 0.5rem;
+      text-align: center;
+      width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .day-event-dot {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      margin: 0 1px;
+    }
+    .past-day {
+      background-color: #f8f9fa;
+      color: #adb5bd;
+    }
+    .today {
+      background-color: #e3f2fd;
+      color: #1976d2;
+      font-weight: bold;
+      border: 2px solid #1976d2;
+    }
+    .booked-day {
+      background-color: #e8f5e9;
+      color: #2e7d32;
+      border: 1px solid #c8e6c9;
+    }
+    .available-day {
+      background-color: #ffffff;
+      color: #495057;
+    }
+    .selected-day {
+      background-color: #bbdefb;
+      color: #0d47a1;
+      font-weight: bold;
+    }
+    /* Modal styles */
+    .modal-day-header {
+      font-weight: bold;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid #eee;
+    }
+    .modal-event {
+      padding: 0.5rem;
+      margin-bottom: 0.5rem;
+      border-radius: 4px;
+      background-color: #f5f5f5;
+    }
+    .modal-event:hover {
+      background-color: #e0f7fa;
+      cursor: pointer;
+    }
+    /* Scrollable dashboard */
+    .dashboard-scrollable {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    .dashboard-section {
+      background: white;
+      border-radius: 10px;
+      padding: 1rem;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+    .dashboard-section h2 {
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .compact-action-btn {
+      padding: 0.25rem 0.5rem;
+      font-size: 0.8rem;
+      margin-top: 0.5rem;
+    }
+    .guest-summary {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .guest-actions {
+      display: flex;
+      gap: 0.25rem;
+    }
+    .manage-guest-btn {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .guest-details-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+    .detail-item {
+      padding: 0.5rem;
+      background-color: #f8f9fa;
+      border-radius: 5px;
+      font-size: 0.9rem;
+    }
+    .detail-label {
+      font-weight: bold;
+      font-size: 0.8rem;
+      color: #6c757d;
+    }
+    .detail-value {
+      margin-top: 0.25rem;
+    }
+    .edit-icon-btn {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      cursor: pointer;
+      color: #6c757d;
+      transition: color 0.2s;
+    }
+    .edit-icon-btn:hover {
+      color: #0d6efd;
+    }
+    .compact-guest-card {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem;
+    }
+    .compact-guest-info {
+      flex: 1;
+    }
+    .compact-guest-actions {
+      display: flex;
+      gap: 0.25rem;
+    }
+    .compact-meta {
+      font-size: 0.8rem;
+      color: #6c757d;
+    }
   </style>
 </head>
 <body>
   <h1 class="text-center mb-4">OCB Stays – Host Dashboard</h1>
 
-  <ul class="nav nav-tabs" id="myTab" role="tablist">
-    <li class="nav-item" role="presentation">
-      <button class="nav-link active" id="register-tab" data-bs-toggle="tab" data-bs-target="#register" type="button" role="tab">
-        <i class="fas fa-user-plus me-1"></i> Register
-      </button>
-    </li>
-    <li class="nav-item" role="presentation">
-      <button class="nav-link" id="manage-tab" data-bs-toggle="tab" data-bs-target="#manage" type="button" role="tab">
-        <i class="fas fa-users-cog me-1"></i> Manage
-      </button>
-    </li>
-  </ul>
-
-  <div class="tab-content" id="myTabContent">
-    <!-- Registration Tab -->
-    <div class="tab-pane fade show active" id="register" role="tabpanel">
+  <!-- Main Content Area -->
+  <div class="main-content">
+    <!-- Dashboard Tab Content (default) -->
+    <div id="dashboard-content">
+      <div class="dashboard-scrollable">
+        <div class="dashboard-section">
+          <h2><i class="fas fa-calendar-day"></i> Today's Guests</h2>
+          <div id="today-guests-list">
+            <div class="text-center py-3">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="dashboard-section">
+          <h2><i class="fas fa-calendar-week"></i> Upcoming Guests</h2>
+          <div id="upcoming-guests-list">
+            <div class="text-center py-3">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="dashboard-section">
+          <h2><i class="fas fa-calendar-alt"></i> Booking Calendar</h2>
+          <div class="mb-3">
+            <select class="form-select" id="propertyFilter">
+              <option value="all">All Properties</option>
+              <option value="Stargazing Deck (0)">Stargazing Deck (0)</option>
+              <option value="Stargazing Cabin (1)">Stargazing Cabin (1)</option>
+              <option value="A Frame Cottage">A Frame Cottage</option>
+            </select>
+          </div>
+          <div id="property-calendar-view">
+            <!-- Calendar will be generated here -->
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Register Tab Content (hidden by default) -->
+    <div id="register-content" style="display: none;">
       <form id="guestForm">
+        <!-- Date Selection Section -->
+        <div class="date-selection mb-3">
+          <h5>Select Dates</h5>
+          <div class="mb-3">
+            <input type="text" class="form-control flatpickr-input" id="dateRange" placeholder="Select check-in and check-out dates" required>
+          </div>
+          <div id="availabilityStatus" class="availability-status"></div>
+        </div>
+        
         <div class="mb-3">
           <label for="room" class="form-label">Room</label>
-          <select class="form-select" id="room" required>
-            <option value="">Loading available rooms...</option>
+          <select class="form-select" id="room" required disabled>
+            <option value="">First select dates to see available rooms</option>
           </select>
-        </div>
-        <div class="mb-3">
-          <label for="checkin" class="form-label">Check-in Date</label>
-          <input type="date" class="form-control" id="checkin" required>
-        </div>
-        <div class="mb-3">
-          <label for="checkout" class="form-label">Check-out Date</label>
-          <input type="date" class="form-control" id="checkout" required>
         </div>
         <div class="mb-3">
           <label for="name" class="form-label">Name</label>
@@ -106,9 +403,9 @@
         </div>
         <div class="mb-3">
           <label for="mobile" class="form-label">Mobile Number</label>
-          <div class="mobile-input-group">
+          <div class="contact-button-wrapper">
             <input type="tel" class="form-control" id="mobile" required>
-            <i class="fas fa-address-book contact-icon" id="openContacts"></i>
+            <i class="fas fa-address-book contact-icon" id="openContacts" style="cursor: pointer;"></i>
           </div>
         </div>
         <div class="mb-3">
@@ -134,9 +431,9 @@
       </form>
       <div id="linkOutput" class="mt-3"></div>
     </div>
-
-    <!-- Management Tab -->
-    <div class="tab-pane fade" id="manage" role="tabpanel">
+    
+    <!-- Manage Tab Content (hidden by default) -->
+    <div id="manage-content" style="display: none;">
       <div class="mb-3">
         <label for="guestSelect" class="form-label">Select Active Guest</label>
         <select class="form-select" id="guestSelect">
@@ -145,12 +442,22 @@
       </div>
       
       <div id="selectedGuestInfo" style="display: none;">
-        <div class="action-buttons">
-          <div class="action-icon email-icon" id="sendEmailToGuest" title="Send Email">
-            <i class="fas fa-envelope"></i>
+        <div class="guest-card position-relative">
+          <i class="fas fa-edit edit-icon-btn" id="editGuestBtn"></i>
+          <div id="guestDetailsContent">
+            <!-- Guest details will be loaded here -->
           </div>
+        </div>
+        
+        <div class="action-buttons mt-3">
+          <a class="action-icon call-icon" id="callGuest" title="Call Guest">
+            <i class="fas fa-phone"></i>
+          </a>
           <div class="action-icon whatsapp-icon" id="sendWhatsappToGuest" title="Send WhatsApp">
             <i class="fab fa-whatsapp"></i>
+          </div>
+          <div class="action-icon email-icon" id="sendEmailToGuest" title="Send Email">
+            <i class="fas fa-envelope"></i>
           </div>
           <div class="action-icon copy-icon" id="copyGuestLink" title="Copy Link">
             <i class="fas fa-copy"></i>
@@ -158,7 +465,7 @@
         </div>
       </div>
       
-      <div class="action-buttons">
+      <div class="action-buttons mt-3">
         <div class="action-icon food-icon" id="placeOrder" title="Place Food Order">
           <i class="fas fa-utensils"></i>
         </div>
@@ -175,8 +482,102 @@
     </div>
   </div>
 
+  <!-- Calendar Day Modal -->
+  <div class="modal fade" id="dayModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="dayModalTitle">Day Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="dayModalBody">
+          Loading...
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Guest Modal -->
+  <div class="modal fade" id="editGuestModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Edit Guest Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="editGuestForm">
+            <div class="mb-3">
+              <label for="editName" class="form-label">Name</label>
+              <input type="text" class="form-control" id="editName" required>
+            </div>
+            <div class="mb-3">
+              <label for="editMobile" class="form-label">Mobile Number</label>
+              <input type="tel" class="form-control" id="editMobile" required>
+            </div>
+            <div class="mb-3">
+              <label for="editRoom" class="form-label">Room</label>
+              <select class="form-select" id="editRoom" required>
+                <option value="">Select Room</option>
+                <option value="Stargazing Deck (0)">Stargazing Deck (0)</option>
+                <option value="Stargazing Cabin (1)">Stargazing Cabin (1)</option>
+                <option value="A Frame Cottage">A Frame Cottage</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="editCheckin" class="form-label">Check-in Date</label>
+              <input type="text" class="form-control flatpickr-input" id="editCheckin" required>
+            </div>
+            <div class="mb-3">
+              <label for="editCheckout" class="form-label">Check-out Date</label>
+              <input type="text" class="form-control flatpickr-input" id="editCheckout" required>
+            </div>
+            <div class="mb-3">
+              <label for="editAdvance" class="form-label">Advance Payment (₹)</label>
+              <input type="number" class="form-control" id="editAdvance">
+            </div>
+            <div class="mb-3">
+              <label for="editBalance" class="form-label">Balance Amount (₹)</label>
+              <input type="number" class="form-control" id="editBalance">
+            </div>
+            <input type="hidden" id="editGuestId">
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" id="saveGuestChanges">Save Changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fixed Footer Tabs -->
+  <div class="footer-tabs">
+    <ul class="nav nav-tabs" id="mainTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="dashboard-tab" data-tab-target="dashboard" type="button" role="tab">
+          <i class="fas fa-tachometer-alt"></i> Dashboard
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="register-footer-tab" data-tab-target="register" type="button" role="tab">
+          <i class="fas fa-user-plus"></i> Register
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="manage-footer-tab" data-tab-target="manage" type="button" role="tab">
+          <i class="fas fa-users-cog"></i> Manage
+        </button>
+      </li>
+    </ul>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <script>
     // Configuration
     const config = {
@@ -203,6 +604,10 @@
       
       formatDate: (dateString) => new Date(dateString).toLocaleDateString('en-US', { 
         month: 'short', day: 'numeric', year: 'numeric' 
+      }),
+      
+      formatShortDate: (dateString) => new Date(dateString).toLocaleDateString('en-US', {
+        month: 'short', day: 'numeric'
       }),
       
       fetchAirtable: async (endpoint, options = {}) => {
@@ -240,6 +645,41 @@
         alert.textContent = message;
         container.prepend(alert);
         setTimeout(() => alert.remove(), 5000);
+      },
+      
+      datesOverlap: (start1, end1, start2, end2) => {
+        const d1 = new Date(start1);
+        const d2 = new Date(end1);
+        const d3 = new Date(start2);
+        const d4 = new Date(end2);
+        
+        return (d1 < d4) && (d3 < d2);
+      },
+      
+      focusNextInput: (currentInput) => {
+        const form = currentInput.closest('form');
+        if (!form) return;
+        
+        const inputs = Array.from(form.querySelectorAll('input, select, textarea'));
+        const currentIndex = inputs.indexOf(currentInput);
+        if (currentIndex < inputs.length - 1) {
+          inputs[currentIndex + 1].focus();
+        }
+      },
+      
+      getDaysInMonth: (year, month) => {
+        return new Date(year, month + 1, 0).getDate();
+      },
+      
+      getFirstDayOfMonth: (year, month) => {
+        return new Date(year, month, 1).getDay();
+      },
+      
+      calculateNights: (checkin, checkout) => {
+        const oneDay = 24 * 60 * 60 * 1000;
+        const start = new Date(checkin);
+        const end = new Date(checkout);
+        return Math.round(Math.abs((start - end) / oneDay));
       }
     };
 
@@ -273,6 +713,64 @@
         }
       },
       
+      async checkRoomAvailability() {
+        const dateRange = document.getElementById('dateRange').value;
+        if (!dateRange) {
+          document.getElementById('availabilityStatus').innerHTML = '<span class="unavailable">Please select dates</span>';
+          return;
+        }
+        
+        const [checkin, checkout] = dateRange.split(' to ');
+        const roomSelect = document.getElementById('room');
+        const statusDiv = document.getElementById('availabilityStatus');
+        
+        statusDiv.innerHTML = '<span>Checking availability...</span>';
+        
+        try {
+          // Get all active bookings
+          const data = await helpers.fetchAirtable(
+            `${config.airtable.tables.guests}?filterByFormula={status}="Active"`
+          );
+          
+          // Find rooms that are booked during the selected dates
+          const bookedRooms = new Set();
+          data.records.forEach(record => {
+            const guest = record.fields;
+            if (helpers.datesOverlap(
+              guest.checkin, guest.checkout, 
+              checkin, checkout
+            )) {
+              bookedRooms.add(guest.room);
+            }
+          });
+          
+          // Update room select with available rooms
+          roomSelect.innerHTML = '<option value="">Select Room</option>';
+          let availableCount = 0;
+          
+          config.rooms.forEach(room => {
+            if (!bookedRooms.has(room)) {
+              const option = document.createElement('option');
+              option.value = room;
+              option.textContent = room;
+              roomSelect.appendChild(option);
+              availableCount++;
+            }
+          });
+          
+          if (availableCount === 0) {
+            statusDiv.innerHTML = '<span class="unavailable">No rooms available for selected dates</span>';
+            roomSelect.disabled = true;
+          } else {
+            statusDiv.innerHTML = `<span class="available">${availableCount} room(s) available for selected dates</span>`;
+            roomSelect.disabled = false;
+          }
+        } catch (error) {
+          console.error('Error checking availability:', error);
+          statusDiv.innerHTML = '<span class="unavailable">Error checking availability</span>';
+        }
+      },
+      
       async loadActiveGuests() {
         const guestSelect = document.getElementById('guestSelect');
         if (!guestSelect) return;
@@ -300,6 +798,282 @@
         } finally {
           guestSelect.disabled = false;
         }
+      },
+      
+      async loadTodaysGuests() {
+        const today = new Date().toISOString().split('T')[0];
+        const container = document.getElementById('today-guests-list');
+        if (!container) return;
+        
+        try {
+          container.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>';
+          
+          // Get guests staying today
+          const formula = `AND({checkin} <= '${today}', {checkout} >= '${today}', {status}="Active")`;
+          
+          const data = await helpers.fetchAirtable(
+            `${config.airtable.tables.guests}?filterByFormula=${formula}`
+          );
+          
+          if (data.records.length === 0) {
+            container.innerHTML = '<div class="alert alert-info">No guests for today</div>';
+            return;
+          }
+          
+          container.innerHTML = '';
+          data.records.forEach(record => {
+            const guest = record.fields;
+            const card = document.createElement('div');
+            card.className = 'guest-card compact-guest-card';
+            card.innerHTML = `
+              <div class="compact-guest-info">
+                <div><strong>${guest.name || 'Unnamed Guest'}</strong></div>
+                <div class="compact-meta">
+                  ${guest.room} • ${helpers.formatShortDate(guest.checkin)} to ${helpers.formatShortDate(guest.checkout)}
+                </div>
+              </div>
+              <div class="compact-guest-actions">
+                <button class="btn btn-sm btn-outline-primary manage-guest-btn" data-guest-id="${record.id}">
+                  <i class="fas fa-cog"></i>
+                </button>
+              </div>
+            `;
+            container.appendChild(card);
+          });
+          
+          // Add event listeners to manage buttons
+          document.querySelectorAll('.manage-guest-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+              // Switch to manage tab and select this guest
+              document.querySelector('#manage-footer-tab').click();
+              setTimeout(() => {
+                const guestSelect = document.getElementById('guestSelect');
+                guestSelect.value = btn.dataset.guestId;
+                guestSelect.dispatchEvent(new Event('change'));
+                // Scroll to top of manage section
+                document.getElementById('manage-content').scrollIntoView({ behavior: 'smooth' });
+              }, 100);
+            });
+          });
+        } catch (error) {
+          console.error('Error loading today\'s guests:', error);
+          container.innerHTML = '<div class="alert alert-danger">Failed to load today\'s guests</div>';
+        }
+      },
+      
+      async loadUpcomingGuests() {
+        const today = new Date().toISOString().split('T')[0];
+        const container = document.getElementById('upcoming-guests-list');
+        if (!container) return;
+        
+        try {
+          container.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>';
+          
+          // Get upcoming guests (checking in after today)
+          const data = await helpers.fetchAirtable(
+            `${config.airtable.tables.guests}?filterByFormula=AND({checkin} > '${today}', {status}="Active")`
+          );
+          
+          if (data.records.length === 0) {
+            container.innerHTML = '<div class="alert alert-info">No upcoming guests</div>';
+            return;
+          }
+          
+          // Sort by check-in date
+          data.records.sort((a, b) => new Date(a.fields.checkin) - new Date(b.fields.checkout));
+          
+          container.innerHTML = '';
+          data.records.forEach(record => {
+            const guest = record.fields;
+            const daysToCheckin = Math.ceil((new Date(guest.checkin) - new Date()) / (1000 * 60 * 60 * 24));
+            
+            const card = document.createElement('div');
+            card.className = 'guest-card compact-guest-card';
+            card.innerHTML = `
+              <div class="compact-guest-info">
+                <div><strong>${guest.name || 'Unnamed Guest'}</strong></div>
+                <div class="compact-meta">
+                  ${guest.room} • ${helpers.formatShortDate(guest.checkin)} • ${daysToCheckin} days
+                </div>
+              </div>
+              <div class="compact-guest-actions">
+                <button class="btn btn-sm btn-outline-primary manage-guest-btn" data-guest-id="${record.id}">
+                  <i class="fas fa-cog"></i>
+                </button>
+              </div>
+            `;
+            container.appendChild(card);
+          });
+          
+          // Add event listeners to manage buttons
+          document.querySelectorAll('.manage-guest-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+              // Switch to manage tab and select this guest
+              document.querySelector('#manage-footer-tab').click();
+              setTimeout(() => {
+                const guestSelect = document.getElementById('guestSelect');
+                guestSelect.value = btn.dataset.guestId;
+                guestSelect.dispatchEvent(new Event('change'));
+                // Scroll to top of manage section
+                document.getElementById('manage-content').scrollIntoView({ behavior: 'smooth' });
+              }, 100);
+            });
+          });
+        } catch (error) {
+          console.error('Error loading upcoming guests:', error);
+          container.innerHTML = '<div class="alert alert-danger">Failed to load upcoming guests</div>';
+        }
+      },
+      
+      async generateCalendarView(propertyFilter = 'all') {
+        const container = document.getElementById('property-calendar-view');
+        if (!container) return;
+        
+        try {
+          container.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>';
+          
+          // Get all active bookings
+          const data = await helpers.fetchAirtable(
+            `${config.airtable.tables.guests}?filterByFormula={status}="Active"`
+          );
+          
+          // Filter by property if needed
+          const bookings = propertyFilter === 'all' 
+            ? data.records 
+            : data.records.filter(r => r.fields.room === propertyFilter);
+          
+          // Generate calendar for current month
+          const today = new Date();
+          const currentMonth = today.getMonth();
+          const currentYear = today.getFullYear();
+          
+          // Create month calendar
+          const monthName = today.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+          const daysInMonth = helpers.getDaysInMonth(currentYear, currentMonth);
+          const firstDayOfMonth = helpers.getFirstDayOfMonth(currentYear, currentMonth);
+          
+          let html = `<div class="month-calendar">
+            <div class="month-header">
+              <div class="month-title">${monthName}</div>
+            </div>
+            <div class="weekdays">
+              <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+            </div>
+            <div class="days-grid">`;
+          
+          // Add empty cells for days before the first day of the month
+          for (let i = 0; i < firstDayOfMonth; i++) {
+            html += `<div class="calendar-day"></div>`;
+          }
+          
+          // Add days of the month
+          for (let day = 1; day <= daysInMonth; day++) {
+            const date = new Date(currentYear, currentMonth, day);
+            const dateStr = date.toISOString().split('T')[0];
+            const isToday = dateStr === today.toISOString().split('T')[0];
+            
+            // Find bookings for this day
+            const dayBookings = bookings.filter(b => 
+              helpers.datesOverlap(
+                b.fields.checkin, 
+                b.fields.checkout, 
+                dateStr, 
+                dateStr
+              )
+            );
+            
+            const isBooked = dayBookings.length > 0;
+            const dayClass = [
+              'calendar-day',
+              isToday ? 'today' : '',
+              isBooked ? 'booked-day' : 'available-day',
+              date < today ? 'past-day' : ''
+            ].filter(Boolean).join(' ');
+            
+            html += `<div class="${dayClass}" data-date="${dateStr}">
+              <div class="day-number">${day}</div>
+              <div class="day-events">`;
+            
+            if (isBooked) {
+              html += `<span class="day-event-dot" style="background-color: #2e7d32;"></span>`;
+              if (dayBookings.length > 1) {
+                html += `<span class="day-event-dot" style="background-color: #2e7d32;"></span>`;
+              }
+            }
+            
+            html += `</div></div>`;
+          }
+          
+          html += `</div></div>`;
+          container.innerHTML = html;
+          
+          // Add click handlers to days
+          document.querySelectorAll('.calendar-day').forEach(day => {
+            day.addEventListener('click', () => {
+              const date = day.dataset.date;
+              if (date) {
+                this.showDayDetails(date, bookings);
+              }
+            });
+          });
+        } catch (error) {
+          console.error('Error generating calendar:', error);
+          container.innerHTML = '<div class="alert alert-danger">Failed to load calendar</div>';
+        }
+      },
+      
+      async showDayDetails(date, allBookings) {
+        const modalTitle = document.getElementById('dayModalTitle');
+        const modalBody = document.getElementById('dayModalBody');
+        const modal = new bootstrap.Modal(document.getElementById('dayModal'));
+        
+        modalTitle.textContent = new Date(date).toLocaleDateString('en-US', { 
+          weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+        });
+        
+        // Find bookings for this day
+        const dayBookings = allBookings.filter(b => 
+          helpers.datesOverlap(
+            b.fields.checkin, 
+            b.fields.checkout, 
+            date, 
+            date
+          )
+        );
+        
+        if (dayBookings.length === 0) {
+          modalBody.innerHTML = '<div class="alert alert-info">No bookings for this day</div>';
+        } else {
+          modalBody.innerHTML = dayBookings.map(booking => {
+            const guest = booking.fields;
+            return `
+              <div class="modal-event manage-guest-btn" data-guest-id="${booking.id}">
+                <div><strong>${guest.name || 'Unnamed Guest'}</strong></div>
+                <div>Room: ${guest.room}</div>
+                <div>Dates: ${helpers.formatDate(guest.checkin)} to ${helpers.formatDate(guest.checkout)}</div>
+                <div>Mobile: ${guest.mobile || 'Not provided'}</div>
+              </div>
+            `;
+          }).join('');
+        }
+        
+        modal.show();
+        
+        // Add event listeners to manage buttons
+        document.querySelectorAll('#dayModalBody .manage-guest-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            // Switch to manage tab and select this guest
+            modal.hide();
+            document.querySelector('#manage-footer-tab').click();
+            setTimeout(() => {
+              const guestSelect = document.getElementById('guestSelect');
+              guestSelect.value = btn.dataset.guestId;
+              guestSelect.dispatchEvent(new Event('change'));
+              // Scroll to top of manage section
+              document.getElementById('manage-content').scrollIntoView({ behavior: 'smooth' });
+            }, 100);
+          });
+        });
       },
       
       async getGuestOrders(guestID) {
@@ -390,6 +1164,57 @@ ${link}
 
 Cheers,
 Team OCB Stays`;
+      },
+      
+      async loadGuestDetails(guestId) {
+        try {
+          const response = await helpers.fetchAirtable(
+            `${config.airtable.tables.guests}/${guestId}`
+          );
+          
+          if (!response.id) throw new Error('Guest not found');
+          return response.fields;
+        } catch (error) {
+          console.error('Error loading guest details:', error);
+          throw error;
+        }
+      },
+      
+      async calculateFoodTotal(guestId) {
+        try {
+          const orders = await this.getGuestOrders(guestId);
+          if (!orders.length) return 0;
+          
+          return orders.reduce((total, order) => {
+            return total + (order.fields.TotalAmount || 0);
+          }, 0);
+        } catch (error) {
+          console.error('Error calculating food total:', error);
+          return 0;
+        }
+      },
+      
+      initCalendar() {
+        flatpickr("#dateRange", {
+          mode: "range",
+          minDate: "today",
+          dateFormat: "Y-m-d",
+          onChange: function(selectedDates) {
+            if (selectedDates.length === 2) {
+              app.checkRoomAvailability();
+            }
+          }
+        });
+        
+        flatpickr("#editCheckin", {
+          minDate: "today",
+          dateFormat: "Y-m-d"
+        });
+        
+        flatpickr("#editCheckout", {
+          minDate: "today",
+          dateFormat: "Y-m-d"
+        });
       }
     };
 
@@ -402,10 +1227,14 @@ Team OCB Stays`;
         helpers.toggleSpinner('registerSpinner', true);
         
         try {
+          const dateRange = document.getElementById('dateRange').value;
+          if (!dateRange) throw new Error('Please select dates');
+          
+          const [checkin, checkout] = dateRange.split(' to ');
           const formData = {
             room: document.getElementById('room').value,
-            checkin: document.getElementById('checkin').value,
-            checkout: document.getElementById('checkout').value,
+            checkin,
+            checkout,
             name: document.getElementById('name').value,
             mobile: document.getElementById('mobile').value,
             advanceAmount: document.getElementById('advanceAmount').value || 0,
@@ -453,6 +1282,9 @@ Team OCB Stays`;
           
           await app.loadActiveGuests();
           await app.loadAvailableRooms();
+          await app.loadTodaysGuests();
+          await app.loadUpcomingGuests();
+          await app.generateCalendarView();
         } catch (error) {
           console.error("Registration error:", error);
           helpers.showAlert('linkOutput', `Error: ${error.message}`, 'danger');
@@ -533,7 +1365,9 @@ Team OCB Stays`;
           helpers.showAlert('billOutput', 'Guest checked out successfully');
           document.getElementById('selectedGuestInfo').style.display = 'none';
           await app.loadActiveGuests();
-          await app.loadAvailableRooms();
+          await app.loadTodaysGuests();
+          await app.loadUpcomingGuests();
+          await app.generateCalendarView();
         } catch (error) {
           console.error("Checkout error:", error);
           helpers.showAlert('billOutput', `Error: ${error.message}`, 'danger');
@@ -543,31 +1377,95 @@ Team OCB Stays`;
         }
       },
       
-      setupGuestSelection() {
+      async setupGuestSelection() {
         const guestSelect = document.getElementById('guestSelect');
         if (!guestSelect) return;
         
-        guestSelect.addEventListener('change', function() {
+        guestSelect.addEventListener('change', async function() {
           const guestInfoDiv = document.getElementById('selectedGuestInfo');
           if (!this.value) return guestInfoDiv.style.display = 'none';
           
           const guest = JSON.parse(this.options[this.selectedIndex].dataset.guest);
           const homeLink = guest.homeLink;
           
-          document.getElementById('copyGuestLink').onclick = () => {
-            navigator.clipboard.writeText(homeLink);
-            helpers.showAlert('billOutput', 'Link copied to clipboard!');
-          };
-          
-          document.getElementById('sendEmailToGuest').onclick = () => window.open(
-            `mailto:?subject=OCB Stays Information&body=${encodeURIComponent(app.generateEmailBody(guest, homeLink))}`
-          );
-          
-          document.getElementById('sendWhatsappToGuest').onclick = () => window.open(
-            `https://wa.me/${guest.mobile}?text=${encodeURIComponent(app.generateWhatsappMessage(guest, homeLink))}`
-          );
+          // Show loading state
+          document.getElementById('guestDetailsContent').innerHTML = `
+            <div class="text-center py-3">
+              <div class="spinner-border text-primary" role="status"></div>
+              <div>Loading guest details...</div>
+            </div>
+          `;
           
           guestInfoDiv.style.display = 'block';
+          
+          try {
+            // Calculate food total
+            const foodTotal = await app.calculateFoodTotal(guest.guestID);
+            
+            // Calculate nights
+            const nights = helpers.calculateNights(guest.checkin, guest.checkout);
+            
+            // Render guest details
+            document.getElementById('guestDetailsContent').innerHTML = `
+              <h5>${guest.name || 'Unnamed Guest'}</h5>
+              <div class="guest-details-grid">
+                <div class="detail-item">
+                  <div class="detail-label">Room</div>
+                  <div class="detail-value">${guest.room}</div>
+                </div>
+                <div class="detail-item">
+                  <div class="detail-label">Mobile</div>
+                  <div class="detail-value">${guest.mobile || 'Not provided'}</div>
+                </div>
+                <div class="detail-item">
+                  <div class="detail-label">Check-in</div>
+                  <div class="detail-value">${helpers.formatDate(guest.checkin)}</div>
+                </div>
+                <div class="detail-item">
+                  <div class="detail-label">Check-out</div>
+                  <div class="detail-value">${helpers.formatDate(guest.checkout)}</div>
+                </div>
+                <div class="detail-item">
+                  <div class="detail-label">Nights</div>
+                  <div class="detail-value">${nights}</div>
+                </div>
+                <div class="detail-item">
+                  <div class="detail-label">Advance Paid</div>
+                  <div class="detail-value">₹${guest.advanceAmount || 0}</div>
+                </div>
+                <div class="detail-item">
+                  <div class="detail-label">Balance Due</div>
+                  <div class="detail-value">₹${guest.balanceAmount || 0}</div>
+                </div>
+                <div class="detail-item">
+                  <div class="detail-label">Food Orders</div>
+                  <div class="detail-value">₹${foodTotal}</div>
+                </div>
+              </div>
+            `;
+            
+            // Setup action buttons
+            document.getElementById('copyGuestLink').onclick = () => {
+              navigator.clipboard.writeText(homeLink);
+              helpers.showAlert('billOutput', 'Link copied to clipboard!');
+            };
+            
+            document.getElementById('sendEmailToGuest').onclick = () => window.open(
+              `mailto:?subject=OCB Stays Information&body=${encodeURIComponent(app.generateEmailBody(guest, homeLink))}`
+            );
+            
+            document.getElementById('sendWhatsappToGuest').onclick = () => window.open(
+              `https://wa.me/${guest.mobile}?text=${encodeURIComponent(app.generateWhatsappMessage(guest, homeLink))}`
+            );
+            
+            document.getElementById('callGuest').href = `tel:${guest.mobile}`;
+            
+          } catch (error) {
+            console.error('Error loading guest details:', error);
+            document.getElementById('guestDetailsContent').innerHTML = `
+              <div class="alert alert-danger">Failed to load guest details</div>
+            `;
+          }
         });
       },
       
@@ -587,17 +1485,178 @@ Team OCB Stays`;
         });
       },
       
+      setupEditGuest() {
+        const editBtn = document.getElementById('editGuestBtn');
+        if (!editBtn) return;
+        
+        editBtn.addEventListener('click', async () => {
+          const guestSelect = document.getElementById('guestSelect');
+          if (!guestSelect || !guestSelect.value) return;
+          
+          const guestId = guestSelect.value;
+          const guest = JSON.parse(guestSelect.options[guestSelect.selectedIndex].dataset.guest);
+          
+          // Populate edit form
+          document.getElementById('editName').value = guest.name || '';
+          document.getElementById('editMobile').value = guest.mobile || '';
+          document.getElementById('editRoom').value = guest.room || '';
+          document.getElementById('editCheckin').value = guest.checkin;
+          document.getElementById('editCheckout').value = guest.checkout;
+          document.getElementById('editAdvance').value = guest.advanceAmount || 0;
+          document.getElementById('editBalance').value = guest.balanceAmount || 0;
+          document.getElementById('editGuestId').value = guestId;
+          
+          // Show modal
+          const modal = new bootstrap.Modal(document.getElementById('editGuestModal'));
+          modal.show();
+        });
+      },
+      
+      async saveGuestChanges() {
+        const guestId = document.getElementById('editGuestId').value;
+        if (!guestId) return;
+        
+        const btn = document.getElementById('saveGuestChanges');
+        btn.disabled = true;
+        
+        try {
+          const formData = {
+            name: document.getElementById('editName').value,
+            mobile: document.getElementById('editMobile').value,
+            room: document.getElementById('editRoom').value,
+            checkin: document.getElementById('editCheckin').value,
+            checkout: document.getElementById('editCheckout').value,
+            advanceAmount: document.getElementById('editAdvance').value || 0,
+            balanceAmount: document.getElementById('editBalance').value || 0
+          };
+          
+          await helpers.fetchAirtable(`${config.airtable.tables.guests}/${guestId}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ fields: formData })
+          });
+          
+          // Close modal
+          const modal = bootstrap.Modal.getInstance(document.getElementById('editGuestModal'));
+          modal.hide();
+          
+          // Reload guest data
+          helpers.showAlert('billOutput', 'Guest details updated successfully!');
+          await app.loadActiveGuests();
+          await app.loadTodaysGuests();
+          await app.loadUpcomingGuests();
+          await app.generateCalendarView();
+          
+          // Refresh selected guest
+          const guestSelect = document.getElementById('guestSelect');
+          guestSelect.value = guestId;
+          guestSelect.dispatchEvent(new Event('change'));
+          
+        } catch (error) {
+          console.error('Error updating guest:', error);
+          helpers.showAlert('billOutput', `Error: ${error.message}`, 'danger');
+        } finally {
+          btn.disabled = false;
+        }
+      },
+      
       setupContactIcon() {
         const contactIcon = document.getElementById('openContacts');
         if (!contactIcon) return;
         
-        contactIcon.addEventListener('click', () => {
+        contactIcon.addEventListener('click', (e) => {
+          e.stopPropagation();
           const mobileInput = document.getElementById('mobile');
           mobileInput.focus();
+          
           // This will trigger native contact picker on mobile devices
-          if (typeof mobileInput.select === 'function') {
-            mobileInput.select();
+          if (navigator.contacts && navigator.contacts.select) {
+            navigator.contacts.select(['name', 'tel'], { multiple: false })
+              .then(contacts => {
+                if (contacts && contacts.length > 0) {
+                  const contact = contacts[0];
+                  mobileInput.value = contact.tel ? contact.tel[0] : '';
+                }
+              })
+              .catch(console.error);
+          } else {
+            // Fallback for browsers without Contact Picker API
+            if (typeof mobileInput.select === 'function') {
+              mobileInput.select();
+            }
           }
+        });
+      },
+      
+      setupAvailabilityCheck() {
+        const dateRange = document.getElementById('dateRange');
+        if (!dateRange) return;
+        
+        dateRange.addEventListener('change', () => {
+          if (dateRange.value) {
+            app.checkRoomAvailability();
+          }
+        });
+      },
+      
+      setupPropertyFilter() {
+        const filter = document.getElementById('propertyFilter');
+        if (!filter) return;
+        
+        filter.addEventListener('change', () => {
+          app.generateCalendarView(filter.value);
+        });
+      },
+      
+      setupTabNavigation() {
+        // Main tabs (footer)
+        document.querySelectorAll('#mainTabs .nav-link').forEach(tab => {
+          tab.addEventListener('click', (e) => {
+            e.preventDefault();
+            const target = tab.dataset.tabTarget;
+            
+            // Hide all content
+            document.querySelectorAll('.main-content > div').forEach(content => {
+              content.style.display = 'none';
+            });
+            
+            // Show selected content
+            document.getElementById(`${target}-content`).style.display = 'block';
+            
+            // Update active tab
+            document.querySelectorAll('#mainTabs .nav-link').forEach(t => {
+              t.classList.remove('active');
+            });
+            tab.classList.add('active');
+            
+            // Load data if needed
+            if (target === 'dashboard') {
+              app.loadTodaysGuests();
+              app.loadUpcomingGuests();
+              app.generateCalendarView();
+            } else if (target === 'manage') {
+              app.loadActiveGuests();
+            } else if (target === 'register') {
+              app.loadAvailableRooms();
+            }
+          });
+        });
+      },
+      
+      setupAutoFocus() {
+        // Auto-focus next input when current input is filled
+        document.querySelectorAll('input, select').forEach(input => {
+          input.addEventListener('change', function() {
+            if (this.value) {
+              helpers.focusNextInput(this);
+            }
+          });
+          
+          // Also for keypress Enter
+          input.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+              helpers.focusNextInput(this);
+            }
+          });
         });
       }
     };
@@ -608,12 +1667,24 @@ Team OCB Stays`;
       document.getElementById('guestForm')?.addEventListener('submit', handlers.registerGuest);
       document.getElementById('generateBill')?.addEventListener('click', handlers.generateBill);
       document.getElementById('checkoutGuest')?.addEventListener('click', handlers.checkoutGuest);
+      document.getElementById('saveGuestChanges')?.addEventListener('click', handlers.saveGuestChanges);
+      
       handlers.setupGuestSelection();
       handlers.setupPlaceOrder();
+      handlers.setupEditGuest();
       handlers.setupContactIcon();
+      handlers.setupAvailabilityCheck();
+      handlers.setupPropertyFilter();
+      handlers.setupTabNavigation();
+      handlers.setupAutoFocus();
+      
+      // Initialize calendar
+      app.initCalendar();
       
       // Load initial data
-      await app.loadAvailableRooms();
+      await app.loadTodaysGuests();
+      await app.loadUpcomingGuests();
+      await app.generateCalendarView();
       await app.loadActiveGuests();
       
       // Make app functions available globally
