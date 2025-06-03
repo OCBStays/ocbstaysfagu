@@ -995,26 +995,162 @@
             tab.classList.add('active');
           });
         });
-      }
-    };
+      },
 
-    // Configuration
-    const config = {
-      airtable: {
-        token: 'patWo5RyRmRCbKXp3.afc1eefc274991a91c14b6b95b2f5bb726cfb14deee85b57e10e5b0f84bc2980',
-        baseId: 'app2UvEfKduRwGjfR',
-        tables: {
-          guests: 'Guests',
-          bills: 'Bills',
-          orders: 'Orders'
+      setupGuestSelection() {
+        const guestSelect = document.getElementById('guestSelect');
+        const pastGuestSelect = document.getElementById('pastGuestSelect');
+
+        if (guestSelect) {
+          guestSelect.addEventListener('change', async function() {
+            const guestInfoDiv = document.getElementById('selectedGuestInfo');
+            if (!this.value) {
+              guestInfoDiv.style.display = 'none';
+              return;
+            }
+
+            const guest = JSON.parse(this.options[this.selectedIndex].dataset.guest);
+            const homeLink = guest.homeLink;
+
+            // Show loading state
+            document.getElementById('guestDetailsContent').innerHTML = `
+              <div class="text-center py-3">
+                <div class="spinner-border text-primary" role="status"></div>
+                <div>Loading guest details...</div>
+              </div>
+            `;
+            guestInfoDiv.style.display = 'block';
+
+            try {
+              // Calculate food total
+              const foodTotal = await app.calculateFoodTotal(guest.guestID);
+              // Calculate nights
+              const nights = helpers.calculateNights(guest.checkin, guest.checkout);
+
+              // Render guest details
+              document.getElementById('guestDetailsContent').innerHTML = `
+                <h5>${guest.name || 'Unnamed Guest'}</h5>
+                <div class="guest-details-grid">
+                  <div class="detail-item">
+                    <div class="detail-label">Room</div>
+                    <div class="detail-value">${guest.room}</div>
+                  </div>
+                  <div class="detail-item">
+                    <div class="detail-label">Mobile</div>
+                    <div class="detail-value">${guest.mobile || 'Not provided'}</div>
+                  </div>
+                  <div class="detail-item">
+                    <div class="detail-label">Check-in</div>
+                    <div class="detail-value">${helpers.formatDate(guest.checkin)}</div>
+                  </div>
+                  <div class="detail-item">
+                    <div class="detail-label">Check-out</div>
+                    <div class="detail-value">${helpers.formatDate(guest.checkout)}</div>
+                  </div>
+                  <div class="detail-item">
+                    <div class="detail-label">Nights</div>
+                    <div class="detail-value">${nights}</div>
+                  </div>
+                  <div class="detail-item">
+                    <div class="detail-label">Advance Paid</div>
+                    <div class="detail-value">₹${guest.advanceAmount || 0}</div>
+                  </div>
+                  <div class="detail-item">
+                    <div class="detail-label">Balance Due</div>
+                    <div class="detail-value">₹${guest.balanceAmount || 0}</div>
+                  </div>
+                  <div class="detail-item">
+                    <div class="detail-label">Food Orders</div>
+                    <div class="detail-value">₹${foodTotal}</div>
+                  </div>
+                </div>
+              `;
+
+              // Setup action buttons
+              document.getElementById('copyGuestLink').onclick = () => {
+                navigator.clipboard.writeText(homeLink);
+                helpers.showAlert('billOutput', 'Link copied to clipboard!');
+              };
+              document.getElementById('sendEmailToGuest').onclick = () => window.open(
+                `mailto:?subject=OCB Stays Information&body=${encodeURIComponent(app.generateEmailBody(guest, homeLink))}`
+              );
+              document.getElementById('sendWhatsappToGuest').onclick = () => window.open(
+                `https://wa.me/${guest.mobile}?text=${encodeURIComponent(app.generateWhatsappMessage(guest, homeLink))}`
+              );
+              document.getElementById('callGuest').href = `tel:${guest.mobile}`;
+            } catch (error) {
+              console.error('Error loading guest details:', error);
+              document.getElementById('guestDetailsContent').innerHTML = `
+                <div class="alert alert-danger">Failed to load guest details</div>
+              `;
+            }
+          });
+        }
+
+        if (pastGuestSelect) {
+          pastGuestSelect.addEventListener('change', function() {
+            const pastGuestInfoDiv = document.getElementById('selectedPastGuestInfo');
+            if (!this.value) {
+              pastGuestInfoDiv.style.display = 'none';
+              return;
+            }
+
+            const guest = JSON.parse(this.options[this.selectedIndex].dataset.guest);
+            document.getElementById('pastGuestDetailsContent').innerHTML = `
+              <h5>${guest.name || 'Unnamed Guest'}</h5>
+              <div class="guest-details-grid">
+                <div class="detail-item">
+                  <div class="detail-label">Room</div>
+                  <div class="detail-value">${guest.room}</div>
+                </div>
+                <div class="detail-item">
+                  <div class="detail-label">Mobile</div>
+                  <div class="detail-value">${guest.mobile || 'Not provided'}</div>
+                </div>
+                <div class="detail-item">
+                  <div class="detail-label">Check-in</div>
+                  <div class="detail-value">${helpers.formatDate(guest.checkin)}</div>
+                </div>
+                <div class="detail-item">
+                  <div class="detail-label">Check-out</div>
+                  <div class="detail-value">${helpers.formatDate(guest.checkout)}</div>
+                </div>
+                <div class="detail-item">
+                  <div class="detail-label">Nights</div>
+                  <div class="detail-value">${helpers.calculateNights(guest.checkin, guest.checkout)}</div>
+                </div>
+                <div class="detail-item">
+                  <div class="detail-label">Advance Paid</div>
+                  <div class="detail-value">₹${guest.advanceAmount || 0}</div>
+                </div>
+                <div class="detail-item">
+                  <div class="detail-label">Balance Due</div>
+                  <div class="detail-value">₹${guest.balanceAmount || 0}</div>
+                </div>
+              </div>
+            `;
+            pastGuestInfoDiv.style.display = 'block';
+          });
         }
       },
-      urls: {
-        guestPortal: 'https://ocbstays.github.io/ocbstaysfagu/guest/index.html',
-        guestMenu: 'https://ocbstays.github.io/ocbstaysfagu/guest/menu.html'
-      },
-      rooms: ["Stargazing Deck (0)", "Stargazing Cabin (1)", "A Frame Cottage"]
-    };
+
+      // Configuration
+      config = {
+        airtable: {
+          token: 'patWo5RyRmRCbKXp3.afc1eefc274991a91c14b6b95b2f5bb726cfb14deee85b57e10e5b0f84bc2980',
+          baseId: 'app2UvEfKduRwGjfR',
+          tables: {
+            guests: 'Guests',
+            bills: 'Bills',
+            orders: 'Orders'
+          }
+        },
+        urls: {
+          guestPortal: 'https://ocbstays.github.io/ocbstaysfagu/guest/index.html',
+          guestMenu: 'https://ocbstays.github.io/ocbstaysfagu/guest/menu.html'
+        },
+        rooms: ["Stargazing Deck (0)", "Stargazing Cabin (1)", "A Frame Cottage"]
+      };
 
     // Helper functions 
     const helpers = {
@@ -1865,7 +2001,6 @@ Team OCB Stays`;
         const guestSelect = document.getElementById('guestSelect');
         const pastGuestSelect = document.getElementById('pastGuestSelect');
 
-        // Active guest logic
         if (guestSelect) {
           guestSelect.addEventListener('change', async function() {
             const guestInfoDiv = document.getElementById('selectedGuestInfo');
@@ -1873,7 +2008,6 @@ Team OCB Stays`;
               guestInfoDiv.style.display = 'none';
               return;
             }
-            // Do NOT hide past guest info here
 
             const guest = JSON.parse(this.options[this.selectedIndex].dataset.guest);
             const homeLink = guest.homeLink;
@@ -1953,7 +2087,6 @@ Team OCB Stays`;
           });
         }
 
-        // Past guest logic (read-only)
         if (pastGuestSelect) {
           pastGuestSelect.addEventListener('change', function() {
             const pastGuestInfoDiv = document.getElementById('selectedPastGuestInfo');
@@ -1961,7 +2094,6 @@ Team OCB Stays`;
               pastGuestInfoDiv.style.display = 'none';
               return;
             }
-            // Do NOT hide active guest info here
 
             const guest = JSON.parse(this.options[this.selectedIndex].dataset.guest);
             document.getElementById('pastGuestDetailsContent').innerHTML = `
@@ -2001,7 +2133,7 @@ Team OCB Stays`;
           });
         }
       },
-      
+
       // Setup tab navigation
       setupTabNavigation() {
         // Hide all tab contents except dashboard on load
@@ -2042,6 +2174,7 @@ Team OCB Stays`;
       handlers.setupTabNavigation();
 
       // Attach guest selection listeners ONCE, before any async/await
+      app.setupGuestSelection = handlers.setupGuestSelection;
       handlers.setupGuestSelection();
 
       // Initialize components (these can load async, tabs will work regardless)
