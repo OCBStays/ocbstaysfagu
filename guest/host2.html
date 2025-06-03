@@ -1857,4 +1857,169 @@ Team OCB Stays`;
             if (!this.value) return guestInfoDiv.style.display = 'none';
 
             const guest = JSON.parse(this.options[this.selectedIndex].dataset.guest);
-            const homeLink
+            const homeLink = guest.homeLink;
+
+            // Show loading state
+            document.getElementById('guestDetailsContent').innerHTML = `
+              <div class="text-center py-3">
+                <div class="spinner-border text-primary" role="status"></div>
+                <div>Loading guest details...</div>
+              </div>
+            `;
+            
+            guestInfoDiv.style.display = 'block';
+            
+            try {
+              // Calculate food total
+              const foodTotal = await app.calculateFoodTotal(guest.guestID);
+              
+              // Calculate nights
+              const nights = helpers.calculateNights(guest.checkin, guest.checkout);
+              
+              // Render guest details
+              document.getElementById('guestDetailsContent').innerHTML = `
+                <h5>${guest.name || 'Unnamed Guest'}</h5>
+                <div class="guest-details-grid">
+                  <div class="detail-item">
+                    <div class="detail-label">Room</div>
+                    <div class="detail-value">${guest.room}</div>
+                  </div>
+                  <div class="detail-item">
+                    <div class="detail-label">Mobile</div>
+                    <div class="detail-value">${guest.mobile || 'Not provided'}</div>
+                  </div>
+                  <div class="detail-item">
+                    <div class="detail-label">Check-in</div>
+                    <div class="detail-value">${helpers.formatDate(guest.checkin)}</div>
+                  </div>
+                  <div class="detail-item">
+                    <div class="detail-label">Check-out</div>
+                    <div class="detail-value">${helpers.formatDate(guest.checkout)}</div>
+                  </div>
+                  <div class="detail-item">
+                    <div class="detail-label">Nights</div>
+                    <div class="detail-value">${nights}</div>
+                  </div>
+                  <div class="detail-item">
+                    <div class="detail-label">Advance Paid</div>
+                    <div class="detail-value">₹${guest.advanceAmount || 0}</div>
+                  </div>
+                  <div class="detail-item">
+                    <div class="detail-label">Balance Due</div>
+                    <div class="detail-value">₹${guest.balanceAmount || 0}</div>
+                  </div>
+                  <div class="detail-item">
+                    <div class="detail-label">Food Orders</div>
+                    <div class="detail-value">₹${foodTotal}</div>
+                  </div>
+                </div>
+              `;
+              
+              // Setup action buttons
+              document.getElementById('copyGuestLink').onclick = () => {
+                navigator.clipboard.writeText(homeLink);
+                helpers.showAlert('billOutput', 'Link copied to clipboard!');
+              };
+              
+              document.getElementById('sendEmailToGuest').onclick = () => window.open(
+                `mailto:?subject=OCB Stays Information&body=${encodeURIComponent(app.generateEmailBody(guest, homeLink))}`
+              );
+              
+              document.getElementById('sendWhatsappToGuest').onclick = () => window.open(
+                `https://wa.me/${guest.mobile}?text=${encodeURIComponent(app.generateWhatsappMessage(guest, homeLink))}`
+              );
+              
+              document.getElementById('callGuest').href = `tel:${guest.mobile}`;
+              
+            } catch (error) {
+              console.error('Error loading guest details:', error);
+              document.getElementById('guestDetailsContent').innerHTML = `
+                <div class="alert alert-danger">Failed to load guest details</div>
+              `;
+            }
+          });
+        }
+        // Add: Past guest selection logic
+        if (pastGuestSelect) {
+          pastGuestSelect.addEventListener('change', function() {
+            const pastGuestInfoDiv = document.getElementById('selectedPastGuestInfo');
+            document.getElementById('selectedGuestInfo').style.display = 'none';
+            if (!this.value) return pastGuestInfoDiv.style.display = 'none';
+
+            const guest = JSON.parse(this.options[this.selectedIndex].dataset.guest);
+            // Render past guest details (read-only)
+            document.getElementById('pastGuestDetailsContent').innerHTML = `
+              <h5>${guest.name || 'Unnamed Guest'}</h5>
+              <div class="guest-details-grid">
+                <div class="detail-item">
+                  <div class="detail-label">Room</div>
+                  <div class="detail-value">${guest.room}</div>
+                </div>
+                <div class="detail-item">
+                  <div class="detail-label">Mobile</div>
+                  <div class="detail-value">${guest.mobile || 'Not provided'}</div>
+                </div>
+                <div class="detail-item">
+                  <div class="detail-label">Check-in</div>
+                  <div class="detail-value">${helpers.formatDate(guest.checkin)}</div>
+                </div>
+                <div class="detail-item">
+                  <div class="detail-label">Check-out</div>
+                  <div class="detail-value">${helpers.formatDate(guest.checkout)}</div>
+                </div>
+                <div class="detail-item">
+                  <div class="detail-label">Nights</div>
+                  <div class="detail-value">${helpers.calculateNights(guest.checkin, guest.checkout)}</div>
+                </div>
+                <div class="detail-item">
+                  <div class="detail-label">Advance Paid</div>
+                  <div class="detail-value">₹${guest.advanceAmount || 0}</div>
+                </div>
+                <div class="detail-item">
+                  <div class="detail-label">Balance Due</div>
+                  <div class="detail-value">₹${guest.balanceAmount || 0}</div>
+                </div>
+              </div>
+            `;
+            pastGuestInfoDiv.style.display = 'block';
+          });
+        }
+      },
+      
+      // Tab navigation logic
+      setupTabNavigation() {
+        document.querySelectorAll('#mainTabs .nav-link').forEach(tab => {
+          tab.addEventListener('click', function (e) {
+            e.preventDefault();
+            // Hide all tab contents
+            document.querySelectorAll('.main-content > div').forEach(content => {
+              content.style.display = 'none';
+            });
+            // Show selected tab content
+            const target = tab.dataset.tabTarget;
+            document.getElementById(`${target}-content`).style.display = 'block';
+            // Set active tab
+            document.querySelectorAll('#mainTabs .nav-link').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+          });
+        });
+        // Show dashboard by default
+        document.getElementById('dashboard-content').style.display = 'block';
+      }
+    };
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      // Initialize components
+      app.initCalendar();
+      await app.loadActiveGuests();
+      await app.loadAvailableRooms();
+      await app.loadTodaysGuests();
+      await app.loadUpcomingGuests();
+      await app.generateCalendarView();
+      
+      // Setup tab navigation
+      app.setupTabNavigation();
+    });
+  </script>
+</body>
+</html>
