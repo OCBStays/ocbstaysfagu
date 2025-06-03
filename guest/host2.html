@@ -1573,10 +1573,12 @@ Team OCB Stays`;
       // Setup tab navigation FIRST so tabs are always clickable
       handlers.setupTabNavigation();
 
+      // Attach guest selection listeners ONCE, before any async/await
+      handlers.setupGuestSelection();
+
       // Initialize components (these can load async, tabs will work regardless)
       app.initCalendar();
       await app.loadActiveGuests();
-      handlers.setupGuestSelection();
       await app.loadAvailableRooms();
       await app.loadTodaysGuests();
       await app.loadUpcomingGuests();
