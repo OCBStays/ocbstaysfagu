@@ -1570,16 +1570,17 @@ Team OCB Stays`;
     };
 
     window.addEventListener('DOMContentLoaded', async () => {
-      // Initialize components
+      // Setup tab navigation FIRST so tabs are always clickable
+      handlers.setupTabNavigation();
+
+      // Initialize components (these can load async, tabs will work regardless)
       app.initCalendar();
       await app.loadActiveGuests();
+      handlers.setupGuestSelection();
       await app.loadAvailableRooms();
       await app.loadTodaysGuests();
       await app.loadUpcomingGuests();
       await app.generateCalendarView();
-      
-      // Setup tab navigation
-      handlers.setupTabNavigation();
     });
   </script>
 </body>
