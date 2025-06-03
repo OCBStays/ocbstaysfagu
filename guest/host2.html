@@ -1584,6 +1584,37 @@ Team OCB Stays`;
       await app.loadUpcomingGuests();
       await app.generateCalendarView();
     });
+
+    // Edit guest handler
+    document.getElementById('saveGuestChanges').onclick = async function() {
+      const guestId = document.getElementById('editGuestId').value;
+      if (!guestId) return;
+      const updatedFields = {
+        name: document.getElementById('editName').value,
+        mobile: document.getElementById('editMobile').value,
+        room: document.getElementById('editRoom').value,
+        checkin: document.getElementById('editCheckin').value,
+        checkout: document.getElementById('editCheckout').value,
+        advanceAmount: parseFloat(document.getElementById('editAdvance').value) || 0,
+        balanceAmount: parseFloat(document.getElementById('editBalance').value) || 0
+      };
+      try {
+        await helpers.fetchAirtable(`${config.airtable.tables.guests}/${guestId}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ fields: updatedFields })
+        });
+        // Hide modal
+        bootstrap.Modal.getInstance(document.getElementById('editGuestModal')).hide();
+        // Refresh guest info and dropdowns
+        await app.loadActiveGuests();
+        // Optionally, re-select the guest to refresh info
+        document.getElementById('guestSelect').value = guestId;
+        document.getElementById('guestSelect').dispatchEvent(new Event('change'));
+        helpers.showAlert('billOutput', 'Guest details updated!');
+      } catch (error) {
+        helpers.showAlert('billOutput', 'Failed to update guest: ' + error.message, 'danger');
+      }
+    };
   </script>
 </body>
 </html>
