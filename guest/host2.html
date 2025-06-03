@@ -997,7 +997,7 @@
         });
       },
 
-      setupGuestSelection() {
+      async setupGuestSelection() {
         const guestSelect = document.getElementById('guestSelect');
         const pastGuestSelect = document.getElementById('pastGuestSelect');
 
@@ -2170,46 +2170,49 @@ Team OCB Stays`;
         container.style.display = 'flex';
       });
 
-      // Setup tab navigation FIRST so tabs are always clickable
+      // Setup tab navigation FIRST, before any data loading
       handlers.setupTabNavigation();
-
-      // Attach guest selection listeners ONCE, before any async/await
+      
+      // Initialize basic UI elements
       app.setupGuestSelection = handlers.setupGuestSelection;
       handlers.setupGuestSelection();
-
-      // Initialize components (these can load async, tabs will work regardless)
       app.initCalendar();
-      await app.loadActiveGuests();
-      await app.loadAvailableRooms();
-      await app.loadTodaysGuests();
-      await app.loadUpcomingGuests();
-      await app.generateCalendarView();
 
-      // Add form submit handler for guest registration
+      // Load data asynchronously without blocking tab switching
+      const loadData = async () => {
+        try {
+          await Promise.all([
+            app.loadActiveGuests(),
+            app.loadAvailableRooms(),
+            app.loadTodaysGuests(),
+            app.loadUpcomingGuests(),
+            app.generateCalendarView()
+          ]);
+        } catch (error) {
+          console.error('Error loading data:', error);
+        } finally {
+          // Hide all loading containers when done
+          document.querySelectorAll('.loading-container').forEach(container => {
+            container.style.display = 'none';
+          });
+        }
+      };
+
+      // Start loading data without awaiting
+      loadData();
+
+      // Setup event handlers - these work independently of data loading
       document.getElementById('guestForm').addEventListener('submit', handlers.registerGuest);
-
-      // Add property filter change handler
       document.getElementById('propertyFilter').addEventListener('change', (e) => {
         app.generateCalendarView(e.target.value);
       });
-
-      // Add click handler for generateBill button
       document.getElementById('generateBill').addEventListener('click', handlers.generateBill);
-
-      // Add click handler for placeOrder to show food orders
       document.getElementById('placeOrder').addEventListener('click', () => {
         const guestSelect = document.getElementById('guestSelect');
         const guest = JSON.parse(guestSelect.options[guestSelect.selectedIndex].dataset.guest);
         app.showFoodOrders(guest.guestID);
       });
-
-      // Add click handler for checkout button
       document.getElementById('checkoutGuest').addEventListener('click', handlers.checkoutGuest);
-
-      // Hide loading containers after data is loaded
-      document.querySelectorAll('.loading-container').forEach(container => {
-        container.style.display = 'none';
-      });
     });
 
     // Add event handlers for guest card clicks
