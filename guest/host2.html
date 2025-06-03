@@ -518,6 +518,48 @@
       color: #2d3748;
       font-weight: 500;
     }
+
+    /* Flatpickr calendar styling */
+    .flatpickr-calendar {
+        background: var(--glass-bg) !important;
+        border: 1px solid var(--glass-border) !important;
+        box-shadow: var(--glass-shadow) !important;
+        border-radius: var(--border-radius) !important;
+        font-family: inherit !important;
+        backdrop-filter: blur(10px) !important;
+        -webkit-backdrop-filter: blur(10px) !important;
+    }
+
+    .flatpickr-day {
+        border-radius: 8px !important;
+        font-weight: 500 !important;
+    }
+
+    .flatpickr-day.selected {
+        background: var(--primary) !important;
+        border-color: var(--primary) !important;
+    }
+
+    .flatpickr-day.today {
+        border-color: var(--primary) !important;
+    }
+
+    .flatpickr-months .flatpickr-month {
+        background: transparent !important;
+    }
+
+    .flatpickr-current-month .flatpickr-monthDropdown-months {
+        background: transparent !important;
+    }
+
+    .flatpickr-weekdays {
+        background: transparent !important;
+    }
+
+    .flatpickr-weekday {
+        background: transparent !important;
+        color: var(--dark) !important;
+    }
   </style>
 </head>
 <body>
@@ -1585,10 +1627,18 @@ Team OCB Stays`;
           mode: "range",
           minDate: "today",
           dateFormat: "Y-m-d",
+          altFormat: "F j, Y",
+          altInput: true,
+          animate: true,
+          closeOnSelect: false,
+          disableMobile: false,
           onChange: function(selectedDates) {
             if (selectedDates.length === 2) {
               app.checkRoomAvailability();
             }
+          },
+          onOpen: function() {
+            document.querySelector('.flatpickr-calendar').style.display = 'block';
           }
         });
         
