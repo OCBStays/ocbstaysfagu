@@ -1542,7 +1542,7 @@ Team OCB Stays`;
         }
       },
       
-      // Tab navigation logic
+      // Setup tab navigation
       setupTabNavigation() {
         // Hide all tab contents except dashboard on load
         document.querySelectorAll('.main-content > div').forEach(content => {
@@ -1578,7 +1578,7 @@ Team OCB Stays`;
       await app.generateCalendarView();
       
       // Setup tab navigation
-      app.setupTabNavigation();
+      handlers.setupTabNavigation();
     });
   </script>
 </body>
