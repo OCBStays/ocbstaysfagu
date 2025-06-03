@@ -1405,11 +1405,17 @@ Team OCB Stays`;
       async setupGuestSelection() {
         const guestSelect = document.getElementById('guestSelect');
         const pastGuestSelect = document.getElementById('pastGuestSelect');
+
+        // Active guest logic
         if (guestSelect) {
           guestSelect.addEventListener('change', async function() {
             const guestInfoDiv = document.getElementById('selectedGuestInfo');
+            if (!this.value) {
+              guestInfoDiv.style.display = 'none';
+              return;
+            }
+            // Hide past guest info if showing
             document.getElementById('selectedPastGuestInfo').style.display = 'none';
-            if (!this.value) return guestInfoDiv.style.display = 'none';
 
             const guest = JSON.parse(this.options[this.selectedIndex].dataset.guest);
             const homeLink = guest.homeLink;
@@ -1421,16 +1427,14 @@ Team OCB Stays`;
                 <div>Loading guest details...</div>
               </div>
             `;
-            
             guestInfoDiv.style.display = 'block';
-            
+
             try {
               // Calculate food total
               const foodTotal = await app.calculateFoodTotal(guest.guestID);
-              
               // Calculate nights
               const nights = helpers.calculateNights(guest.checkin, guest.checkout);
-              
+
               // Render guest details
               document.getElementById('guestDetailsContent').innerHTML = `
                 <h5>${guest.name || 'Unnamed Guest'}</h5>
@@ -1469,23 +1473,19 @@ Team OCB Stays`;
                   </div>
                 </div>
               `;
-              
+
               // Setup action buttons
               document.getElementById('copyGuestLink').onclick = () => {
                 navigator.clipboard.writeText(homeLink);
                 helpers.showAlert('billOutput', 'Link copied to clipboard!');
               };
-              
               document.getElementById('sendEmailToGuest').onclick = () => window.open(
                 `mailto:?subject=OCB Stays Information&body=${encodeURIComponent(app.generateEmailBody(guest, homeLink))}`
               );
-              
               document.getElementById('sendWhatsappToGuest').onclick = () => window.open(
                 `https://wa.me/${guest.mobile}?text=${encodeURIComponent(app.generateWhatsappMessage(guest, homeLink))}`
               );
-              
               document.getElementById('callGuest').href = `tel:${guest.mobile}`;
-              
             } catch (error) {
               console.error('Error loading guest details:', error);
               document.getElementById('guestDetailsContent').innerHTML = `
@@ -1494,15 +1494,19 @@ Team OCB Stays`;
             }
           });
         }
-        // Add: Past guest selection logic
+
+        // Past guest logic (read-only)
         if (pastGuestSelect) {
           pastGuestSelect.addEventListener('change', function() {
             const pastGuestInfoDiv = document.getElementById('selectedPastGuestInfo');
+            if (!this.value) {
+              pastGuestInfoDiv.style.display = 'none';
+              return;
+            }
+            // Hide active guest info if showing
             document.getElementById('selectedGuestInfo').style.display = 'none';
-            if (!this.value) return pastGuestInfoDiv.style.display = 'none';
 
             const guest = JSON.parse(this.options[this.selectedIndex].dataset.guest);
-            // Render past guest details (read-only)
             document.getElementById('pastGuestDetailsContent').innerHTML = `
               <h5>${guest.name || 'Unnamed Guest'}</h5>
               <div class="guest-details-grid">
