@@ -837,6 +837,24 @@
   <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <script>
+    // Move config outside handlers
+const config = {
+    airtable: {
+        token: 'patWo5RyRmRCbKXp3.afc1eefc274991a91c14b6b95b2f5bb726cfb14deee85b57e10e5b0f84bc2980',
+        baseId: 'app2UvEfKduRwGjfR',
+        tables: {
+            guests: 'Guests',
+            bills: 'Bills',
+            orders: 'Orders'
+        }
+    },
+    urls: {
+        guestPortal: 'https://ocbstays.github.io/ocbstaysfagu/guest/index.html',
+        guestMenu: 'https://ocbstays.github.io/ocbstaysfagu/guest/menu.html'
+    },
+    rooms: ["Stargazing Deck (0)", "Stargazing Cabin (1)", "A Frame Cottage"]
+};
+
     const handlers = {
       async registerGuest(e) {
         e.preventDefault();
@@ -978,22 +996,28 @@
       },
       
       setupTabNavigation() {
-        document.querySelectorAll('.main-content > div').forEach(content => {
-          content.style.display = 'none';
-        });
-        document.getElementById('dashboard-content').style.display = 'block';
-
+        // Handle tab switching immediately without waiting for data
         document.querySelectorAll('#mainTabs .nav-link').forEach(tab => {
-          tab.addEventListener('click', function (e) {
-            e.preventDefault();
-            document.querySelectorAll('.main-content > div').forEach(content => {
-              content.style.display = 'none';
+            tab.addEventListener('click', (e) => {
+                e.preventDefault();
+                
+                // Switch tabs immediately
+                document.querySelectorAll('.main-content > div').forEach(content => {
+                    content.style.display = 'none';
+                });
+                
+                const target = tab.dataset.tabTarget;
+                const targetContent = document.getElementById(`${target}-content`);
+                if (targetContent) {
+                    targetContent.style.display = 'block';
+                }
+                
+                // Update active state
+                document.querySelectorAll('#mainTabs .nav-link').forEach(t => {
+                    t.classList.remove('active');
+                });
+                tab.classList.add('active');
             });
-            const target = tab.dataset.tabTarget;
-            document.getElementById(`${target}-content`).style.display = 'block';
-            document.querySelectorAll('#mainTabs .nav-link').forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-          });
         });
       },
 
@@ -2170,7 +2194,7 @@ Team OCB Stays`;
         container.style.display = 'flex';
       });
 
-      // Setup tab navigation FIRST, before any data loading
+      // Setup navigation first - this should be instant
       handlers.setupTabNavigation();
       
       // Initialize basic UI elements
@@ -2178,9 +2202,10 @@ Team OCB Stays`;
       handlers.setupGuestSelection();
       app.initCalendar();
 
-      // Load data asynchronously without blocking tab switching
+      // Load data asynchronously
       const loadData = async () => {
         try {
+          // Load everything in parallel
           await Promise.all([
             app.loadActiveGuests(),
             app.loadAvailableRooms(),
@@ -2190,18 +2215,26 @@ Team OCB Stays`;
           ]);
         } catch (error) {
           console.error('Error loading data:', error);
+          // Show error state
+          document.querySelectorAll('.loading-container').forEach(container => {
+            container.innerHTML = `
+                    <div class="alert alert-danger">
+                        Failed to load data. Please refresh the page.
+                    </div>
+                `;
+          });
         } finally {
-          // Hide all loading containers when done
+          // Hide loading states when done
           document.querySelectorAll('.loading-container').forEach(container => {
             container.style.display = 'none';
           });
         }
       };
 
-      // Start loading data without awaiting
+      // Start loading data without blocking
       loadData();
 
-      // Setup event handlers - these work independently of data loading
+      // Setup event handlers
       document.getElementById('guestForm').addEventListener('submit', handlers.registerGuest);
       document.getElementById('propertyFilter').addEventListener('change', (e) => {
         app.generateCalendarView(e.target.value);
