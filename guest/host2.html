@@ -18,20 +18,26 @@
       --danger: #ef4444;
       --success: #22c55e;
       --border-radius: 12px;
-      --glass-bg: rgba(255, 255, 255, 0.7);
-      --glass-border: rgba(255, 255, 255, 0.2);
-      --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+      --glass-bg: rgba(255, 255, 255, 0.85);
+      --glass-border: rgba(255, 255, 255, 0.25);
+      --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
     }
 
     body {
-      font-family: 'Inter', system-ui, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background-image: url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&q=80');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      background-color: #2b4162;
       color: var(--dark);
+      line-height: 1.6;
       padding: 1.5rem;
       max-width: 1200px;
       margin: auto;
       padding-bottom: 80px;
       min-height: 100vh;
+      font-weight: 400;
     }
 
     .loading-spinner {
@@ -116,7 +122,7 @@
       bottom: 0;
       left: 0;
       right: 0;
-      background: rgba(255,255,255,0.9);
+      background: rgba(255,255,255,0.95);
       backdrop-filter: blur(10px);
       border-top: 1px solid rgba(0,0,0,0.08);
       z-index: 1000;
@@ -138,12 +144,9 @@
     }
     /* Guest cards */
     .guest-card {
-      background: white;
-      border-radius: var(--border-radius);
-      padding: 1.5rem;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-      transition: all 0.3s ease;
-      border: 1px solid rgba(0,0,0,0.05);
+      background: rgba(255, 255, 255, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
 
     .guest-card:hover {
@@ -317,7 +320,8 @@
     }
     .dashboard-section {
       background: var(--glass-bg);
-      backdrop-filter: blur(8px);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
       border: 1px solid var(--glass-border);
       box-shadow: var(--glass-shadow);
       border-radius: var(--border-radius);
@@ -474,7 +478,45 @@
 
     .modal-content {
       background: var(--glass-bg);
-      backdrop-filter: blur(8px);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    /* Loading state improvements */
+    .loading-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      background: rgba(255, 255, 255, 0.5);
+      border-radius: var(--border-radius);
+      backdrop-filter: blur(5px);
+    }
+
+    .loading-text {
+      margin-top: 1rem;
+      color: #2d3748;
+      font-weight: 500;
+    }
+
+    /* Override Bootstrap spinner */
+    .spinner-border {
+      width: 2rem;
+      height: 2rem;
+      border-width: 0.25em;
+      color: var(--primary);
+    }
+
+    /* Improve text readability */
+    h1, h2, h3, h4, h5, h6 {
+      color: #1a202c;
+      font-weight: 600;
+    }
+
+    .form-label {
+      color: #2d3748;
+      font-weight: 500;
     }
   </style>
 </head>
@@ -489,10 +531,9 @@
         <div class="dashboard-section">
           <h2><i class="fas fa-calendar-day"></i> Today's Guests</h2>
           <div id="today-guests-list">
-            <div class="text-center py-3">
-              <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Loading...</span>
-              </div>
+            <div class="loading-container">
+              <div class="spinner-border text-primary" role="status"></div>
+              <div class="loading-text">Loading guests...</div>
             </div>
           </div>
         </div>
@@ -500,10 +541,9 @@
         <div class="dashboard-section">
           <h2><i class="fas fa-calendar-week"></i> Upcoming Guests</h2>
           <div id="upcoming-guests-list">
-            <div class="text-center py-3">
-              <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Loading...</span>
-              </div>
+            <div class="loading-container">
+              <div class="spinner-border text-primary" role="status"></div>
+              <div class="loading-text">Loading upcoming guests...</div>
             </div>
           </div>
         </div>
@@ -519,7 +559,10 @@
             </select>
           </div>
           <div id="property-calendar-view">
-            <!-- Calendar will be generated here -->
+            <div class="loading-container">
+              <div class="spinner-border text-primary" role="status"></div>
+              <div class="loading-text">Loading calendar...</div>
+            </div>
           </div>
         </div>
       </div>
@@ -1936,6 +1979,15 @@ Team OCB Stays`;
     };
 
     window.addEventListener('DOMContentLoaded', async () => {
+      // Pre-load background image
+      const img = new Image();
+      img.src = 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&q=80';
+      
+      // Show loading state
+      document.querySelectorAll('.loading-container').forEach(container => {
+        container.style.display = 'flex';
+      });
+
       // Setup tab navigation FIRST so tabs are always clickable
       handlers.setupTabNavigation();
 
@@ -1970,6 +2022,11 @@ Team OCB Stays`;
 
       // Add click handler for checkout button
       document.getElementById('checkoutGuest').addEventListener('click', handlers.checkoutGuest);
+
+      // Hide loading containers after data is loaded
+      document.querySelectorAll('.loading-container').forEach(container => {
+        container.style.display = 'none';
+      });
     });
 
     // Add event handlers for guest card clicks
