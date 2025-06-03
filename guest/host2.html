@@ -18,16 +18,20 @@
       --danger: #ef4444;
       --success: #22c55e;
       --border-radius: 12px;
+      --glass-bg: rgba(255, 255, 255, 0.7);
+      --glass-border: rgba(255, 255, 255, 0.2);
+      --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
     }
 
     body {
       font-family: 'Inter', system-ui, sans-serif;
-      background: var(--light);
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: var(--dark);
       padding: 1.5rem;
       max-width: 1200px;
       margin: auto;
       padding-bottom: 80px;
+      min-height: 100vh;
     }
 
     .loading-spinner {
@@ -50,7 +54,7 @@
       width: 40px;
       height: 40px;
       font-size: 1.1rem;
-      border-radius: var(--border-radius);
+      border-radius: 50%;
       transition: all 0.2s ease;
       cursor: pointer;
     }
@@ -144,7 +148,7 @@
 
     .guest-card:hover {
       transform: translateY(-2px);
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      box-shadow: var(--glass-shadow);
     }
 
     .guest-card h5 {
@@ -312,17 +316,19 @@
       gap: 1.5rem;
     }
     .dashboard-section {
-      background: white;
+      background: var(--glass-bg);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--glass-border);
+      box-shadow: var(--glass-shadow);
       border-radius: var(--border-radius);
       padding: 1.5rem;
-      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
       transition: all 0.2s ease;
       margin-bottom: 1.5rem;
-      border: 1px solid rgba(0,0,0,0.05);
     }
 
     .dashboard-section:hover {
-      box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+      transform: translateY(-2px);
+      box-shadow: var(--glass-shadow);
     }
 
     .dashboard-section h2 {
@@ -422,17 +428,53 @@
       border-bottom-color: var(--primary);
     }
 
-    /* Modal improvements */
-    .modal-content {
-      border-radius: var(--border-radius);
-      border: none;
-      box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    /* New styles for payment tracking */
+    .payment-progress {
+      height: 8px;
+      background: #e2e8f0;
+      border-radius: 4px;
+      margin: 1rem 0;
+      overflow: hidden;
     }
 
-    .modal-body {
-      padding: 1.5rem;
-      max-height: 80vh;
-      overflow-y: auto;
+    .payment-progress-bar {
+      height: 100%;
+      background: linear-gradient(to right, var(--success) var(--paid-percent), var(--danger) var(--paid-percent));
+      transition: width 0.3s ease;
+    }
+
+    .payment-summary {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 0.5rem;
+      font-size: 0.9rem;
+    }
+
+    /* Food orders section */
+    .food-orders-section {
+      margin-top: 1.5rem;
+      cursor: pointer;
+      padding: 1rem;
+      border-radius: var(--border-radius);
+      background: rgba(0,0,0,0.03);
+      transition: all 0.2s ease;
+    }
+
+    .food-orders-section:hover {
+      background: rgba(0,0,0,0.05);
+    }
+
+    .food-order-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem;
+      border-bottom: 1px solid rgba(0,0,0,0.1);
+    }
+
+    .modal-content {
+      background: var(--glass-bg);
+      backdrop-filter: blur(8px);
     }
   </style>
 </head>
@@ -1355,136 +1397,184 @@ Team OCB Stays`;
           minDate: "today",
           dateFormat: "Y-m-d"
         });
-      }
-    };
+      },
+      
+      async generateBill(guestData, orders) {
+        const billHeader = `
+          <div class="bill-header text-center mb-4">
+            <h3>OCB Stays</h3>
+            <p>Food Bill</p>
+            <div class="guest-info mt-3">
+              <p><strong>Guest:</strong> ${guestData.name}</p>
+              <p><strong>Room:</strong> ${guestData.room}</p>
+              <p><strong>Stay:</strong> ${helpers.formatDate(guestData.checkin)} to ${helpers.formatDate(guestData.checkout)}</p>
+            </div>
+          </div>
+        `;
 
-    // Event handlers
-    const handlers = {
-      async registerGuest(e) {
-        e.preventDefault();
-        const btn = e.target.querySelector('button[type="submit"]') || e.target;
-        btn.disabled = true;
-        helpers.toggleSpinner('registerSpinner', true);
+        // Group items by name and calculate totals
+        const itemGroups = orders.reduce((acc, order) => {
+          const items = JSON.parse(order.fields.Items || '[]');
+          items.forEach(item => {
+            if (!acc[item.name]) {
+              acc[item.name] = { quantity: 0, amount: 0 };
+            }
+            acc[item.name].quantity += item.quantity;
+            acc[item.name].amount += item.price * item.quantity;
+          });
+          return acc;
+        }, {});
+
+        const itemsHTML = Object.entries(itemGroups).map(([name, data]) => `
+          <tr>
+            <td>${name}</td>
+            <td class="text-center">${data.quantity}</td>
+            <td class="text-end">₹${data.amount.toFixed(2)}</td>
+          </tr>
+        `).join('');
+
+        const totalAmount = Object.values(itemGroups).reduce((sum, item) => sum + item.amount, 0);
+
+        return `
+          <div class="bill-details p-4">
+            ${billHeader}
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th class="text-center">Qty</th>
+                  <th class="text-end">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${itemsHTML}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <th colspan="2">Total</th>
+                  <th class="text-end">₹${totalAmount.toFixed(2)}</th>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        `;
+      },
+      
+      showCheckoutConfirmation(guest, onConfirm) {
+        const modal = new bootstrap.Modal(document.getElementById('checkoutConfirmModal'));
+        const modalBody = document.getElementById('checkoutConfirmBody');
+        
+        modalBody.innerHTML = `
+          <div class="mb-3">
+            <label class="form-label">Payment Status</label>
+            <select class="form-select" id="paymentStatus">
+              <option value="Cleared">Cleared</option>
+              <option value="Pending">Pending</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Payment Type</label>
+            <select class="form-select" id="paymentType">
+              <option value="UPI">UPI</option>
+              <option value="Cash">Cash</option>
+              <option value="Card">Card</option>
+              <option value="Net Banking">Net Banking</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Payment Received By</label>
+            <select class="form-select" id="paymentTo">
+              <option value="Prateek">Prateek</option>
+              <option value="Gaurav">Gaurav</option>
+              <option value="Uncle">Uncle</option>
+            </select>
+          </div>
+        `;
+
+        document.getElementById('confirmCheckout').onclick = async () => {
+          const status = document.getElementById('paymentStatus').value;
+          const type = document.getElementById('paymentType').value;
+          const paymentTo = document.getElementById('paymentTo').value;
+
+          await onConfirm({
+            status,
+            type,
+            paymentTo,
+            balanceAmount: status === 'Cleared' ? 0 : guest.balanceAmount
+          });
+          
+          modal.hide();
+        };
+
+        modal.show();
+      },
+      
+      showFoodOrders: async function(guestId) {
+        const modal = new bootstrap.Modal(document.getElementById('foodOrdersModal'));
+        const modalBody = document.getElementById('foodOrdersBody');
         
         try {
-          const dateRange = document.getElementById('dateRange').value;
-          if (!dateRange) throw new Error('Please select dates');
+          const orders = await this.getGuestOrders(guestId);
           
-          const [checkin, checkout] = dateRange.split(' to ');
-          const formData = {
-            room: document.getElementById('room').value,
-            checkin,
-            checkout,
-            name: document.getElementById('name').value,
-            mobile: document.getElementById('mobile').value,
-            advanceAmount: document.getElementById('advanceAmount').value || 0,
-            balanceAmount: document.getElementById('balanceAmount').value || 0
-          };
-          
-          const guestID = helpers.generateGuestId();
-          const homeLink = `${config.urls.guestPortal}?guestID=${guestID}&room=${encodeURIComponent(formData.room)}`;
-          
-          // Create guest in Airtable
-          const response = await helpers.fetchAirtable(config.airtable.tables.guests, {
-            method: 'POST',
-            body: JSON.stringify({
-              fields: {
-                ...formData,
-                guestID,
-                status: "Active",
-                homeLink,
-                advanceAmount: parseFloat(formData.advanceAmount),
-                balanceAmount: parseFloat(formData.balanceAmount)
-              }
-            })
-          });
-
-          if (!response.id) throw new Error('Failed to create guest record');
-          
-          document.getElementById('linkOutput').innerHTML = `
-            <div class="alert alert-success">Guest registered successfully! Record ID: ${response.id}</div>
-            <div class="input-group-copy">
-              <input type="text" class="form-control" value="${homeLink}" readonly>
-              <button class="btn btn-outline-secondary" onclick="navigator.clipboard.writeText('${homeLink}');alert('Copied!')">📋 Copy</button>
+          modalBody.innerHTML = `
+            <div class="mb-3">
+              <select class="form-select" id="orderStatusFilter">
+                <option value="all">All Orders</option>
+                <option value="Pending">Pending</option>
+                <option value="Preparing">Preparing</option>
+                <option value="Delivered">Delivered</option>
+                <option value="Cancelled">Cancelled</option>
+              </select>
+            </div>
+            <div id="ordersList">
+              ${orders.map(order => `
+                <div class="food-order-item" data-status="${order.fields.Status}">
+                  <div>
+                    <div class="fw-bold">${new Date(order.fields.createdAt).toLocaleString()}</div>
+                    <div>${JSON.parse(order.fields.Items).map(item => 
+                      `${item.name} x${item.quantity}`).join(', ')}
+                    </div>
+                    <div class="text-muted">₹${order.fields.TotalAmount}</div>
+                  </div>
+                  <select class="form-select form-select-sm" style="width: auto;" 
+                    onchange="app.updateOrderStatus('${order.id}', this.value)">
+                    <option value="Pending" ${order.fields.Status === 'Pending' ? 'selected' : ''}>Pending</option>
+                    <option value="Preparing" ${order.fields.Status === 'Preparing' ? 'selected' : ''}>Preparing</option>
+                    <option value="Delivered" ${order.fields.Status === 'Delivered' ? 'selected' : ''}>Delivered</option>
+                    <option value="Cancelled" ${order.fields.Status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+                  </select>
+                </div>
+              `).join('')}
             </div>
           `;
-          
-          // Enable action buttons
-          const guest = { ...formData, guestID };
-          document.getElementById('sendEmailBtn').onclick = () => window.open(
-            `mailto:?subject=OCB Stays Booking Confirmation&body=${encodeURIComponent(app.generateEmailBody(guest, homeLink))}`
-          );
-          document.getElementById('sendWhatsappBtn').onclick = () => window.open(
-            `https://wa.me/?text=${encodeURIComponent(app.generateWhatsappMessage(guest, homeLink))}`
-          );
-          document.getElementById('sendEmailBtn').disabled = false;
-          document.getElementById('sendWhatsappBtn').disabled = false;
-          
-          await app.loadActiveGuests();
-          await app.loadAvailableRooms();
-          await app.loadTodaysGuests();
-          await app.loadUpcomingGuests();
-          await app.generateCalendarView();
+
+          // Add filter functionality
+          document.getElementById('orderStatusFilter').onchange = function() {
+            const status = this.value;
+            document.querySelectorAll('#ordersList .food-order-item').forEach(item => {
+              item.style.display = 
+                status === 'all' || item.dataset.status === status ? 'flex' : 'none';
+            });
+          };
+
+          modal.show();
         } catch (error) {
-          console.error("Registration error:", error);
-          helpers.showAlert('linkOutput', `Error: ${error.message}`, 'danger');
-        } finally {
-          btn.disabled = false;
-          helpers.toggleSpinner('registerSpinner', false);
+          console.error('Error loading orders:', error);
+          modalBody.innerHTML = '<div class="alert alert-danger">Failed to load orders</div>';
         }
       },
       
-      async generateBill() {
-        const guestSelect = document.getElementById('guestSelect');
-        const btn = document.getElementById('generateBill');
-        if (!guestSelect || !guestSelect.value) {
-          return helpers.showAlert('billOutput', 'Please select a guest', 'danger');
-        }
-        
-        btn.disabled = true;
-        helpers.toggleSpinner('billSpinner', true);
-        document.getElementById('billOutput').innerHTML = '<div class="alert alert-info">Generating food bill...</div>';
-        
+      updateOrderStatus: async function(orderId, status) {
         try {
-          const guestData = JSON.parse(guestSelect.options[guestSelect.selectedIndex].dataset.guest);
-          const orders = await app.getGuestOrders(guestData.guestID);
-          if (!orders.length) return helpers.showAlert('billOutput', 'No food orders found', 'warning');
-          
-          const billResult = await app.createFoodBill(guestSelect.value, guestData, orders);
-          
-          let ordersHTML = billResult.orders.map(order => `
-            <div class="order-item">
-              <span>${order.item}</span>
-              <span>₹${order.amount.toFixed(2)}</span>
-            </div>
-          `).join('');
-          
-          ordersHTML += `
-            <div class="order-total">
-              <span>Total:</span>
-              <span>₹${billResult.totalAmount.toFixed(2)}</span>
-            </div>
-          `;
-          
-          document.getElementById('billOutput').innerHTML = `
-            <div class="alert alert-success">Food bill generated!</div>
-            <div class="bill-details">
-              <h5>Guest: ${billResult.guest.name || 'Unnamed'} (${billResult.guest.guestID})</h5>
-              <h6>Order Items:</h6>
-              ${ordersHTML}
-            </div>
-            <div class="action-buttons mt-3">
-              <div class="action-icon download-icon" onclick="app.downloadBillAsImage()" title="Download Bill">
-                <i class="fas fa-download"></i>
-              </div>
-            </div>
-          `;
+          await helpers.fetchAirtable(`${config.airtable.tables.orders}/${orderId}`, {
+            method: 'PATCH',
+            body: JSON.stringify({
+              fields: { Status: status }
+            })
+          });
         } catch (error) {
-          console.error("Bill generation error:", error);
-          helpers.showAlert('billOutput', `Error: ${error.message}`, 'danger');
-        } finally {
-          btn.disabled = false;
-          helpers.toggleSpinner('billSpinner', false);
+          console.error('Error updating order status:', error);
+          alert('Failed to update order status');
         }
       },
       
@@ -1841,7 +1931,68 @@ Team OCB Stays`;
       window.open(`${config.urls.guestMenu}?guestID=${guest.guestID}`, '_blank');
     };
 
-    // ...rest of existing script...
-  </script>
-</body>
-</html>
+    // Update handlers
+    handlers.checkoutGuest = async function() {
+      const guestSelect = document.getElementById('guestSelect');
+      const guest = JSON.parse(guestSelect.options[guestSelect.selectedIndex].dataset.guest);
+      
+      app.showCheckoutConfirmation(guest, async (paymentDetails) => {
+        try {
+          await helpers.fetchAirtable(`${config.airtable.tables.guests}/${guestSelect.value}`, {
+            method: 'PATCH',
+            body: JSON.stringify({
+              fields: {
+                status: "Checked Out",
+                balanceAmount: paymentDetails.balanceAmount,
+                PaymentStatus: paymentDetails.status,
+                PaymentType: paymentDetails.type,
+                PaymentTo: paymentDetails.paymentTo
+              }
+            })
+          });
+          
+          helpers.showAlert('billOutput', 'Guest checked out successfully');
+          await app.loadActiveGuests();
+          await app.loadTodaysGuests();
+          await app.loadUpcomingGuests();
+          document.getElementById('selectedGuestInfo').style.display = 'none';
+        } catch (error) {
+          console.error("Checkout error:", error);
+          helpers.showAlert('billOutput', `Error: ${error.message}`, 'danger');
+        }
+      });
+    };
+</script>
+
+<!-- Add these new modals -->
+<div class="modal fade" id="checkoutConfirmModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Confirm Checkout</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="checkoutConfirmBody">
+        <!-- Content will be dynamically added -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="confirmCheckout">Confirm Checkout</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="foodOrdersModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Food Orders</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="foodOrdersBody">
+        <!-- Content will be dynamically added -->
+      </div>
+    </div>
+  </div>
+</div>
