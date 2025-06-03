@@ -434,13 +434,13 @@
     
     <!-- Manage Tab Content (hidden by default) -->
     <div id="manage-content" style="display: none;">
+      <!-- Active Guest Section -->
       <div class="mb-3">
         <label for="guestSelect" class="form-label">Select Active Guest</label>
         <select class="form-select" id="guestSelect">
           <option value="">Select Guest</option>
         </select>
       </div>
-      
       <div id="selectedGuestInfo" style="display: none;">
         <div class="guest-card position-relative">
           <i class="fas fa-edit edit-icon-btn" id="editGuestBtn"></i>
@@ -448,7 +448,6 @@
             <!-- Guest details will be loaded here -->
           </div>
         </div>
-        
         <div class="action-buttons mt-3">
           <a class="action-icon call-icon" id="callGuest" title="Call Guest">
             <i class="fas fa-phone"></i>
@@ -463,22 +462,38 @@
             <i class="fas fa-copy"></i>
           </div>
         </div>
-      </div>
-      
-      <div class="action-buttons mt-3">
-        <div class="action-icon food-icon" id="placeOrder" title="Place Food Order">
-          <i class="fas fa-utensils"></i>
+        <div class="action-buttons mt-3">
+          <div class="action-icon food-icon" id="placeOrder" title="Place Food Order">
+            <i class="fas fa-utensils"></i>
+          </div>
+          <button id="generateBill" class="btn btn-secondary compact-btn">
+            <i class="fas fa-file-invoice"></i> Bill
+            <span id="billSpinner" class="loading-spinner" style="display: none;"></span>
+          </button>
+          <button id="checkoutGuest" class="btn btn-danger compact-btn">
+            <i class="fas fa-sign-out-alt"></i> Checkout
+            <span id="checkoutSpinner" class="loading-spinner" style="display: none;"></span>
+          </button>
         </div>
-        <button id="generateBill" class="btn btn-secondary compact-btn">
-          <i class="fas fa-file-invoice"></i> Bill
-          <span id="billSpinner" class="loading-spinner" style="display: none;"></span>
-        </button>
-        <button id="checkoutGuest" class="btn btn-danger compact-btn">
-          <i class="fas fa-sign-out-alt"></i> Checkout
-          <span id="checkoutSpinner" class="loading-spinner" style="display: none;"></span>
-        </button>
+        <div id="billOutput" class="mt-3"></div>
       </div>
-      <div id="billOutput" class="mt-3"></div>
+
+      <!-- Past Guest Section -->
+      <div class="mt-4">
+        <div class="mb-3">
+          <label for="pastGuestSelect" class="form-label">Select Past Guest (Checked Out)</label>
+          <select class="form-select" id="pastGuestSelect">
+            <option value="">Select Past Guest</option>
+          </select>
+        </div>
+        <div id="selectedPastGuestInfo" style="display: none;">
+          <div class="guest-card position-relative">
+            <div id="pastGuestDetailsContent">
+              <!-- Past guest details will be loaded here -->
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -773,16 +788,20 @@
       
       async loadActiveGuests() {
         const guestSelect = document.getElementById('guestSelect');
-        if (!guestSelect) return;
-        
+        const pastGuestSelect = document.getElementById('pastGuestSelect');
+        if (!guestSelect || !pastGuestSelect) return;
+
         try {
           guestSelect.disabled = true;
+          pastGuestSelect.disabled = true;
           guestSelect.innerHTML = '<option value="">Loading guests...</option>';
-          const data = await helpers.fetchAirtable(
-            `${config.airtable.tables.guests}?filterByFormula={status}="Active"`
-          );
-          
+          pastGuestSelect.innerHTML = '<option value="">Loading past guests...</option>';
+
+          // Fetch all guests
+          const data = await helpers.fetchAirtable(`${config.airtable.tables.guests}`);
           guestSelect.innerHTML = '<option value="">Select Guest</option>';
+          pastGuestSelect.innerHTML = '<option value="">Select Past Guest</option>';
+
           data.records.forEach(record => {
             const guest = record.fields;
             const option = new Option(
@@ -790,13 +809,19 @@
               record.id
             );
             option.dataset.guest = JSON.stringify(guest);
-            guestSelect.add(option);
+
+            if (guest.status === "Active") {
+              guestSelect.add(option.cloneNode(true));
+            } else if (guest.status === "Checked Out") {
+              pastGuestSelect.add(option.cloneNode(true));
+            }
           });
         } catch (error) {
           console.error('Error loading guests:', error);
           helpers.showAlert('billOutput', `Failed to load guests: ${error.message}`, 'danger');
         } finally {
           guestSelect.disabled = false;
+          pastGuestSelect.disabled = false;
         }
       },
       
@@ -1379,34 +1404,108 @@ Team OCB Stays`;
       
       async setupGuestSelection() {
         const guestSelect = document.getElementById('guestSelect');
-        if (!guestSelect) return;
-        
-        guestSelect.addEventListener('change', async function() {
-          const guestInfoDiv = document.getElementById('selectedGuestInfo');
-          if (!this.value) return guestInfoDiv.style.display = 'none';
-          
-          const guest = JSON.parse(this.options[this.selectedIndex].dataset.guest);
-          const homeLink = guest.homeLink;
-          
-          // Show loading state
-          document.getElementById('guestDetailsContent').innerHTML = `
-            <div class="text-center py-3">
-              <div class="spinner-border text-primary" role="status"></div>
-              <div>Loading guest details...</div>
-            </div>
-          `;
-          
-          guestInfoDiv.style.display = 'block';
-          
-          try {
-            // Calculate food total
-            const foodTotal = await app.calculateFoodTotal(guest.guestID);
-            
-            // Calculate nights
-            const nights = helpers.calculateNights(guest.checkin, guest.checkout);
-            
-            // Render guest details
+        const pastGuestSelect = document.getElementById('pastGuestSelect');
+
+        // Active guest logic
+        if (guestSelect) {
+          guestSelect.addEventListener('change', async function() {
+            const guestInfoDiv = document.getElementById('selectedGuestInfo');
+            if (!this.value) {
+              guestInfoDiv.style.display = 'none';
+              return;
+            }
+            // Do NOT hide past guest info here
+
+            const guest = JSON.parse(this.options[this.selectedIndex].dataset.guest);
+            const homeLink = guest.homeLink;
+
+            // Show loading state
             document.getElementById('guestDetailsContent').innerHTML = `
+              <div class="text-center py-3">
+                <div class="spinner-border text-primary" role="status"></div>
+                <div>Loading guest details...</div>
+              </div>
+            `;
+            guestInfoDiv.style.display = 'block';
+
+            try {
+              // Calculate food total
+              const foodTotal = await app.calculateFoodTotal(guest.guestID);
+              // Calculate nights
+              const nights = helpers.calculateNights(guest.checkin, guest.checkout);
+
+              // Render guest details
+              document.getElementById('guestDetailsContent').innerHTML = `
+                <h5>${guest.name || 'Unnamed Guest'}</h5>
+                <div class="guest-details-grid">
+                  <div class="detail-item">
+                    <div class="detail-label">Room</div>
+                    <div class="detail-value">${guest.room}</div>
+                  </div>
+                  <div class="detail-item">
+                    <div class="detail-label">Mobile</div>
+                    <div class="detail-value">${guest.mobile || 'Not provided'}</div>
+                  </div>
+                  <div class="detail-item">
+                    <div class="detail-label">Check-in</div>
+                    <div class="detail-value">${helpers.formatDate(guest.checkin)}</div>
+                  </div>
+                  <div class="detail-item">
+                    <div class="detail-label">Check-out</div>
+                    <div class="detail-value">${helpers.formatDate(guest.checkout)}</div>
+                  </div>
+                  <div class="detail-item">
+                    <div class="detail-label">Nights</div>
+                    <div class="detail-value">${nights}</div>
+                  </div>
+                  <div class="detail-item">
+                    <div class="detail-label">Advance Paid</div>
+                    <div class="detail-value">₹${guest.advanceAmount || 0}</div>
+                  </div>
+                  <div class="detail-item">
+                    <div class="detail-label">Balance Due</div>
+                    <div class="detail-value">₹${guest.balanceAmount || 0}</div>
+                  </div>
+                  <div class="detail-item">
+                    <div class="detail-label">Food Orders</div>
+                    <div class="detail-value">₹${foodTotal}</div>
+                  </div>
+                </div>
+              `;
+
+              // Setup action buttons
+              document.getElementById('copyGuestLink').onclick = () => {
+                navigator.clipboard.writeText(homeLink);
+                helpers.showAlert('billOutput', 'Link copied to clipboard!');
+              };
+              document.getElementById('sendEmailToGuest').onclick = () => window.open(
+                `mailto:?subject=OCB Stays Information&body=${encodeURIComponent(app.generateEmailBody(guest, homeLink))}`
+              );
+              document.getElementById('sendWhatsappToGuest').onclick = () => window.open(
+                `https://wa.me/${guest.mobile}?text=${encodeURIComponent(app.generateWhatsappMessage(guest, homeLink))}`
+              );
+              document.getElementById('callGuest').href = `tel:${guest.mobile}`;
+            } catch (error) {
+              console.error('Error loading guest details:', error);
+              document.getElementById('guestDetailsContent').innerHTML = `
+                <div class="alert alert-danger">Failed to load guest details</div>
+              `;
+            }
+          });
+        }
+
+        // Past guest logic (read-only)
+        if (pastGuestSelect) {
+          pastGuestSelect.addEventListener('change', function() {
+            const pastGuestInfoDiv = document.getElementById('selectedPastGuestInfo');
+            if (!this.value) {
+              pastGuestInfoDiv.style.display = 'none';
+              return;
+            }
+            // Do NOT hide active guest info here
+
+            const guest = JSON.parse(this.options[this.selectedIndex].dataset.guest);
+            document.getElementById('pastGuestDetailsContent').innerHTML = `
               <h5>${guest.name || 'Unnamed Guest'}</h5>
               <div class="guest-details-grid">
                 <div class="detail-item">
@@ -1427,7 +1526,7 @@ Team OCB Stays`;
                 </div>
                 <div class="detail-item">
                   <div class="detail-label">Nights</div>
-                  <div class="detail-value">${nights}</div>
+                  <div class="detail-value">${helpers.calculateNights(guest.checkin, guest.checkout)}</div>
                 </div>
                 <div class="detail-item">
                   <div class="detail-label">Advance Paid</div>
@@ -1437,259 +1536,85 @@ Team OCB Stays`;
                   <div class="detail-label">Balance Due</div>
                   <div class="detail-value">₹${guest.balanceAmount || 0}</div>
                 </div>
-                <div class="detail-item">
-                  <div class="detail-label">Food Orders</div>
-                  <div class="detail-value">₹${foodTotal}</div>
-                </div>
               </div>
             `;
-            
-            // Setup action buttons
-            document.getElementById('copyGuestLink').onclick = () => {
-              navigator.clipboard.writeText(homeLink);
-              helpers.showAlert('billOutput', 'Link copied to clipboard!');
-            };
-            
-            document.getElementById('sendEmailToGuest').onclick = () => window.open(
-              `mailto:?subject=OCB Stays Information&body=${encodeURIComponent(app.generateEmailBody(guest, homeLink))}`
-            );
-            
-            document.getElementById('sendWhatsappToGuest').onclick = () => window.open(
-              `https://wa.me/${guest.mobile}?text=${encodeURIComponent(app.generateWhatsappMessage(guest, homeLink))}`
-            );
-            
-            document.getElementById('callGuest').href = `tel:${guest.mobile}`;
-            
-          } catch (error) {
-            console.error('Error loading guest details:', error);
-            document.getElementById('guestDetailsContent').innerHTML = `
-              <div class="alert alert-danger">Failed to load guest details</div>
-            `;
-          }
-        });
-      },
-      
-      setupPlaceOrder() {
-        const placeOrderBtn = document.getElementById('placeOrder');
-        if (!placeOrderBtn) return;
-        
-        placeOrderBtn.addEventListener('click', () => {
-          const guestSelect = document.getElementById('guestSelect');
-          if (!guestSelect || !guestSelect.value) {
-            return helpers.showAlert('billOutput', 'Please select a guest', 'danger');
-          }
-          
-          const guest = JSON.parse(guestSelect.options[guestSelect.selectedIndex].dataset.guest);
-          const menuLink = `${config.urls.guestMenu}?guestID=${guest.guestID}&room=${encodeURIComponent(guest.room)}`;
-          window.open(menuLink, '_blank');
-        });
-      },
-      
-      setupEditGuest() {
-        const editBtn = document.getElementById('editGuestBtn');
-        if (!editBtn) return;
-        
-        editBtn.addEventListener('click', async () => {
-          const guestSelect = document.getElementById('guestSelect');
-          if (!guestSelect || !guestSelect.value) return;
-          
-          const guestId = guestSelect.value;
-          const guest = JSON.parse(guestSelect.options[guestSelect.selectedIndex].dataset.guest);
-          
-          // Populate edit form
-          document.getElementById('editName').value = guest.name || '';
-          document.getElementById('editMobile').value = guest.mobile || '';
-          document.getElementById('editRoom').value = guest.room || '';
-          document.getElementById('editCheckin').value = guest.checkin;
-          document.getElementById('editCheckout').value = guest.checkout;
-          document.getElementById('editAdvance').value = guest.advanceAmount || 0;
-          document.getElementById('editBalance').value = guest.balanceAmount || 0;
-          document.getElementById('editGuestId').value = guestId;
-          
-          // Show modal
-          const modal = new bootstrap.Modal(document.getElementById('editGuestModal'));
-          modal.show();
-        });
-      },
-      
-      async saveGuestChanges() {
-        const guestId = document.getElementById('editGuestId').value;
-        if (!guestId) return;
-        
-        const btn = document.getElementById('saveGuestChanges');
-        btn.disabled = true;
-        
-        try {
-          const formData = {
-            name: document.getElementById('editName').value,
-            mobile: document.getElementById('editMobile').value,
-            room: document.getElementById('editRoom').value,
-            checkin: document.getElementById('editCheckin').value,
-            checkout: document.getElementById('editCheckout').value,
-            advanceAmount: document.getElementById('editAdvance').value || 0,
-            balanceAmount: document.getElementById('editBalance').value || 0
-          };
-          
-          await helpers.fetchAirtable(`${config.airtable.tables.guests}/${guestId}`, {
-            method: 'PATCH',
-            body: JSON.stringify({ fields: formData })
+            pastGuestInfoDiv.style.display = 'block';
           });
-          
-          // Close modal
-          const modal = bootstrap.Modal.getInstance(document.getElementById('editGuestModal'));
-          modal.hide();
-          
-          // Reload guest data
-          helpers.showAlert('billOutput', 'Guest details updated successfully!');
-          await app.loadActiveGuests();
-          await app.loadTodaysGuests();
-          await app.loadUpcomingGuests();
-          await app.generateCalendarView();
-          
-          // Refresh selected guest
-          const guestSelect = document.getElementById('guestSelect');
-          guestSelect.value = guestId;
-          guestSelect.dispatchEvent(new Event('change'));
-          
-        } catch (error) {
-          console.error('Error updating guest:', error);
-          helpers.showAlert('billOutput', `Error: ${error.message}`, 'danger');
-        } finally {
-          btn.disabled = false;
         }
       },
       
-      setupContactIcon() {
-        const contactIcon = document.getElementById('openContacts');
-        if (!contactIcon) return;
-        
-        contactIcon.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const mobileInput = document.getElementById('mobile');
-          mobileInput.focus();
-          
-          // This will trigger native contact picker on mobile devices
-          if (navigator.contacts && navigator.contacts.select) {
-            navigator.contacts.select(['name', 'tel'], { multiple: false })
-              .then(contacts => {
-                if (contacts && contacts.length > 0) {
-                  const contact = contacts[0];
-                  mobileInput.value = contact.tel ? contact.tel[0] : '';
-                }
-              })
-              .catch(console.error);
-          } else {
-            // Fallback for browsers without Contact Picker API
-            if (typeof mobileInput.select === 'function') {
-              mobileInput.select();
-            }
-          }
-        });
-      },
-      
-      setupAvailabilityCheck() {
-        const dateRange = document.getElementById('dateRange');
-        if (!dateRange) return;
-        
-        dateRange.addEventListener('change', () => {
-          if (dateRange.value) {
-            app.checkRoomAvailability();
-          }
-        });
-      },
-      
-      setupPropertyFilter() {
-        const filter = document.getElementById('propertyFilter');
-        if (!filter) return;
-        
-        filter.addEventListener('change', () => {
-          app.generateCalendarView(filter.value);
-        });
-      },
-      
+      // Setup tab navigation
       setupTabNavigation() {
-        // Main tabs (footer)
+        // Hide all tab contents except dashboard on load
+        document.querySelectorAll('.main-content > div').forEach(content => {
+          content.style.display = 'none';
+        });
+        document.getElementById('dashboard-content').style.display = 'block';
+
         document.querySelectorAll('#mainTabs .nav-link').forEach(tab => {
-          tab.addEventListener('click', (e) => {
+          tab.addEventListener('click', function (e) {
             e.preventDefault();
-            const target = tab.dataset.tabTarget;
-            
-            // Hide all content
+            // Hide all tab contents
             document.querySelectorAll('.main-content > div').forEach(content => {
               content.style.display = 'none';
             });
-            
-            // Show selected content
+            // Show selected tab content
+            const target = tab.dataset.tabTarget;
             document.getElementById(`${target}-content`).style.display = 'block';
-            
-            // Update active tab
-            document.querySelectorAll('#mainTabs .nav-link').forEach(t => {
-              t.classList.remove('active');
-            });
+            // Set active tab
+            document.querySelectorAll('#mainTabs .nav-link').forEach(t => t.classList.remove('active'));
             tab.classList.add('active');
-            
-            // Load data if needed
-            if (target === 'dashboard') {
-              app.loadTodaysGuests();
-              app.loadUpcomingGuests();
-              app.generateCalendarView();
-            } else if (target === 'manage') {
-              app.loadActiveGuests();
-            } else if (target === 'register') {
-              app.loadAvailableRooms();
-            }
-          });
-        });
-      },
-      
-      setupAutoFocus() {
-        // Auto-focus next input when current input is filled
-        document.querySelectorAll('input, select').forEach(input => {
-          input.addEventListener('change', function() {
-            if (this.value) {
-              helpers.focusNextInput(this);
-            }
-          });
-          
-          // Also for keypress Enter
-          input.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-              helpers.focusNextInput(this);
-            }
           });
         });
       }
     };
 
-    // Initialize
     window.addEventListener('DOMContentLoaded', async () => {
-      // Setup event listeners
-      document.getElementById('guestForm')?.addEventListener('submit', handlers.registerGuest);
-      document.getElementById('generateBill')?.addEventListener('click', handlers.generateBill);
-      document.getElementById('checkoutGuest')?.addEventListener('click', handlers.checkoutGuest);
-      document.getElementById('saveGuestChanges')?.addEventListener('click', handlers.saveGuestChanges);
-      
-      handlers.setupGuestSelection();
-      handlers.setupPlaceOrder();
-      handlers.setupEditGuest();
-      handlers.setupContactIcon();
-      handlers.setupAvailabilityCheck();
-      handlers.setupPropertyFilter();
+      // Setup tab navigation FIRST so tabs are always clickable
       handlers.setupTabNavigation();
-      handlers.setupAutoFocus();
-      
-      // Initialize calendar
+
+      // Attach guest selection listeners ONCE, before any async/await
+      handlers.setupGuestSelection();
+
+      // Initialize components (these can load async, tabs will work regardless)
       app.initCalendar();
-      
-      // Load initial data
+      await app.loadActiveGuests();
+      await app.loadAvailableRooms();
       await app.loadTodaysGuests();
       await app.loadUpcomingGuests();
       await app.generateCalendarView();
-      await app.loadActiveGuests();
-      
-      // Make app functions available globally
-      window.app = app;
     });
+
+    // Edit guest handler
+    document.getElementById('saveGuestChanges').onclick = async function() {
+      const guestId = document.getElementById('editGuestId').value;
+      if (!guestId) return;
+      const updatedFields = {
+        name: document.getElementById('editName').value,
+        mobile: document.getElementById('editMobile').value,
+        room: document.getElementById('editRoom').value,
+        checkin: document.getElementById('editCheckin').value,
+        checkout: document.getElementById('editCheckout').value,
+        advanceAmount: parseFloat(document.getElementById('editAdvance').value) || 0,
+        balanceAmount: parseFloat(document.getElementById('editBalance').value) || 0
+      };
+      try {
+        await helpers.fetchAirtable(`${config.airtable.tables.guests}/${guestId}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ fields: updatedFields })
+        });
+        // Hide modal
+        bootstrap.Modal.getInstance(document.getElementById('editGuestModal')).hide();
+        // Refresh guest info and dropdowns
+        await app.loadActiveGuests();
+        // Optionally, re-select the guest to refresh info
+        document.getElementById('guestSelect').value = guestId;
+        document.getElementById('guestSelect').dispatchEvent(new Event('change'));
+        helpers.showAlert('billOutput', 'Guest details updated!');
+      } catch (error) {
+        helpers.showAlert('billOutput', 'Failed to update guest: ' + error.message, 'danger');
+      }
+    };
   </script>
 </body>
 </html>

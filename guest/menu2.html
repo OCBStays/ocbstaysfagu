@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>OCB Stays - Food Menu</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <!-- Add Tailwind CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.4.1/dist/tailwind.min.css" rel="stylesheet">
   <style>
     body {
       background-image: url('https://images.unsplash.com/photo-1600891964599-f61ba0e24092?auto=format&fit=crop&w=1950&q=80');
@@ -45,190 +48,692 @@
       flex-direction: row;
       gap: 10px;
       z-index: 999;
+      width: auto;
+      max-width: 100%;
+      align-items: center;
+      justify-content: space-between;
     }
-    .dropdown-menu-scrollable {
-      max-height: 300px;
-      overflow-y: auto;
+    #floatingSearch {
+      flex-grow: 1;
+    }
+    #floatingCart {
+      flex-shrink: 0;
+    }
+    .dropdown {
+      flex-shrink: 0;
     }
     .scroll-button {
       position: fixed;
-      right: 10px;
-      z-index: 998;
-      border-radius: 50%;
+      right: 20px;
       width: 40px;
       height: 40px;
+      background: #3498db;
+      color: white;
+      border: none;
+      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.2rem;
-      background-color: #f8f9fa;
-      border: 1px solid #ccc;
+      cursor: pointer;
+      z-index: 998;
     }
     #scrollTopBtn {
-      bottom: 80px;
+      bottom: 100px;
     }
     #scrollBottomBtn {
-      bottom: 130px;
+      bottom: 50px;
+    }
+    .kitchen-status {
+      display: inline-block;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.25rem;
+      font-weight: bold;
+      font-size: 0.9rem;
+    }
+    .kitchen-open {
+      background-color: #d4edda;
+      color: #155724;
+    }
+    .kitchen-closed {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+    .guest-info {
+      font-size: 0.9rem;
+      color: #6c757d;
+      margin-bottom: 1rem;
+    }
+    .timings-info {
+      cursor: pointer;
+      color: #0d6efd;
+    }
+    @media (max-width: 767px) {
+      #floatingControls {
+        gap: 8px;
+        right: 10px;
+        justify-content: space-evenly;
+      }
+      #floatingSearch {
+        width: 120px;
+      }
+      #floatingCart {
+        padding: 8px 12px;
+      }
+      .dropdown {
+        min-width: 120px;
+      }
+      .scroll-button {
+        width: 35px;
+        height: 35px;
+        font-size: 1rem;
+      }
+      #scrollTopBtn, #scrollBottomBtn {
+        bottom: 70px;
+      }
     }
   </style>
 </head>
-<body class="bg-light">
+<body class="bg-gray-50">
   <div class="container py-5 menu-wrapper">
-    <h1 class="mb-4">🍽️ OCB Stays – Food Menu</h1>
-    <p class="text-muted mb-4">Select items below. Orders will be delivered to your room.</p>
-    <h5 id="roomHeader" class="text-primary mb-4"></h5>
-    <div id="menuContainer"></div>
-
-    <div class="mt-4">
-      <label for="instructions" class="form-label">Special Instructions</label>
-      <textarea id="instructions" class="form-control" rows="3"></textarea>
+    <h1 class="mb-2">🍽️ OCB Stays – Food Menu</h1>
+    
+    <div class="d-flex align-items-center mb-3">
+      <div class="me-3">
+        <i class="fas fa-clock me-1"></i>
+        <span>8:00 AM - 2:30 PM | 4:30 PM - 10:00 PM</span>
+        <i class="fas fa-info-circle ms-2 timings-info" data-bs-toggle="tooltip" 
+           title="<ul class='mb-0'><li>Last order for lunch at 1:00 PM</li><li>Last order for dinner at 8:30 PM</li></ul>"></i>
+      </div>
+      <div id="kitchenStatusBadge" class="kitchen-status"></div>
     </div>
+    
+    <p class="text-muted mb-2">Select items below. Orders will be delivered to your room.</p>
+    <div id="guestInfo" class="guest-info"></div>
+    
+    <div id="validationError" class="alert alert-danger d-none">
+      Invalid guest access. Please check your link or contact reception.
+    </div>
+
+    <div id="menuContainer"></div>
 
     <div id="confirmationMsg" class="alert alert-success mt-4 d-none">
       ✅ Order placed successfully!
     </div>
   </div>
 
+  <!-- Category Bar -->
+  <div id="categoryBar" class="flex overflow-x-auto space-x-2 p-2 bg-white shadow sticky top-0 z-50">
+    <!-- Category buttons will be injected here -->
+  </div>
+  <!-- Filter Bar -->
+  <div class="flex flex-wrap gap-2 justify-center my-4">
+    <button class="filter-btn px-3 py-1 rounded bg-green-100 text-green-800" data-filter="Veg">Veg</button>
+    <button class="filter-btn px-3 py-1 rounded bg-red-100 text-red-800" data-filter="Non-Veg">Non-Veg</button>
+    <button class="filter-btn px-3 py-1 rounded bg-yellow-100 text-yellow-800" data-filter="Vegan">Vegan</button>
+    <button class="filter-btn px-3 py-1 rounded bg-blue-100 text-blue-800" data-filter="Gluten-Free">Gluten-Free</button>
+    <button class="filter-btn px-3 py-1 rounded bg-gray-200 text-gray-800" data-filter="All">All</button>
+  </div>
+  <!-- Menu Grid -->
+  <div id="menuGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 px-2">
+    <!-- Menu cards will be injected here -->
+  </div>
+  <!-- Item Modal -->
+  <div id="itemModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg p-6 max-w-md w-full relative">
+      <button id="closeModal" class="absolute top-2 right-2 text-gray-400 hover:text-gray-700">&times;</button>
+      <img id="modalImage" class="w-full h-48 object-cover rounded mb-4" src="" alt="Food Image">
+      <h2 id="modalTitle" class="text-xl font-bold mb-2"></h2>
+      <div id="modalDesc" class="mb-2 text-gray-700"></div>
+      <div id="modalDiet" class="mb-2 text-sm"></div>
+      <div id="modalIngredients" class="mb-2 text-sm"></div>
+      <button id="modalAddBtn" class="bg-blue-600 text-white px-4 py-2 rounded">Add to Cart</button>
+    </div>
+  </div>
+
   <div id="floatingControls">
+    <div id="floatingSearch" style="flex-grow: 1;">
+      <input id="menuSearch" class="form-control" type="text" placeholder="Search items..." />
+    </div>
     <div class="dropdown">
       <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
         Categories
       </button>
       <ul class="dropdown-menu dropdown-menu-scrollable" id="categoryDropdown"></ul>
     </div>
-    <div id="floatingCart" class="btn btn-success">
+    <button id="floatingCart" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#cartModal">
       🛒 <span id="cartCount">0</span> | ₹<span id="cartTotal">0</span>
+    </button>
+  </div>
+
+  <button id="scrollTopBtn" class="scroll-button">↑</button>
+  <button id="scrollBottomBtn" class="scroll-button">↓</button>
+
+  <!-- Cart Modal -->
+  <div class="modal fade" id="cartModal" tabindex="-1" aria-labelledby="cartModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="cartModalLabel">🛒 Your Cart</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div id="confirmationMsgModal" class="alert alert-success d-none">
+            <div>✅ Order placed successfully!</div>
+            <div class="mt-2">Redirecting in <span id="redirectCountdown">5</span> seconds...</div>
+          </div>
+          <div id="cartItems"></div>
+          <div class="mt-3">
+            <label for="instructions" class="form-label">Special Instructions</label>
+            <textarea id="instructions" class="form-control" rows="3"></textarea>
+          </div>
+          <div class="mt-3">
+            <strong>Total: ₹<span id="cartTotalModal">0</span></strong>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button id="placeOrder" class="btn btn-primary">
+            Place Order
+            <span id="orderSpinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 
-  <div id="scrollTopBtn" class="scroll-button">↑</div>
-  <div id="scrollBottomBtn" class="scroll-button">↓</div>
-
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    const MENU_SHEET_URL = 'https://opensheet.elk.sh/12TG5XURaO5WIhFH2f1z9RG9sjCMCRiVDdzZWDHIdrGs/Sheet1';
+    const AIRTABLE_TOKEN = 'patWo5RyRmRCbKXp3.afc1eefc274991a91c14b6b95b2f5bb726cfb14deee85b57e10e5b0f84bc2980';
+    const BASE_ID = 'app2UvEfKduRwGjfR';
+    const ORDERS_TABLE = 'Orders';
+    const GUESTS_TABLE = 'Guests';
+    const MENU_TABLE = 'FoodMenu';
+    const TELEGRAM_BOT_TOKEN = '7519042380:AAEuIMpdUkXJnBoH_xAvFk8vUjS25cdO0i0';
+    const TELEGRAM_CHAT_ID = '-1002542002840';
+    
     const params = new URLSearchParams(window.location.search);
     const room = params.get('room') || '';
-    document.getElementById('roomHeader').textContent = `Room: ${room}`;
-    const cart = {};
+    const guestID = params.get('guestID') || '';
+    let cart = {};
+    let isKitchenOpen = false;
+    let guestName = '';
+    let redirectTimer;
+
+    // Initialize tooltips
+    let tooltip;
+    document.addEventListener('DOMContentLoaded', function() {
+      tooltip = new bootstrap.Tooltip(document.querySelector('.timings-info'), {
+        html: true
+      });
+    });
+
+    // Check kitchen status (visual only, no functional restrictions)
+    function checkKitchenStatus() {
+      const now = new Date();
+      const hours = now.getHours();
+      const minutes = now.getMinutes();
+      const currentTime = hours + (minutes / 100);
+      
+      // Check if current time is within service hours
+      const isLunchTime = (currentTime >= 8.00 && currentTime <= 14.30);
+      const isDinnerTime = (currentTime >= 16.30 && currentTime <= 22.00);
+      
+      isKitchenOpen = isLunchTime || isDinnerTime;
+      
+      const statusBadge = document.getElementById('kitchenStatusBadge');
+      statusBadge.textContent = isKitchenOpen ? 'Kitchen Open' : 'Kitchen Closed';
+      statusBadge.className = isKitchenOpen ? 'kitchen-status kitchen-open' : 'kitchen-status kitchen-closed';
+    }
+
+    // Validate guest access
+    async function validateGuestAccess() {
+      if (!guestID) {
+        document.getElementById('validationError').classList.remove('d-none');
+        document.getElementById('menuContainer').classList.add('d-none');
+        return false;
+      }
+      
+      try {
+        const response = await fetch(
+          `https://api.airtable.com/v0/${BASE_ID}/${GUESTS_TABLE}?filterByFormula={guestID}='${guestID}'`,
+          {
+            headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` }
+          }
+        );
+        
+        if (!response.ok) throw new Error("Failed to fetch guest record");
+        
+        const data = await response.json();
+        if (data.records.length === 0 || data.records[0].fields.status !== 'Active') {
+          throw new Error("Guest not found or inactive");
+        }
+        
+        // Set guest name
+        guestName = data.records[0].fields.Name || '';
+        document.getElementById('guestInfo').innerHTML = `
+          <strong>Room:</strong> ${room} | 
+          <strong>Guest:</strong> ${guestName} | 
+          <strong>ID:</strong> ${guestID}
+        `;
+        
+        return true;
+      } catch (error) {
+        console.error("Guest validation error:", error);
+        document.getElementById('validationError').classList.remove('d-none');
+        document.getElementById('menuContainer').classList.add('d-none');
+        return false;
+      }
+    }
+
+    async function getGuestRecordId(guestID) {
+      try {
+        const response = await fetch(
+          `https://api.airtable.com/v0/${BASE_ID}/${GUESTS_TABLE}?filterByFormula={guestID}='${guestID}'`,
+          {
+            headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` }
+          }
+        );
+        
+        if (!response.ok) throw new Error("Failed to fetch guest record");
+        
+        const data = await response.json();
+        if (data.records.length === 0) throw new Error("Guest not found");
+        
+        return data.records[0].id;
+      } catch (error) {
+        console.error("Error fetching guest record:", error);
+        throw error;
+      }
+    }
 
     async function loadMenu() {
-      const res = await fetch(MENU_SHEET_URL);
-      const data = await res.json();
-      const grouped = {};
+      try {
+        const isValidGuest = await validateGuestAccess();
+        if (!isValidGuest) return;
+        
+        checkKitchenStatus();
 
-      data.forEach(item => {
-        if (item["Available?"] === 'Yes') {
+        // Fetch menu from Airtable FoodMenu table
+        const res = await fetch(
+          `https://api.airtable.com/v0/${BASE_ID}/${MENU_TABLE}?filterByFormula={Available}='Yes'&pageSize=100`,
+          {
+            headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` }
+          }
+        );
+        if (!res.ok) throw new Error('Failed to fetch menu from Airtable');
+        const data = await res.json();
+
+        // Group by Category
+        const grouped = {};
+        data.records.forEach(record => {
+          const item = record.fields;
+          if (!item.Category) return;
           if (!grouped[item.Category]) grouped[item.Category] = [];
           grouped[item.Category].push(item);
-        }
-      });
+        });
 
-      const container = document.getElementById('menuContainer');
-      const dropdown = document.getElementById('categoryDropdown');
+        const container = document.getElementById('menuContainer');
+        const dropdown = document.getElementById('categoryDropdown');
+        container.innerHTML = '';
+        dropdown.innerHTML = '';
 
-      for (const category in grouped) {
-        const anchor = category.replace(/\s+/g, '-').toLowerCase();
+        for (const category in grouped) {
+          const anchor = category.replace(/\s+/g, '-').toLowerCase();
 
-        const section = document.createElement('div');
-        section.className = 'menu-category';
-        section.id = anchor;
-        section.innerHTML = `
-          <h4 class="collapsible">${category} <button class="btn btn-sm btn-outline-secondary toggle-section">Toggle</button></h4>
-          <div class="category-items"></div>
-        `;
-
-        const dropdownItem = document.createElement('li');
-        dropdownItem.innerHTML = `<a class="dropdown-item" href="#${anchor}">${category}</a>`;
-        dropdown.appendChild(dropdownItem);
-
-        const itemsContainer = section.querySelector('.category-items');
-
-        grouped[category].forEach(item => {
-          const row = document.createElement('div');
-          row.className = 'item-row';
-          const itemId = item.Item.replace(/\s+/g, '-').toLowerCase();
-
-          row.innerHTML = `
-            <div>
-              <div><strong>${item.Item}</strong></div>
-              <div class="text-muted small">₹${item["Price (₹)"]}</div>
-            </div>
-            <div id="controls-${itemId}">
-              <button class="btn btn-outline-primary btn-sm" onclick="addItem('${item.Item}', ${item["Price (₹)"]})">Add</button>
-            </div>
+          const section = document.createElement('div');
+          section.className = 'menu-category';
+          section.id = anchor;
+          section.innerHTML = `
+            <h4 class="collapsible">${category} <button class="btn btn-sm btn-outline-secondary toggle-section">Toggle</button></h4>
+            <div class="category-items"></div>
           `;
-          itemsContainer.appendChild(row);
+
+          const dropdownItem = document.createElement('li');
+          dropdownItem.innerHTML = `<a class="dropdown-item" href="#${anchor}">${category}</a>`;
+          dropdown.appendChild(dropdownItem);
+
+          const itemsContainer = section.querySelector('.category-items');
+
+          grouped[category].forEach(item => {
+            const row = document.createElement('div');
+            row.className = 'item-row';
+            const itemId = item.Item.replace(/\s+/g, '-').toLowerCase();
+
+            row.innerHTML = `
+              <div>
+                <div><strong>${item.Item}</strong></div>
+                <div class="text-muted small">₹${item.Price}</div>
+                ${item.Description ? `<div class="text-muted small">${item.Description}</div>` : ''}
+              </div>
+              <div id="controls-${itemId}">
+                <button class="btn btn-outline-primary btn-sm" onclick="addItem('${item.Item}', ${item.Price}, '${itemId}')">Add</button>
+              </div>
+            `;
+            itemsContainer.appendChild(row);
+          });
+          container.appendChild(section);
+        }
+
+        document.querySelectorAll('.toggle-section').forEach(btn => {
+          btn.addEventListener('click', e => {
+            const categoryItems = e.target.closest('h4').nextElementSibling;
+            categoryItems.style.display = categoryItems.style.display === 'none' ? '' : 'none';
+          });
         });
-        container.appendChild(section);
+      } catch (error) {
+        console.error('Error loading menu:', error);
+        document.getElementById('menuContainer').innerHTML = `
+          <div class="alert alert-danger">
+            Failed to load menu. Please try again later.
+          </div>
+        `;
       }
-
-      document.querySelectorAll('.toggle-section').forEach(btn => {
-        btn.addEventListener('click', e => {
-          const categoryItems = e.target.closest('h4').nextElementSibling;
-          categoryItems.style.display = categoryItems.style.display === 'none' ? '' : 'none';
-        });
-      });
     }
 
-    function addItem(name, price) {
-      if (!cart[name]) cart[name] = { quantity: 1, price };
-      updateQtyUI(name);
-      updateCartUI();
-    }
-
-    function changeQty(name, price, delta) {
-      if (!cart[name]) return;
-      cart[name].quantity += delta;
-      if (cart[name].quantity <= 0) {
-        delete cart[name];
-        showAddButton(name);
+    function addItem(name, price, itemId) {
+      if (!cart[itemId]) {
+        cart[itemId] = { 
+          name: name,
+          price: price,
+          quantity: 1
+        };
       } else {
-        updateQtyUI(name);
+        cart[itemId].quantity += 1;
+      }
+      updateQtyUI(itemId);
+      updateCartUI();
+    }
+
+    function changeQty(itemId, delta) {
+      if (!cart[itemId]) return;
+      
+      cart[itemId].quantity += delta;
+      
+      if (cart[itemId].quantity <= 0) {
+        delete cart[itemId];
+        showAddButton(itemId);
+      } else {
+        updateQtyUI(itemId);
       }
       updateCartUI();
     }
 
-    function updateQtyUI(name) {
-      const itemId = name.replace(/\s+/g, '-').toLowerCase();
+    function updateQtyUI(itemId) {
       const container = document.getElementById(`controls-${itemId}`);
-      const quantity = cart[name]?.quantity || 0;
+      const quantity = cart[itemId]?.quantity || 0;
       container.innerHTML = `
         <div class="qty-controls">
-          <button class="btn btn-outline-secondary btn-sm" onclick="changeQty('${name}', ${cart[name].price}, -1)">−</button>
+          <button class="btn btn-outline-secondary btn-sm" onclick="changeQty('${itemId}', -1)">−</button>
           <span id="qty-${itemId}">${quantity}</span>
-          <button class="btn btn-outline-secondary btn-sm" onclick="changeQty('${name}', ${cart[name].price}, 1)">+</button>
+          <button class="btn btn-outline-secondary btn-sm" onclick="changeQty('${itemId}', 1)">+</button>
         </div>
       `;
     }
 
-    function showAddButton(name) {
-      const itemId = name.replace(/\s+/g, '-').toLowerCase();
+    function showAddButton(itemId) {
+      const item = cart[itemId] || { name: '', price: 0 };
       const container = document.getElementById(`controls-${itemId}`);
       container.innerHTML = `
-        <button class="btn btn-outline-primary btn-sm" onclick="addItem('${name}', ${cart[name]?.price || 0})">Add</button>
+        <button class="btn btn-outline-primary btn-sm" onclick="addItem('${item.name}', ${item.price}, '${itemId}')">Add</button>
       `;
     }
 
     function updateCartUI() {
       let total = 0;
       let count = 0;
-      for (const item in cart) {
-        total += cart[item].price * cart[item].quantity;
-        count += cart[item].quantity;
+      const cartItems = document.getElementById('cartItems');
+      cartItems.innerHTML = '';
+
+      for (const itemId in cart) {
+        const item = cart[itemId];
+        total += item.price * item.quantity;
+        count += item.quantity;
+
+        const row = document.createElement('div');
+        row.className = 'item-row';
+        row.innerHTML = `
+          <div>
+            <strong>${item.name}</strong> x <span>${item.quantity}</span>
+          </div>
+          <div class="qty-controls">
+            <button class="btn btn-outline-secondary btn-sm" onclick="changeQty('${itemId}', -1)">−</button>
+            <span>₹${item.price * item.quantity}</span>
+            <button class="btn btn-outline-secondary btn-sm" onclick="changeQty('${itemId}', 1)">+</button>
+          </div>
+        `;
+        cartItems.appendChild(row);
       }
+
       document.getElementById('cartCount').textContent = count;
       document.getElementById('cartTotal').textContent = total;
+      document.getElementById('cartTotalModal').textContent = total;
     }
 
-    document.getElementById('floatingCart').addEventListener('click', () => {
-      const cartItems = Object.entries(cart).map(([name, item]) => `- ${name} x ${item.quantity}`).join('\n');
-      alert(cartItems || "Cart is empty");
+    async function sendTelegramNotification(orderDetails) {
+      try {
+        let message = `📦 *New Food Order*\n\n`;
+        message += `🏠 *Room:* ${room}\n`;
+        message += `👤 *Guest:* ${guestName} (${guestID})\n\n`;
+        message += `📝 *Order Items:*\n`;
+        
+        orderDetails.items.forEach(item => {
+          message += `- ${item.name} x ${item.quantity} = ₹${item.price * item.quantity}\n`;
+        });
+        
+        message += `\n💰 *Total:* ₹${orderDetails.totalAmount}\n`;
+        if (orderDetails.instructions) {
+          message += `\n📌 *Special Instructions:*\n${orderDetails.instructions}\n`;
+        }
+        
+        const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: TELEGRAM_CHAT_ID,
+            text: message,
+            parse_mode: 'Markdown'
+          })
+        });
+        
+        const data = await response.json();
+        if (!data.ok) {
+          console.error('Telegram API Error:', data);
+        }
+      } catch (error) {
+        console.error('Error sending Telegram notification:', error);
+      }
+    }
+
+    function startRedirectCountdown() {
+      let seconds = 5;
+      const countdownElement = document.getElementById('redirectCountdown');
+      
+      redirectTimer = setInterval(() => {
+        seconds--;
+        countdownElement.textContent = seconds;
+        
+        if (seconds <= 0) {
+          clearInterval(redirectTimer);
+          window.location.href = `https://ocbstays.github.io/ocbstaysfagu/guest/index.html?guestID=${guestID}&room=${encodeURIComponent(room)}`;
+        }
+      }, 1000);
+    }
+
+    document.getElementById('placeOrder').addEventListener('click', async () => {
+      const placeOrderBtn = document.getElementById('placeOrder');
+      const spinner = document.getElementById('orderSpinner');
+      const instructions = document.getElementById('instructions').value;
+      
+      if (Object.keys(cart).length === 0) {
+        alert('Your cart is empty!');
+        return;
+      }
+      
+      placeOrderBtn.disabled = true;
+      spinner.classList.remove('d-none');
+      
+      try {
+        // 1. Get the guest's Airtable record ID
+        const guestRecordId = await getGuestRecordId(guestID);
+        
+        // 2. Prepare order items
+        const orderItems = Object.values(cart).map(item => ({
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity
+        }));
+        
+        const totalAmount = orderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        
+        // 3. Save to Airtable
+        const orderResponse = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${ORDERS_TABLE}`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${AIRTABLE_TOKEN}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            fields: {
+              OrderID: `ORD-${Date.now().toString().slice(-6)}`,
+              Guest: [guestRecordId],
+              Room: room,
+              Items: JSON.stringify(orderItems),
+              TotalAmount: totalAmount,
+              SpecialInstructions: instructions,
+              Status: "Pending",
+              OrderDate: new Date().toISOString()
+            }
+          })
+        });
+
+        if (!orderResponse.ok) {
+          const errorData = await orderResponse.json();
+          throw new Error(errorData.error?.message || 'Failed to save order');
+        }
+        
+        // 4. Send Telegram notification
+        await sendTelegramNotification({
+          items: orderItems,
+          totalAmount: totalAmount,
+          instructions: instructions
+        });
+        
+        // Show success message
+        document.getElementById('confirmationMsg').classList.remove('d-none');
+        document.getElementById('confirmationMsgModal').classList.remove('d-none');
+        document.getElementById('cartItems').classList.add('d-none');
+        
+        // Start redirect countdown
+        startRedirectCountdown();
+        
+      } catch (error) {
+        console.error('Order error:', error);
+        alert(`Failed to place order: ${error.message}`);
+      } finally {
+        placeOrderBtn.disabled = false;
+        spinner.classList.add('d-none');
+      }
     });
 
-    document.getElementById('scrollTopBtn').addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
-    document.getElementById('scrollBottomBtn').addEventListener('click', () => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }));
+    document.getElementById('scrollTopBtn').addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
 
+    document.getElementById('scrollBottomBtn').addEventListener('click', () => {
+      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    });
+
+    document.getElementById('menuSearch').addEventListener('input', function () {
+      const query = this.value.toLowerCase();
+      document.querySelectorAll('.menu-category').forEach(category => {
+        const items = category.querySelectorAll('.item-row');
+        let visibleItems = 0;
+        items.forEach(item => {
+          const name = item.querySelector('strong').textContent.toLowerCase();
+          const match = name.includes(query);
+          item.style.display = match ? '' : 'none';
+          if (match) visibleItems++;
+        });
+        category.style.display = visibleItems > 0 ? '' : 'none';
+      });
+    });
+
+    // Check kitchen status every minute (visual only)
+    setInterval(checkKitchenStatus, 60000);
+
+    // Example: Render category bar and menu grid
+    let allMenuItems = [];
+    let selectedCategory = 'All';
+    let selectedFilter = 'All';
+
+    async function loadMenu() {
+      // ...fetch from Airtable as before...
+      // After fetching, store all items:
+      allMenuItems = []; // fill with fetched items
+      // Extract unique categories:
+      const categories = Array.from(new Set(allMenuItems.map(i => i.Category)));
+      renderCategoryBar(categories);
+      renderMenuGrid();
+    }
+
+    function renderCategoryBar(categories) {
+      const bar = document.getElementById('categoryBar');
+      bar.innerHTML = '';
+      ['All', ...categories].forEach(cat => {
+        const btn = document.createElement('button');
+        btn.textContent = cat;
+        btn.className = 'px-4 py-2 rounded bg-gray-200 hover:bg-blue-200 whitespace-nowrap';
+        btn.onclick = () => {
+          selectedCategory = cat;
+          renderMenuGrid();
+        };
+        bar.appendChild(btn);
+      });
+    }
+
+    function renderMenuGrid() {
+      const grid = document.getElementById('menuGrid');
+      grid.innerHTML = '';
+      let filtered = allMenuItems;
+      if (selectedCategory !== 'All') filtered = filtered.filter(i => i.Category === selectedCategory);
+      if (selectedFilter !== 'All') filtered = filtered.filter(i => (i.Type || '').includes(selectedFilter));
+      filtered.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'bg-white rounded shadow p-4 flex flex-col cursor-pointer hover:shadow-lg transition';
+        card.innerHTML = `
+          <img src="${item.Image || 'https://via.placeholder.com/300x200?text=Food'}" class="w-full h-32 object-cover rounded mb-2" alt="">
+          <div class="font-bold text-lg">${item.Item}</div>
+          <div class="text-gray-600 mb-2">₹${item.Price}</div>
+          <button class="bg-blue-600 text-white px-3 py-1 rounded mt-auto">Add</button>
+        `;
+        card.onclick = () => openItemModal(item);
+        grid.appendChild(card);
+      });
+    }
+
+    // Filter buttons
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.onclick = () => {
+        selectedFilter = btn.dataset.filter;
+        renderMenuGrid();
+      };
+    });
+
+    // Modal logic
+    function openItemModal(item) {
+      document.getElementById('modalTitle').textContent = item.Item;
+      document.getElementById('modalDesc').textContent = item.Description || '';
+      document.getElementById('modalDiet').textContent = item.Type || '';
+      document.getElementById('modalIngredients').textContent = item.Ingredients || '';
+      document.getElementById('modalImage').src = item.Image || 'https://via.placeholder.com/300x200?text=Food';
+      document.getElementById('itemModal').classList.remove('hidden');
+      // AI integration: If missing info, call AI API here and update modal fields
+    }
+    document.getElementById('closeModal').onclick = () => {
+      document.getElementById('itemModal').classList.add('hidden');
+    };
+
+    // Initialize
     loadMenu();
   </script>
 </body>
