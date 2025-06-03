@@ -1414,8 +1414,7 @@ Team OCB Stays`;
               guestInfoDiv.style.display = 'none';
               return;
             }
-            // Hide past guest info if showing
-            document.getElementById('selectedPastGuestInfo').style.display = 'none';
+            // Do NOT hide past guest info here
 
             const guest = JSON.parse(this.options[this.selectedIndex].dataset.guest);
             const homeLink = guest.homeLink;
@@ -1503,8 +1502,7 @@ Team OCB Stays`;
               pastGuestInfoDiv.style.display = 'none';
               return;
             }
-            // Hide active guest info if showing
-            document.getElementById('selectedGuestInfo').style.display = 'none';
+            // Do NOT hide active guest info here
 
             const guest = JSON.parse(this.options[this.selectedIndex].dataset.guest);
             document.getElementById('pastGuestDetailsContent').innerHTML = `
