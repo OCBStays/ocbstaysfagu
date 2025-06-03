@@ -837,7 +837,7 @@
   <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <script>
-// 1. Single config object declaration at the top
+// 1. Config object 
 const config = {
     airtable: {
         token: 'patWo5RyRmRCbKXp3.afc1eefc274991a91c14b6b95b2f5bb726cfb14deee85b57e10e5b0f84bc2980',
@@ -855,7 +855,7 @@ const config = {
     rooms: ["Stargazing Deck (0)", "Stargazing Cabin (1)", "A Frame Cottage"]
 };
 
-    // 2. Initialize helpers object
+    // 2. Helpers object
     const helpers = {
       generateGuestId: () => 'GST' + Array.from({length: 5}, () => 
         'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'[Math.floor(Math.random() * 62)]).join(''),
@@ -1700,7 +1700,7 @@ Team OCB Stays`;
         }
       },
       
-      async setupGuestSelection() {
+      setupGuestSelection() {
         const guestSelect = document.getElementById('guestSelect');
         const pastGuestSelect = document.getElementById('pastGuestSelect');
 
@@ -1837,7 +1837,9 @@ Team OCB Stays`;
         }
       },
 
-      // Setup tab navigation
+    }; // End of app object
+
+    const handlers = {
       setupTabNavigation() {
         const tabs = document.querySelectorAll('#mainTabs .nav-link');
         const contents = document.querySelectorAll('.main-content > div');
@@ -1850,91 +1852,210 @@ Team OCB Stays`;
         tabs.forEach(tab => {
           tab.addEventListener('click', (e) => {
             e.preventDefault();
-            e.stopPropagation();
-
+            const targetId = tab.dataset.tabTarget + '-content';
+            
             // Update tab states
             tabs.forEach(t => t.classList.remove('active'));
             tab.classList.add('active');
 
             // Show selected content
-            const targetId = `${tab.dataset.tabTarget}-content`;
             contents.forEach(content => {
               content.style.display = content.id === targetId ? 'block' : 'none';
             });
           });
         });
-      }
-    };
+      },
 
+      setupGuestSelection() {
+        const guestSelect = document.getElementById('guestSelect');
+        const pastGuestSelect = document.getElementById('pastGuestSelect');
+
+        if (guestSelect) {
+          guestSelect.addEventListener('change', async function() {
+            const guestInfoDiv = document.getElementById('selectedGuestInfo');
+            if (!this.value) {
+              guestInfoDiv.style.display = 'none';
+              return;
+            }
+
+            const guest = JSON.parse(this.options[this.selectedIndex].dataset.guest);
+            const homeLink = guest.homeLink;
+
+            // Show loading state
+            document.getElementById('guestDetailsContent').innerHTML = `
+              <div class="text-center py-3">
+                <div class="spinner-border text-primary" role="status"></div>
+                <div>Loading guest details...</div>
+              </div>
+            `;
+            guestInfoDiv.style.display = 'block';
+
+            try {
+              // Calculate food total
+              const foodTotal = await app.calculateFoodTotal(guest.guestID);
+              // Calculate nights
+              const nights = helpers.calculateNights(guest.checkin, guest.checkout);
+
+              // Render guest details
+              document.getElementById('guestDetailsContent').innerHTML = `
+                <h5>${guest.name || 'Unnamed Guest'}</h5>
+                <div class="guest-details-grid">
+                  <div class="detail-item">
+                    <div class="detail-label">Room</div>
+                    <div class="detail-value">${guest.room}</div>
+                  </div>
+                  <div class="detail-item">
+                    <div class="detail-label">Mobile</div>
+                    <div class="detail-value">${guest.mobile || 'Not provided'}</div>
+                  </div>
+                  <div class="detail-item">
+                    <div class="detail-label">Check-in</div>
+                    <div class="detail-value">${helpers.formatDate(guest.checkin)}</div>
+                  </div>
+                  <div class="detail-item">
+                    <div class="detail-label">Check-out</div>
+                    <div class="detail-value">${helpers.formatDate(guest.checkout)}</div>
+                  </div>
+                  <div class="detail-item">
+                    <div class="detail-label">Nights</div>
+                    <div class="detail-value">${nights}</div>
+                  </div>
+                  <div class="detail-item">
+                    <div class="detail-label">Advance Paid</div>
+                    <div class="detail-value">₹${guest.advanceAmount || 0}</div>
+                  </div>
+                  <div class="detail-item">
+                    <div class="detail-label">Balance Due</div>
+                    <div class="detail-value">₹${guest.balanceAmount || 0}</div>
+                  </div>
+                  <div class="detail-item">
+                    <div class="detail-label">Food Orders</div>
+                    <div class="detail-value">₹${foodTotal}</div>
+                  </div>
+                </div>
+              `;
+
+              // Setup action buttons
+              document.getElementById('copyGuestLink').onclick = () => {
+                navigator.clipboard.writeText(homeLink);
+                helpers.showAlert('billOutput', 'Link copied to clipboard!');
+              };
+              document.getElementById('sendEmailToGuest').onclick = () => window.open(
+                `mailto:?subject=OCB Stays Information&body=${encodeURIComponent(app.generateEmailBody(guest, homeLink))}`
+              );
+              document.getElementById('sendWhatsappToGuest').onclick = () => window.open(
+                `https://wa.me/${guest.mobile}?text=${encodeURIComponent(app.generateWhatsappMessage(guest, homeLink))}`
+              );
+              document.getElementById('callGuest').href = `tel:${guest.mobile}`;
+            } catch (error) {
+              console.error('Error loading guest details:', error);
+              document.getElementById('guestDetailsContent').innerHTML = `
+                <div class="alert alert-danger">Failed to load guest details</div>
+              `;
+            }
+          });
+        }
+
+        if (pastGuestSelect) {
+          pastGuestSelect.addEventListener('change', function() {
+            const pastGuestInfoDiv = document.getElementById('selectedPastGuestInfo');
+            if (!this.value) {
+              pastGuestInfoDiv.style.display = 'none';
+              return;
+            }
+
+            const guest = JSON.parse(this.options[this.selectedIndex].dataset.guest);
+            document.getElementById('pastGuestDetailsContent').innerHTML = `
+              <h5>${guest.name || 'Unnamed Guest'}</h5>
+              <div class="guest-details-grid">
+                <div class="detail-item">
+                  <div class="detail-label">Room</div>
+                  <div class="detail-value">${guest.room}</div>
+                </div>
+                <div class="detail-item">
+                  <div class="detail-label">Mobile</div>
+                  <div class="detail-value">${guest.mobile || 'Not provided'}</div>
+                </div>
+                <div class="detail-item">
+                  <div class="detail-label">Check-in</div>
+                  <div class="detail-value">${helpers.formatDate(guest.checkin)}</div>
+                </div>
+                <div class="detail-item">
+                  <div class="detail-label">Check-out</div>
+                  <div class="detail-value">${helpers.formatDate(guest.checkout)}</div>
+                </div>
+                <div class="detail-item">
+                  <div class="detail-label">Nights</div>
+                  <div class="detail-value">${helpers.calculateNights(guest.checkin, guest.checkout)}</div>
+                </div>
+                <div class="detail-item">
+                  <div class="detail-label">Advance Paid</div>
+                  <div class="detail-value">₹${guest.advanceAmount || 0}</div>
+                </div>
+                <div class="detail-item">
+                  <div class="detail-label">Balance Due</div>
+                  <div class="detail-value">₹${guest.balanceAmount || 0}</div>
+                </div>
+              </div>
+            `;
+            pastGuestInfoDiv.style.display = 'block';
+          });
+        }
+      },
+
+    }; // End of app object
+
+    // Initialize everything when DOM is ready
     window.addEventListener('DOMContentLoaded', () => {
       try {
-        // Setup UI first - this should be instant
+        // Setup UI first
         handlers.setupTabNavigation();
         app.initCalendar();
         handlers.setupGuestSelection();
 
-        // Show initial loading states
-        document.querySelectorAll('.loading-container').forEach(container => {
-          container.style.display = 'flex';
+        // Setup event listeners
+        document.getElementById('guestForm')?.addEventListener('submit', handlers.registerGuest);
+        document.getElementById('propertyFilter')?.addEventListener('change', e => {
+          app.generateCalendarView(e.target.value);
+        });
+        document.getElementById('generateBill')?.addEventListener('click', handlers.generateBill);
+        document.getElementById('checkoutGuest')?.addEventListener('click', handlers.checkoutGuest);
+
+        // Initialize manage buttons
+        document.querySelectorAll('.manage-guest-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const guestId = btn.dataset.guestId;
+            if (guestId) {
+              const manageTab = document.querySelector('#manage-footer-tab');
+              manageTab.click();
+              setTimeout(() => {
+                const guestSelect = document.getElementById('guestSelect');
+                guestSelect.value = guestId;
+                guestSelect.dispatchEvent(new Event('change'));
+              }, 100);
+            }
+          });
         });
 
-        // Load data in parallel without blocking UI
-        Promise.allSettled([
+        // Load initial data
+        Promise.all([
           app.loadActiveGuests(),
           app.loadAvailableRooms(),
           app.loadTodaysGuests(),
           app.loadUpcomingGuests(),
           app.generateCalendarView()
-        ]).then(results => {
-          // Handle any failed loads
-          results.forEach((result, index) => {
-            if (result.status === 'rejected') {
-              console.error(`Failed to load component ${index}:`, result.reason);
-            }
-          });
-        }).finally(() => {
-          // Hide all loading states
-          document.querySelectorAll('.loading-container').forEach(container => {
-            container.style.display = 'none';
-          });
+        ]).catch(error => {
+          console.error('Error loading initial data:', error);
+          alert('Failed to load some data. Please refresh the page.');
         });
 
-        // Setup other event handlers
-        document.getElementById('guestForm').addEventListener('submit', handlers.registerGuest);
-        document.getElementById('propertyFilter').addEventListener('change', e => {
-          app.generateCalendarView(e.target.value);
-        });
-        document.getElementById('generateBill').addEventListener('click', handlers.generateBill);
-        document.getElementById('placeOrder').addEventListener('click', () => {
-          const guestSelect = document.getElementById('guestSelect');
-          if (guestSelect.selectedIndex > -1) {
-            const guest = JSON.parse(guestSelect.options[guestSelect.selectedIndex].dataset.guest);
-            app.showFoodOrders(guest.guestID);
-          }
-        });
-        document.getElementById('checkoutGuest').addEventListener('click', handlers.checkoutGuest);
       } catch (error) {
         console.error('Failed to initialize application:', error);
         alert('Failed to initialize application. Please refresh the page.');
       }
     });
 
-    // Add event handlers for guest card clicks
-    document.addEventListener('click', function(e) {
-      if (e.target.closest('.guest-card')) {
-        const guestId = e.target.closest('.guest-card').dataset.guestId;
-        if (guestId) {
-          document.querySelector('#manage-footer-tab').click();
-          setTimeout(() => {
-            const guestSelect = document.getElementById('guestSelect');
-            guestSelect.value = guestId;
-            guestSelect.dispatchEvent(new Event('change'));
-            document.getElementById('manage-content').scrollIntoView({ behavior: 'smooth' });
-          }, 100);
-        }
-      }
-    });
-  </script>
+// ...rest of the existing code...
 
   <!-- Add these new modals -->
   <div class="modal fade" id="checkoutConfirmModal" tabindex="-1">
@@ -1942,6 +2063,7 @@ Team OCB Stays`;
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title">Confirm Checkout</h5>
+         
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body" id="checkoutConfirmBody">
