@@ -886,6 +886,53 @@
       paymentModes: ["UPI", "Cash", "Card", "NetBanking"]
     };
 
+    // Logger initialization - must be before helpers and app
+    const logger = {
+        entries: [],
+        maxEntries: 100,
+        
+        log(level, message, details = null) {
+            const entry = {
+                timestamp: new Date(),
+                level,
+                message,
+                details
+            };
+            this.entries.unshift(entry);
+            if (this.entries.length > this.maxEntries) {
+                this.entries.pop();
+            }
+            this.updateUI();
+            console.log(`[${level}] ${message}`, details || '');
+        },
+        
+        error(message, details = null) {
+            this.log('error', message, details);
+        },
+        
+        info(message, details = null) {
+            this.log('info', message, details);
+        },
+        
+        updateUI() {
+            const container = document.getElementById('logEntries');
+            if (!container) return;
+            
+            const level = document.getElementById('logLevel')?.value || 'all';
+            const entries = level === 'all' ? 
+                this.entries : 
+                this.entries.filter(e => e.level === level);
+            
+            container.innerHTML = entries.map(entry => `
+                <div class="log-entry log-${entry.level}">
+                    <span class="log-timestamp">[${entry.timestamp.toLocaleTimeString()}]</span>
+                    ${entry.message}
+                    ${entry.details ? `<pre>${JSON.stringify(entry.details, null, 2)}</pre>` : ''}
+                </div>
+            `).join('');
+        }
+    };
+
     // Helper functions
     const helpers = {
       generateGuestId: () => 'GST' + Array.from({length: 5}, () => 
@@ -1878,7 +1925,7 @@ Team OCB Stays`;
               </div>
             </div>
           `;
-        } catch (error) {
+               } catch (error) {
           console.error("Bill generation error:", error);
           helpers.showAlert('billOutput', `Error: ${error.message}`, 'danger');
         } finally {
