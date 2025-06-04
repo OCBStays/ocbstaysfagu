@@ -236,16 +236,18 @@
       border-bottom: 1px solid #eee;
     }
     .modal-event {
-      background: white;
-      border-radius: 8px;
-      padding: 1rem;
-      margin-bottom: 1rem;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      transition: transform 0.2s, box-shadow 0.2s;
+      padding: 0.5rem;
+      margin-bottom: 0.5rem;
+      border-radius: 4px;
+      background-color: #f5f5f5;
+      transition: all 0.2s;
+      border: 1px solid #e0e0e0;
     }
     .modal-event:hover {
+      background-color: #e0f7fa;
+      cursor: pointer;
       transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
     /* Scrollable dashboard */
     .dashboard-scrollable {
@@ -328,10 +330,6 @@
     }
     .compact-guest-info {
       flex: 1;
-    }
-    .compact-guest-actions {
-      display: flex;
-      gap: 0.25rem;
     }
     .compact-meta {
       font-size: 0.8rem;
@@ -416,67 +414,85 @@
       padding: 0.75rem;
       margin-top: 0.5rem;
     }
-    
-    /* Modal event cards */
-    .modal-event {
-      background: white;
-      border-radius: 8px;
-      padding: 1rem;
-      margin-bottom: 1rem;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .modal-event:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-    }
-    
     /* Bill styling */
-    .bill-details {
+    .bill-container {
       background: white;
-      padding: 2rem;
       border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      padding: 1.5rem;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      max-width: 500px;
+      margin: 0 auto;
     }
     .bill-header {
       text-align: center;
-      margin-bottom: 2rem;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 1rem;
     }
-    .bill-guest-info {
-      margin-bottom: 2rem;
+    .bill-title {
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+    }
+    .bill-subtitle {
+      color: #6c757d;
+      margin-bottom: 0.5rem;
+    }
+    .bill-meta {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+      font-size: 0.9rem;
     }
     .bill-items {
       width: 100%;
       border-collapse: collapse;
-      margin: 1rem 0;
+      margin-bottom: 1.5rem;
     }
-    .bill-items th, .bill-items td {
-      padding: 0.5rem;
+    .bill-items th {
       text-align: left;
+      padding: 0.5rem;
+      border-bottom: 1px solid #dee2e6;
     }
-    .bill-items td.quantity {
-      text-align: center;
+    .bill-items td {
+      padding: 0.5rem;
+      border-bottom: 1px solid #eee;
     }
-    .bill-items td.price {
+    .bill-items .text-right {
       text-align: right;
     }
-    
-    /* Logs styling */
-    .logs-container {
-      background: #1e1e1e;
-      color: #fff;
-      padding: 1rem;
-      border-radius: 8px;
-      font-family: monospace;
+    .bill-items .text-center {
+      text-align: center;
     }
+    .bill-total {
+      font-weight: bold;
+      text-align: right;
+      font-size: 1.1rem;
+      margin-top: 1rem;
+    }
+    /* Logs tab */
     .log-entry {
-      padding: 0.5rem;
-      border-bottom: 1px solid #333;
-      font-size: 0.9rem;
+      padding: 0.75rem;
+      border-bottom: 1px solid #eee;
+      font-family: monospace;
+      font-size: 0.85rem;
     }
-    .log-error { color: #ff6b6b; }
-    .log-info { color: #69db7c; }
-    .log-timestamp { color: #868e96; }
+    .log-timestamp {
+      color: #6c757d;
+      margin-right: 0.5rem;
+    }
+    .log-error {
+      color: #dc3545;
+    }
+    .log-success {
+      color: #28a745;
+    }
+    .log-warning {
+      color: #ffc107;
+    }
+    .log-info {
+      color: #17a2b8;
+    }
   </style>
 </head>
 <body>
@@ -583,9 +599,9 @@
           <input type="number" class="form-control" id="balanceAmount">
         </div>
         
-        <!-- Comments -->
+        <!-- Notes -->
         <div class="mb-3">
-          <label for="comments" class="form-label">Comments</label>
+          <label for="comments" class="form-label">Notes</label>
           <textarea class="form-control" id="comments" rows="2"></textarea>
         </div>
         
@@ -692,15 +708,20 @@
     <div id="logs-content" style="display: none;">
       <div class="dashboard-section">
         <h2><i class="fas fa-terminal"></i> System Logs</h2>
-        <div id="logsContainer" class="logs-container">
-          <div class="log-filters mb-3">
-            <select class="form-select" id="logLevel">
-              <option value="all">All Levels</option>
-              <option value="error">Errors Only</option>
-              <option value="info">Info</option>
-            </select>
+        <div class="mb-3">
+          <button class="btn btn-sm btn-primary" id="refreshLogs">
+            <i class="fas fa-sync-alt"></i> Refresh
+          </button>
+          <button class="btn btn-sm btn-danger ms-2" id="clearLogs">
+            <i class="fas fa-trash"></i> Clear
+          </button>
+        </div>
+        <div id="logs-container" class="guest-list-container">
+          <div class="text-center py-3">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
           </div>
-          <div id="logEntries" class="log-entries"></div>
         </div>
       </div>
     </div>
@@ -782,9 +803,9 @@
               <input type="number" class="form-control" id="editBalance">
             </div>
             
-            <!-- Comments in Edit -->
+            <!-- Notes in Edit -->
             <div class="mb-3">
-              <label for="editComments" class="form-label">Comments</label>
+              <label for="editComments" class="form-label">Notes</label>
               <textarea class="form-control" id="editComments" rows="2"></textarea>
             </div>
             
@@ -886,51 +907,29 @@
       paymentModes: ["UPI", "Cash", "Card", "NetBanking"]
     };
 
-    // Logger initialization - must be before helpers and app
+    // Logging system
     const logger = {
-        entries: [],
-        maxEntries: 100,
+      logs: [],
+      log: function(message, type = 'info') {
+        const timestamp = new Date().toISOString();
+        this.logs.push({ timestamp, message, type });
+        this.renderLogs();
+      },
+      renderLogs: function() {
+        const container = document.getElementById('logs-container');
+        if (!container) return;
         
-        log(level, message, details = null) {
-            const entry = {
-                timestamp: new Date(),
-                level,
-                message,
-                details
-            };
-            this.entries.unshift(entry);
-            if (this.entries.length > this.maxEntries) {
-                this.entries.pop();
-            }
-            this.updateUI();
-            console.log(`[${level}] ${message}`, details || '');
-        },
-        
-        error(message, details = null) {
-            this.log('error', message, details);
-        },
-        
-        info(message, details = null) {
-            this.log('info', message, details);
-        },
-        
-        updateUI() {
-            const container = document.getElementById('logEntries');
-            if (!container) return;
-            
-            const level = document.getElementById('logLevel')?.value || 'all';
-            const entries = level === 'all' ? 
-                this.entries : 
-                this.entries.filter(e => e.level === level);
-            
-            container.innerHTML = entries.map(entry => `
-                <div class="log-entry log-${entry.level}">
-                    <span class="log-timestamp">[${entry.timestamp.toLocaleTimeString()}]</span>
-                    ${entry.message}
-                    ${entry.details ? `<pre>${JSON.stringify(entry.details, null, 2)}</pre>` : ''}
-                </div>
-            `).join('');
-        }
+        container.innerHTML = this.logs.map(log => `
+          <div class="log-entry">
+            <span class="log-timestamp">${new Date(log.timestamp).toLocaleTimeString()}</span>
+            <span class="log-${log.type}">${log.message}</span>
+          </div>
+        `).reverse().join('');
+      },
+      clear: function() {
+        this.logs = [];
+        this.renderLogs();
+      }
     };
 
     // Helper functions
@@ -949,7 +948,7 @@
       fetchAirtable: async (endpoint, options = {}) => {
         const url = `https://api.airtable.com/v0/${config.airtable.baseId}/${endpoint}`;
         try {
-          logger.info(`API Request: ${options.method || 'GET'} ${endpoint}`);
+          logger.log(`API Request: ${url}`, 'info');
           const response = await fetch(url, {
             headers: { 
               'Authorization': `Bearer ${config.airtable.token}`,
@@ -960,15 +959,16 @@
           
           if (!response.ok) {
             const error = await response.json();
-            logger.error('API Error', error);
+            logger.log(`API Error: ${error.error.message || 'API request failed'}`, 'error');
             throw new Error(error.error.message || 'API request failed');
           }
           
           const data = await response.json();
-          logger.info('API Response', { endpoint, status: response.status });
+          logger.log(`API Success: ${url}`, 'success');
           return data;
         } catch (error) {
-          logger.error('API Error', { endpoint, error: error.message });
+          logger.log(`API Error: ${error.message}`, 'error');
+          console.error('Airtable API error:', error);
           throw error;
         }
       },
@@ -1030,6 +1030,14 @@
         return d1.getFullYear() === d2.getFullYear() && 
                d1.getMonth() === d2.getMonth() && 
                d1.getDate() === d2.getDate();
+      },
+      
+      isToday: (dateStr) => {
+        const today = new Date();
+        const date = new Date(dateStr);
+        return date.getFullYear() === today.getFullYear() && 
+               date.getMonth() === today.getMonth() && 
+               date.getDate() === today.getDate();
       }
     };
 
@@ -1268,21 +1276,23 @@
         try {
           container.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>';
           
-          // Get guests with checkin date = today
-          const formula = `AND({checkin} = '${today}', {status}="Active")`;
+          // Get guests with checkin date = today OR currently staying
+          const formula = `OR({checkin} = '${today}', AND({checkin} <= '${today}', {checkout} >= '${today}'))`;
           
           const data = await helpers.fetchAirtable(
-            `${config.airtable.tables.guests}?filterByFormula=${formula}`
+            `${config.airtable.tables.guests}?filterByFormula=AND(${formula}, {status}="Active")`
           );
           
           if (data.records.length === 0) {
-            container.innerHTML = '<div class="alert alert-info">No guests checking in today</div>';
+            container.innerHTML = '<div class="alert alert-info">No guests checking in today or currently staying</div>';
             return;
           }
           
           container.innerHTML = '';
           data.records.forEach(record => {
             const guest = record.fields;
+            const isCheckingInToday = helpers.isSameDay(guest.checkin, today);
+            
             const card = document.createElement('div');
             card.className = 'guest-card';
             card.dataset.guestId = record.id;
@@ -1292,6 +1302,7 @@
                   <h5>${guest.name || 'Unnamed Guest'}</h5>
                   <div class="guest-meta">
                     ${guest.room} • ${helpers.formatShortDate(guest.checkin)} to ${helpers.formatShortDate(guest.checkout)}
+                    ${isCheckingInToday ? '<span class="badge bg-primary">Checking In</span>' : '<span class="badge bg-success">Staying</span>'}
                   </div>
                 </div>
               </div>
@@ -1513,9 +1524,23 @@
         } else {
           modalBody.innerHTML = dayBookings.map(booking => {
             const guest = booking.fields;
+            const isCheckingIn = helpers.isSameDay(guest.checkin, date);
+            const isCheckingOut = helpers.isSameDay(guest.checkout, date);
+            
+            let statusBadge = '';
+            if (isCheckingIn && isCheckingOut) {
+              statusBadge = '<span class="badge bg-warning">Same Day</span>';
+            } else if (isCheckingIn) {
+              statusBadge = '<span class="badge bg-primary">Check-in</span>';
+            } else if (isCheckingOut) {
+              statusBadge = '<span class="badge bg-danger">Check-out</span>';
+            } else {
+              statusBadge = '<span class="badge bg-success">Staying</span>';
+            }
+            
             return `
-              <div class="modal-event-details" data-guest-id="${booking.id}">
-                <div><strong>${guest.name || 'Unnamed Guest'}</strong></div>
+              <div class="modal-event" data-guest-id="${booking.id}">
+                <div><strong>${guest.name || 'Unnamed Guest'}</strong> ${statusBadge}</div>
                 <div>Room: ${guest.room}</div>
                 <div>Dates: ${helpers.formatDate(guest.checkin)} to ${helpers.formatDate(guest.checkout)}</div>
                 <div>Mobile: ${guest.mobile || 'Not provided'}</div>
@@ -1527,7 +1552,7 @@
         modal.show();
         
         // Add event listeners to guest details
-        document.querySelectorAll('#dayModalBody .modal-event-details').forEach(detail => {
+        document.querySelectorAll('#dayModalBody .modal-event').forEach(detail => {
           detail.addEventListener('click', () => {
             // Switch to manage tab and select this guest
             modal.hide();
@@ -1564,56 +1589,70 @@
       
       async createFoodBill(guestRecordId, guestDetails, orders) {
         try {
-          // First check for existing bill
+          let totalAmount = 0;
+          const allOrderItems = orders.flatMap(order => {
+            const items = JSON.parse(order.fields.Items || '[]');
+            const orderTotal = order.fields.TotalAmount || 
+              items.reduce((sum, item) => sum + (item.price || 0) * (item.quantity || 1), 0);
+            totalAmount += orderTotal;
+            return items.map(item => ({
+              item: item.name || 'Unspecified item',
+              quantity: item.quantity || 1,
+              price: item.price || 0,
+              amount: (item.price || 0) * (item.quantity || 1),
+              date: order.fields.createdAt || new Date().toISOString()
+            }));
+          });
+
+          // Check if bill already exists for this guest
           const existingBills = await helpers.fetchAirtable(
-            `${config.airtable.tables.bills}?filterByFormula={guestID}='${guestRecordId}'`
+            `${config.airtable.tables.bills}?filterByFormula={guestID} = '${guestRecordId}'`
           );
           
-          const billId = existingBills.records.length > 0 ? 
-            existingBills.records[0].id : 
-            `BIL-${Date.now().toString().slice(-6)}`;
-          
-          // Format bill items
-          const allOrderItems = orders.map(order => ({
-            item: order.fields.ItemName || 'Unspecified item',
-            quantity: order.fields.Quantity || 1,
-            price: order.fields.Price || 0,
-            total: order.fields.TotalAmount || 0
-          }));
-          
-          const billData = {
-            fields: {
-              billID: billId,
-              guestID: [guestRecordId],
-              totalAmount: allOrderItems.reduce((sum, item) => sum + item.total, 0),
-              status: "Pending",
-              orderDetails: JSON.stringify(allOrderItems)
-            }
-          };
-          
+          let billId;
           if (existingBills.records.length > 0) {
             // Update existing bill
-            await helpers.fetchAirtable(`${config.airtable.tables.bills}/${existingBills.records[0].id}`, {
+            billId = existingBills.records[0].id;
+            await helpers.fetchAirtable(`${config.airtable.tables.bills}/${billId}`, {
               method: 'PATCH',
-              body: JSON.stringify(billData)
+              body: JSON.stringify({
+                fields: {
+                  totalAmount: totalAmount,
+                  orderDetails: JSON.stringify(allOrderItems),
+                  updatedAt: new Date().toISOString()
+                }
+              })
             });
+            logger.log(`Updated existing bill for guest ${guestRecordId}`, 'info');
           } else {
             // Create new bill
-            await helpers.fetchAirtable(config.airtable.tables.bills, {
+            const billData = {
+              fields: {
+                billID: `BIL-${Date.now().toString().slice(-6)}`,
+                guestID: [guestRecordId],
+                totalAmount: totalAmount,
+                status: "Pending",
+                orderDetails: JSON.stringify(allOrderItems)
+              }
+            };
+
+            const response = await helpers.fetchAirtable(config.airtable.tables.bills, {
               method: 'POST',
               body: JSON.stringify(billData)
             });
+            billId = response.id;
+            logger.log(`Created new bill for guest ${guestRecordId}`, 'success');
           }
-          
-          return { guest: guestDetails, items: allOrderItems };
+
+          return { guest: guestDetails, orders: allOrderItems, totalAmount, billId };
         } catch (error) {
-          logger.error('Failed to create food bill', error);
+          console.error('Error creating food bill:', error);
           throw error;
         }
       },
       
       downloadBillAsImage() {
-        const billDetails = document.querySelector('.bill-details');
+        const billDetails = document.querySelector('.bill-container');
         if (!billDetails) return alert('No bill generated to download');
         html2canvas(billDetails).then(canvas => {
           const link = document.createElement('a');
@@ -1695,12 +1734,14 @@ Team OCB Stays`;
         
         flatpickr("#editCheckin", {
           minDate: "today",
-          dateFormat: "Y-m-d"
+          dateFormat: "Y-m-d",
+          defaultDate: null
         });
         
         flatpickr("#editCheckout", {
           minDate: "today",
-          dateFormat: "Y-m-d"
+          dateFormat: "Y-m-d",
+          defaultDate: null
         });
       },
       
@@ -1776,7 +1817,7 @@ Team OCB Stays`;
                 <div class="payment-summary-item">
                   <span>Balance Paid:</span>
                   <span>₹${guest.balanceAmount || 0} 
-                    <span class="payment-mode">${guest.paymentType ? `(${guest.paymentType})` : ''}</span>
+                    <span class="payment-mode">${guest.PaymentType ? `(${guest.PaymentType})` : ''}</span>
                   </span>
                 </div>
                 <div class="payment-summary-item total">
@@ -1786,10 +1827,10 @@ Team OCB Stays`;
               </div>
             </div>
             
-            ${guest.comments ? `
+            ${guest.Comments ? `
             <div class="guest-details-section notes-section">
               <h6>Notes</h6>
-              <div class="notes-content">${guest.comments}</div>
+              <div class="notes-content">${guest.Comments}</div>
             </div>
             ` : ''}
           `;
@@ -1799,6 +1840,13 @@ Team OCB Stays`;
             <div class="alert alert-danger">Failed to load guest details</div>
           `;
         }
+      },
+      
+      async loadLogs() {
+        const container = document.getElementById('logs-container');
+        if (!container) return;
+        
+        logger.renderLogs();
       }
     };
 
@@ -1824,8 +1872,12 @@ Team OCB Stays`;
             advanceAmount: document.getElementById('advanceAmount').value || 0,
             advanceMode: document.getElementById('advanceMode').value || '',
             balanceAmount: document.getElementById('balanceAmount').value || 0,
-            Comments: document.getElementById('comments').value || '' // Note the capital C
+            Comments: document.getElementById('comments').value || ''
           };
+          
+          if (!formData.room) throw new Error('Please select a room');
+          if (!formData.name) throw new Error('Please enter guest name');
+          if (!formData.mobile) throw new Error('Please enter mobile number');
           
           const guestID = helpers.generateGuestId();
           const homeLink = `${config.urls.guestPortal}?guestID=${guestID}&room=${encodeURIComponent(formData.room)}`;
@@ -1871,6 +1923,9 @@ Team OCB Stays`;
           await app.loadTodaysGuests();
           await app.loadUpcomingGuests();
           await app.generateCalendarView();
+          
+          // Clear form
+          document.getElementById('guestForm').reset();
         } catch (error) {
           console.error("Registration error:", error);
           helpers.showAlert('linkOutput', `Error: ${error.message}`, 'danger');
@@ -1898,34 +1953,61 @@ Team OCB Stays`;
           
           const billResult = await app.createFoodBill(guestSelect.value, guestData, orders);
           
-          let ordersHTML = billResult.orders.map(order => `
-            <div class="order-item">
-              <span>${order.item}</span>
-              <span>₹${order.amount.toFixed(2)}</span>
-            </div>
+          // Format bill items with proper alignment
+          const billItems = billResult.orders.map(order => `
+            <tr>
+              <td>${order.item}</td>
+              <td class="text-center">${order.quantity}</td>
+              <td class="text-right">₹${order.price.toFixed(2)}</td>
+              <td class="text-right">₹${order.amount.toFixed(2)}</td>
+            </tr>
           `).join('');
-          
-          ordersHTML += `
-            <div class="order-total">
-              <span>Total:</span>
-              <span>₹${billResult.totalAmount.toFixed(2)}</span>
-            </div>
-          `;
           
           document.getElementById('billOutput').innerHTML = `
             <div class="alert alert-success">Food bill generated!</div>
-            <div class="bill-details">
-              <h5>Guest: ${billResult.guest.name || 'Unnamed'} (${billResult.guest.guestID})</h5>
-              <h6>Order Items:</h6>
-              ${ordersHTML}
-            </div>
-            <div class="action-buttons mt-3">
-              <div class="action-icon download-icon" onclick="app.downloadBillAsImage()" title="Download Bill">
-                <i class="fas fa-download"></i>
+            <div class="bill-container">
+              <div class="bill-header">
+                <div class="bill-title">OCB Stays</div>
+                <div class="bill-subtitle">Food Order Bill</div>
+              </div>
+              
+              <div class="bill-meta">
+                <div>
+                  <div><strong>Guest:</strong> ${billResult.guest.name || 'Unnamed'}</div>
+                  <div><strong>Room:</strong> ${billResult.guest.room}</div>
+                </div>
+                <div>
+                  <div><strong>Bill ID:</strong> ${billResult.billId}</div>
+                  <div><strong>Date:</strong> ${new Date().toLocaleDateString()}</div>
+                </div>
+              </div>
+              
+              <table class="bill-items">
+                <thead>
+                  <tr>
+                    <th>Item</th>
+                    <th class="text-center">Qty</th>
+                    <th class="text-right">Price</th>
+                    <th class="text-right">Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${billItems}
+                </tbody>
+              </table>
+              
+              <div class="bill-total">
+                Total Amount: ₹${billResult.totalAmount.toFixed(2)}
               </div>
             </div>
+            
+            <div class="action-buttons mt-3">
+              <button class="btn btn-primary" onclick="app.downloadBillAsImage()">
+                <i class="fas fa-download"></i> Download Bill
+              </button>
+            </div>
           `;
-               } catch (error) {
+        } catch (error) {
           console.error("Bill generation error:", error);
           helpers.showAlert('billOutput', `Error: ${error.message}`, 'danger');
         } finally {
@@ -1966,8 +2048,8 @@ Team OCB Stays`;
             body: JSON.stringify({ 
               fields: { 
                 status: "Checked Out",
-                PaymentType, // Use the correct case
-                comments: comments || guest.comments || '',
+                PaymentType: paymentType,
+                Comments: comments || guest.Comments || '',
                 balanceAmount: parseFloat(guest.balanceAmount) || 0 // Keep original balance amount
               }
             })
@@ -1998,7 +2080,13 @@ Team OCB Stays`;
         
         guestSelect.addEventListener('change', async function() {
           const guestInfoDiv = document.getElementById('selectedGuestInfo');
-          if (!this.value) return guestInfoDiv.style.display = 'none';
+          const billOutput = document.getElementById('billOutput');
+          
+          if (!this.value) {
+            guestInfoDiv.style.display = 'none';
+            billOutput.innerHTML = '';
+            return;
+          }
           
           const guest = JSON.parse(this.options[this.selectedIndex].dataset.guest);
           const homeLink = guest.homeLink;
@@ -2012,6 +2100,7 @@ Team OCB Stays`;
           `;
           
           guestInfoDiv.style.display = 'block';
+          billOutput.innerHTML = ''; // Clear previous bill
           
           try {
             // Calculate food total
@@ -2079,10 +2168,10 @@ Team OCB Stays`;
                 </div>
               </div>
               
-              ${guest.comments ? `
+              ${guest.Comments ? `
               <div class="guest-details-section notes-section">
                 <h6>Notes</h6>
-                <div class="notes-content">${guest.comments}</div>
+                <div class="notes-content">${guest.Comments}</div>
               </div>
               ` : ''}
             `;
@@ -2177,7 +2266,7 @@ Team OCB Stays`;
           document.getElementById('editAdvance').value = guest.advanceAmount || 0;
           document.getElementById('editAdvanceMode').value = guest.advanceMode || '';
           document.getElementById('editBalance').value = guest.balanceAmount || 0;
-          document.getElementById('editComments').value = guest.comments || '';
+          document.getElementById('editComments').value = guest.Comments || '';
           document.getElementById('editGuestId').value = guestId;
           
           // Show modal
@@ -2203,8 +2292,14 @@ Team OCB Stays`;
             advanceAmount: document.getElementById('editAdvance').value || 0,
             advanceMode: document.getElementById('editAdvanceMode').value || '',
             balanceAmount: document.getElementById('editBalance').value || 0,
-            comments: document.getElementById('editComments').value || ''
+            Comments: document.getElementById('editComments').value || ''
           };
+          
+          if (!formData.name) throw new Error('Name is required');
+          if (!formData.mobile) throw new Error('Mobile is required');
+          if (!formData.room) throw new Error('Room is required');
+          if (!formData.checkin) throw new Error('Check-in date is required');
+          if (!formData.checkout) throw new Error('Check-out date is required');
           
           await helpers.fetchAirtable(`${config.airtable.tables.guests}/${guestId}`, {
             method: 'PATCH',
@@ -2314,6 +2409,8 @@ Team OCB Stays`;
               app.loadPastGuests();
             } else if (target === 'register') {
               app.loadAvailableRooms();
+            } else if (target === 'logs') {
+              app.loadLogs();
             }
           });
         });
@@ -2340,11 +2437,25 @@ Team OCB Stays`;
             }
           });
         });
+      },
+      
+      setupLogsButtons() {
+        document.getElementById('refreshLogs')?.addEventListener('click', () => {
+          app.loadLogs();
+        });
+        
+        document.getElementById('clearLogs')?.addEventListener('click', () => {
+          logger.clear();
+        });
       }
     };
 
     // Initialize
     window.addEventListener('DOMContentLoaded', async () => {
+      // Initialize logger
+      window.logger = logger;
+      logger.log('Dashboard initialized', 'info');
+      
       // Setup event listeners
       document.getElementById('guestForm')?.addEventListener('submit', handlers.registerGuest);
       document.getElementById('generateBill')?.addEventListener('click', handlers.generateBill);
@@ -2364,6 +2475,7 @@ Team OCB Stays`;
       handlers.setupPropertyFilter();
       handlers.setupTabNavigation();
       handlers.setupAutoFocus();
+      handlers.setupLogsButtons();
       
       // Initialize calendar
       app.initCalendar();
