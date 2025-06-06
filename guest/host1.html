@@ -8,28 +8,14 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <style>
-    :root {
-      --primary: #2563eb;
-      --primary-dark: #1e40af;
-      --secondary: #64748b;
-      --accent: #f59e0b;
-      --dark: #1e293b;
-      --light: #f8fafc;
-      --danger: #ef4444;
-      --success: #22c55e;
-      --border-radius: 12px;
-    }
-
     body {
-      font-family: 'Inter', system-ui, sans-serif;
-      background: var(--light);
-      color: var(--dark);
-      padding: 1.5rem;
-      max-width: 1200px;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f9f9f9;
+      padding: 1rem;
+      max-width: 1000px;
       margin: auto;
-      padding-bottom: 80px;
+      padding-bottom: 80px; /* Space for fixed footer */
     }
-
     .loading-spinner {
       display: inline-block;
       width: 1rem;
@@ -44,37 +30,17 @@
       to { transform: rotate(360deg); }
     }
     .action-icon {
+      font-size: 1rem;
+      padding: 0.5rem;
+      border-radius: 50%;
+      width: 2.5rem;
+      height: 2.5rem;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 40px;
-      height: 40px;
-      font-size: 1.1rem;
-      border-radius: var(--border-radius);
-      transition: all 0.2s ease;
       cursor: pointer;
+      margin: 0 0.25rem;
     }
-
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.5rem 1rem;
-      border-radius: var(--border-radius);
-      transition: all 0.2s ease;
-    }
-
-    .btn-primary {
-      background: var(--primary);
-      border-color: var(--primary);
-    }
-
-    .btn-primary:hover {
-      background: var(--primary-dark);
-      border-color: var(--primary-dark);
-      transform: translateY(-1px);
-    }
-
     .email-icon { background-color: #3498db; color: white; }
     .whatsapp-icon { background-color: #25D366; color: white; }
     .copy-icon { background-color: #6c757d; color: white; }
@@ -112,41 +78,31 @@
       bottom: 0;
       left: 0;
       right: 0;
-      background: rgba(255,255,255,0.9);
-      backdrop-filter: blur(10px);
-      border-top: 1px solid rgba(0,0,0,0.08);
+      background: white;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
       z-index: 1000;
       padding: 0.5rem 1rem;
     }
     .footer-tabs .nav-link {
-      padding: 0.75rem 1rem;
-      color: #6c757d;
-      transition: all 0.2s;
-      border-radius: 8px;
-      margin: 0 0.25rem;
+      padding: 0.5rem;
+      font-size: 0.9rem;
     }
-    .footer-tabs .nav-link:hover {
-      background: rgba(0,0,0,0.04);
-    }
-    .footer-tabs .nav-link.active {
-      background: #0d6efd;
-      color: white;
+    .footer-tabs .nav-link i {
+      margin-right: 0.3rem;
     }
     /* Guest cards */
     .guest-card {
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
       background: white;
-      border-radius: var(--border-radius);
-      padding: 1.5rem;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-      transition: all 0.3s ease;
-      border: 1px solid rgba(0,0,0,0.05);
+      cursor: pointer;
+      transition: all 0.2s;
     }
-
     .guest-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
-
     .guest-card h5 {
       margin-bottom: 0.5rem;
     }
@@ -213,38 +169,22 @@
       gap: 0.2rem;
     }
     .calendar-day {
-      position: relative;
-      padding: 0.5rem;
-      min-height: 80px;
-    }
-
-    .calendar-day .day-events {
-      position: absolute;
-      bottom: 0.5rem;
-      left: 0.5rem;
-      right: 0.5rem;
-    }
-    
-    .calendar-day {
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.04);
-      transition: all 0.2s;
       aspect-ratio: 1;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       padding: 0.25rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+      font-size: 0.9rem;
       border: 1px solid #f0f0f0;
     }
-
     .calendar-day:hover {
-      background: #f8f9fa;
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      background-color: #f0f0f0;
     }
-
     .day-number {
       font-weight: bold;
       margin-bottom: 0.1rem;
@@ -269,13 +209,13 @@
       color: #adb5bd;
     }
     .today {
-      background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+      background-color: #e3f2fd;
       color: #1976d2;
       font-weight: bold;
       border: 2px solid #1976d2;
     }
     .booked-day {
-      background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+      background-color: #e8f5e9;
       color: #2e7d32;
       border: 1px solid #c8e6c9;
     }
@@ -300,10 +240,14 @@
       margin-bottom: 0.5rem;
       border-radius: 4px;
       background-color: #f5f5f5;
+      transition: all 0.2s;
+      border: 1px solid #e0e0e0;
     }
     .modal-event:hover {
       background-color: #e0f7fa;
       cursor: pointer;
+      transform: translateY(-2px);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
     /* Scrollable dashboard */
     .dashboard-scrollable {
@@ -313,18 +257,10 @@
     }
     .dashboard-section {
       background: white;
-      border-radius: var(--border-radius);
-      padding: 1.5rem;
-      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-      transition: all 0.2s ease;
-      margin-bottom: 1.5rem;
-      border: 1px solid rgba(0,0,0,0.05);
+      border-radius: 10px;
+      padding: 1rem;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
     }
-
-    .dashboard-section:hover {
-      box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-    }
-
     .dashboard-section h2 {
       font-size: 1.2rem;
       margin-bottom: 1rem;
@@ -392,51 +328,273 @@
       align-items: center;
       padding: 0.75rem;
     }
-    .compact-guest-info {
-      flex: 1;
-    }
-    .compact-guest-actions {
-      display: flex;
-      gap: 0.25rem;
-    }
     .compact-meta {
       font-size: 0.8rem;
       color: #6c757d;
     }
-
-    /* Manage tab sub-navigation */
-    .manage-subnav {
+    /* Payment mode dropdown */
+    .payment-mode-group {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .payment-mode-group .form-control:first-child {
+      flex: 2;
+    }
+    .payment-mode-group .form-select {
+      flex: 1;
+      min-width: 120px;
+    }
+    /* Enhanced guest details view */
+    .guest-details-section {
       margin-bottom: 1.5rem;
-      border-bottom: 1px solid rgba(0,0,0,0.1);
     }
-
-    .manage-subnav .nav-link {
-      padding: 1rem 1.5rem;
-      color: var(--secondary);
-      border-bottom: 2px solid transparent;
-      transition: all 0.2s ease;
+    .guest-details-section h6 {
+      border-bottom: 1px solid #eee;
+      padding-bottom: 0.5rem;
+      margin-bottom: 1rem;
+      color: #495057;
     }
-
-    .manage-subnav .nav-link.active {
-      color: var(--primary);
-      border-bottom-color: var(--primary);
+    .payment-summary {
+      background-color: #f8f9fa;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-top: 1rem;
     }
-
-    /* Modal improvements */
-    .modal-content {
-      border-radius: var(--border-radius);
-      border: none;
-      box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    .payment-summary-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
     }
-
-    .modal-body {
-      padding: 1.5rem;
-      max-height: 80vh;
+    .payment-summary-item.total {
+      font-weight: bold;
+      border-top: 1px solid #dee2e6;
+      padding-top: 0.5rem;
+      margin-top: 0.5rem;
+    }
+    .payment-mode {
+      font-size: 0.8rem;
+      color: #6c757d;
+      margin-left: 0.5rem;
+    }
+    /* Guest list containers */
+    .guest-list-container {
+      max-height: 300px;
       overflow-y: auto;
+      margin-top: 1rem;
+    }
+    .guest-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1rem;
+    }
+    /* Manage tabs */
+    .manage-tabs .nav-link {
+      padding: 0.5rem 1rem;
+    }
+    /* Modal fixes */
+    .modal-event-details {
+      padding: 0.5rem;
+    }
+    .modal-event-actions {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 1rem;
+    }
+    /* Notes section */
+    .notes-section {
+      margin-top: 1rem;
+    }
+    .notes-content {
+      background-color: #f8f9fa;
+      border-radius: 5px;
+      padding: 0.75rem;
+      margin-top: 0.5rem;
+    }
+    /* Bill styling */
+    .bill-container {
+      background: white;
+      border-radius: 8px;
+      padding: 1.5rem;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      max-width: 500px;
+      margin: 0 auto;
+    }
+    .bill-header {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 1rem;
+    }
+    .bill-title {
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+    }
+    .bill-subtitle {
+      color: #6c757d;
+      margin-bottom: 0.5rem;
+    }
+    .bill-meta {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+      font-size: 0.9rem;
+    }
+    .bill-items {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 1.5rem;
+    }
+    .bill-items th {
+      text-align: left;
+      padding: 0.5rem;
+      border-bottom: 1px solid #dee2e6;
+    }
+    .bill-items td {
+      padding: 0.5rem;
+      border-bottom: 1px solid #eee;
+    }
+    .bill-items .text-right {
+      text-align: right;
+    }
+    .bill-items .text-center {
+      text-align: center;
+    }
+    .bill-total {
+      font-weight: bold;
+      text-align: right;
+      font-size: 1.1rem;
+      margin-top: 1rem;
+    }
+    /* Logs tab */
+    .log-entry {
+      padding: 0.75rem;
+      border-bottom: 1px solid #eee;
+      font-family: monospace;
+      font-size: 0.85rem;
+    }
+    .log-timestamp {
+      color: #6c757d;
+      margin-right: 0.5rem;
+    }
+    .log-error {
+      color: #dc3545;
+    }
+    .log-success {
+      color: #28a745;
+    }
+    .log-warning {
+      color: #ffc107;
+    }
+    .log-info {
+      color: #17a2b8;
+    }
+    /* Toast notifications */
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1100;
+    }
+    /* Guest list styles */
+    .guest-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      max-height: 300px;
+      overflow-y: auto;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+    }
+    .guest-list-item {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid #eee;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .guest-list-item:last-child {
+      border-bottom: none;
+    }
+    .guest-list-item:hover {
+      background-color: #f8f9fa;
+    }
+    .guest-list-item.active {
+      background-color: #e7f5ff;
+    }
+    .guest-list-name {
+      font-weight: 500;
+      flex: 1;
+    }
+    .guest-list-room {
+      color: #6c757d;
+      font-size: 0.9rem;
+      width: 150px;
+      text-align: center;
+    }
+    .guest-list-dates {
+      color: #6c757d;
+      font-size: 0.85rem;
+      width: 200px;
+      text-align: right;
+    }
+    /* Food orders card */
+    .food-orders-card {
+      background-color: #f8f9fa;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-top: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .food-orders-card:hover {
+      background-color: #e9ecef;
+    }
+    .food-orders-card h6 {
+      margin-bottom: 0.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    /* Order modal */
+    .order-item {
+      padding: 0.5rem;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+    }
+    .order-item:last-child {
+      border-bottom: none;
+    }
+    .order-item-details {
+      flex: 1;
+    }
+    .order-item-price {
+      font-weight: bold;
+      width: 80px;
+      text-align: right;
+    }
+    /* Registration success modal */
+    .registration-success-modal .modal-body {
+      padding: 1.5rem;
+    }
+    .registration-success-details {
+      margin-bottom: 1.5rem;
+    }
+    .registration-success-actions {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-top: 1.5rem;
     }
   </style>
 </head>
 <body>
+  <div class="toast-container"></div>
+  
   <h1 class="text-center mb-4">OCB Stays – Host Dashboard</h1>
 
   <!-- Main Content Area -->
@@ -446,10 +604,12 @@
       <div class="dashboard-scrollable">
         <div class="dashboard-section">
           <h2><i class="fas fa-calendar-day"></i> Today's Guests</h2>
-          <div id="today-guests-list">
-            <div class="text-center py-3">
-              <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Loading...</span>
+          <div class="guest-list-container">
+            <div id="today-guests-list" class="guest-cards-grid">
+              <div class="text-center py-3">
+                <div class="spinner-border text-primary" role="status">
+                  <span class="visually-hidden">Loading...</span>
+                </div>
               </div>
             </div>
           </div>
@@ -457,10 +617,12 @@
         
         <div class="dashboard-section">
           <h2><i class="fas fa-calendar-week"></i> Upcoming Guests</h2>
-          <div id="upcoming-guests-list">
-            <div class="text-center py-3">
-              <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Loading...</span>
+          <div class="guest-list-container">
+            <div id="upcoming-guests-list" class="guest-cards-grid">
+              <div class="text-center py-3">
+                <div class="spinner-border text-primary" role="status">
+                  <span class="visually-hidden">Loading...</span>
+                </div>
               </div>
             </div>
           </div>
@@ -480,27 +642,38 @@
             <!-- Calendar will be generated here -->
           </div>
         </div>
+        
+        <div class="dashboard-section">
+          <h2><i class="fas fa-chart-line"></i> Analytics Summary</h2>
+          <div id="analyticsSummary">
+            <div class="text-center py-3">
+              <div class="spinner-border text-primary" role="status"></div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
     
     <!-- Register Tab Content (hidden by default) -->
     <div id="register-content" style="display: none;">
       <form id="guestForm">
-        <!-- Date Selection Section -->
+        <!-- Date and Room Selection Section -->
         <div class="date-selection mb-3">
-          <h5>Select Dates</h5>
-          <div class="mb-3">
-            <input type="text" class="form-control flatpickr-input" id="dateRange" placeholder="Select check-in and check-out dates" required>
+          <div class="date-fields-row">
+            <div class="form-group">
+              <label for="dateRange" class="form-label">Dates</label>
+              <input type="text" class="form-control flatpickr-input" id="dateRange" placeholder="Select check-in and check-out dates" required>
+            </div>
+            <div class="form-group">
+              <label for="room" class="form-label">Room</label>
+              <select class="form-select" id="room" required disabled>
+                <option value="">Select dates first</option>
+              </select>
+            </div>
           </div>
           <div id="availabilityStatus" class="availability-status"></div>
         </div>
         
-        <div class="mb-3">
-          <label for="room" class="form-label">Room</label>
-          <select class="form-select" id="room" required disabled>
-            <option value="">First select dates to see available rooms</option>
-          </select>
-        </div>
         <div class="mb-3">
           <label for="name" class="form-label">Name</label>
           <input type="text" class="form-control" id="name" required>
@@ -512,25 +685,39 @@
             <i class="fas fa-address-book contact-icon" id="openContacts" style="cursor: pointer;"></i>
           </div>
         </div>
+        
+        <!-- Advance Payment with Mode -->
         <div class="mb-3">
-          <label for="advanceAmount" class="form-label">Advance Payment (₹)</label>
-          <input type="number" class="form-control" id="advanceAmount">
+          <label class="form-label">Advance Payment</label>
+          <div class="payment-mode-group">
+            <input type="number" class="form-control" id="advanceAmount" placeholder="Amount (₹)">
+            <select class="form-select" id="advanceMode">
+              <option value="">Payment Mode</option>
+              <option value="UPI">UPI</option>
+              <option value="Cash">Cash</option>
+              <option value="Card">Card</option>
+              <option value="NetBanking">Net Banking</option>
+            </select>
+          </div>
         </div>
+        
+        <!-- Balance Amount -->
         <div class="mb-3">
           <label for="balanceAmount" class="form-label">Balance Amount (₹)</label>
           <input type="number" class="form-control" id="balanceAmount">
         </div>
+        
+        <!-- Notes -->
+        <div class="mb-3">
+          <label for="comments" class="form-label">Notes</label>
+          <textarea class="form-control" id="comments" rows="2"></textarea>
+        </div>
+        
         <div class="action-buttons">
           <button type="submit" class="btn btn-primary" id="registerBtn">
             Register
             <span id="registerSpinner" class="loading-spinner" style="display: none;"></span>
           </button>
-          <div class="action-icon email-icon" id="sendEmailBtn" disabled title="Send Email">
-            <i class="fas fa-envelope"></i>
-          </div>
-          <div class="action-icon whatsapp-icon" id="sendWhatsappBtn" disabled title="Send WhatsApp">
-            <i class="fab fa-whatsapp"></i>
-          </div>
         </div>
       </form>
       <div id="linkOutput" class="mt-3"></div>
@@ -538,45 +725,52 @@
     
     <!-- Manage Tab Content (hidden by default) -->
     <div id="manage-content" style="display: none;">
-      <!-- Sub navigation -->
-      <ul class="nav manage-subnav" id="manageSubnav">
-        <li class="nav-item">
-          <a class="nav-link active" href="#active-guests">Active Guests</a>
+      <ul class="nav nav-tabs manage-tabs" id="manageTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button class="nav-link active" id="active-tab" data-bs-toggle="tab" data-bs-target="#active-guests" type="button" role="tab">Active Guests</button>
         </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#past-guests">Past Guests</a>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="past-tab" data-bs-toggle="tab" data-bs-target="#past-guests" type="button" role="tab">Past Guests</button>
         </li>
       </ul>
-
-      <!-- Active Guests Section -->
-      <div id="active-guests" class="manage-section">
-        <div class="mb-3">
-          <label for="guestSelect" class="form-label">Select Active Guest</label>
-          <select class="form-select" id="guestSelect">
-            <option value="">Select Guest</option>
-          </select>
-        </div>
-        <div id="selectedGuestInfo" style="display: none;">
-          <div class="guest-card position-relative">
-            <i class="fas fa-edit edit-icon-btn" id="editGuestBtn"></i>
-            <div id="guestDetailsContent">
-              <!-- Guest details will be loaded here -->
+      
+      <div class="tab-content mt-3">
+        <div class="tab-pane fade show active" id="active-guests" role="tabpanel">
+          <div class="mb-3">
+            <label class="form-label">Select Active Guest</label>
+            <div class="guest-list" id="guestList">
+              <div class="text-center py-3">
+                <div class="spinner-border text-primary" role="status">
+                  <span class="visually-hidden">Loading...</span>
+                </div>
+              </div>
             </div>
           </div>
-          <div class="action-buttons mt-3">
-            <a class="action-icon call-icon" id="callGuest" title="Call Guest">
-              <i class="fas fa-phone"></i>
-            </a>
-            <div class="action-icon whatsapp-icon" id="sendWhatsappToGuest" title="Send WhatsApp">
-              <i class="fab fa-whatsapp"></i>
+          
+          <div id="selectedGuestInfo" style="display: none;">
+            <div class="guest-card position-relative">
+              <i class="fas fa-edit edit-icon-btn" id="editGuestBtn"></i>
+              <div id="guestDetailsContent">
+                <!-- Guest details will be loaded here -->
+              </div>
             </div>
-            <div class="action-icon email-icon" id="sendEmailToGuest" title="Send Email">
-              <i class="fas fa-envelope"></i>
-            </div>
-            <div class="action-icon copy-icon" id="copyGuestLink" title="Copy Link">
-              <i class="fas fa-copy"></i>
+            
+            <div class="action-buttons mt-3">
+              <a class="action-icon call-icon" id="callGuest" title="Call Guest">
+                <i class="fas fa-phone"></i>
+              </a>
+              <div class="action-icon whatsapp-icon" id="sendWhatsappToGuest" title="Send WhatsApp">
+                <i class="fab fa-whatsapp"></i>
+              </div>
+              <div class="action-icon email-icon" id="sendEmailToGuest" title="Send Email">
+                <i class="fas fa-envelope"></i>
+              </div>
+              <div class="action-icon copy-icon" id="copyGuestLink" title="Copy Link">
+                <i class="fas fa-copy"></i>
+              </div>
             </div>
           </div>
+          
           <div class="action-buttons mt-3">
             <div class="action-icon food-icon" id="placeOrder" title="Place Food Order">
               <i class="fas fa-utensils"></i>
@@ -592,20 +786,46 @@
           </div>
           <div id="billOutput" class="mt-3"></div>
         </div>
-      </div>
-
-      <!-- Past Guests Section -->
-      <div id="past-guests" class="manage-section" style="display: none;">
-        <div class="mb-3">
-          <label for="pastGuestSelect" class="form-label">Select Past Guest</label>
-          <select class="form-select" id="pastGuestSelect">
-            <option value="">Select Guest</option>
-          </select>
+        
+        <div class="tab-pane fade" id="past-guests" role="tabpanel">
+          <div class="mb-3">
+            <label class="form-label">Select Past Guest</label>
+            <div class="guest-list" id="pastGuestList">
+              <div class="text-center py-3">
+                <div class="spinner-border text-primary" role="status">
+                  <span class="visually-hidden">Loading...</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div id="selectedPastGuestInfo" style="display: none;">
+            <div class="guest-card">
+              <div id="pastGuestDetailsContent">
+                <!-- Past guest details will be loaded here -->
+              </div>
+            </div>
+          </div>
         </div>
-        <div id="selectedPastGuestInfo" style="display: none;">
-          <div class="guest-card position-relative">
-            <div id="pastGuestDetailsContent">
-              <!-- Past guest details will be loaded here -->
+      </div>
+    </div>
+    
+    <!-- Logs Tab Content (hidden by default) -->
+    <div id="logs-content" style="display: none;">
+      <div class="dashboard-section">
+        <h2><i class="fas fa-terminal"></i> System Logs</h2>
+        <div class="mb-3">
+          <button class="btn btn-sm btn-primary" id="refreshLogs">
+            <i class="fas fa-sync-alt"></i> Refresh
+          </button>
+          <button class="btn btn-sm btn-danger ms-2" id="clearLogs">
+            <i class="fas fa-trash"></i> Clear
+          </button>
+        </div>
+        <div id="logs-container" class="guest-list-container">
+          <div class="text-center py-3">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
             </div>
           </div>
         </div>
@@ -625,6 +845,7 @@
           Loading...
         </div>
         <div class="modal-footer">
+          <button type="button" class="btn btn-primary" id="bookThisDate">Book This Date</button>
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
         </div>
       </div>
@@ -666,20 +887,128 @@
               <label for="editCheckout" class="form-label">Check-out Date</label>
               <input type="text" class="form-control flatpickr-input" id="editCheckout" required>
             </div>
+            
+            <!-- Advance Payment with Mode in Edit -->
             <div class="mb-3">
-              <label for="editAdvance" class="form-label">Advance Payment (₹)</label>
-              <input type="number" class="form-control" id="editAdvance">
+              <label class="form-label">Advance Payment</label>
+              <div class="payment-mode-group">
+                <input type="number" class="form-control" id="editAdvance" placeholder="Amount (₹)">
+                <select class="form-select" id="editAdvanceMode">
+                  <option value="">Payment Mode</option>
+                  <option value="UPI">UPI</option>
+                  <option value="Cash">Cash</option>
+                  <option value="Card">Card</option>
+                  <option value="NetBanking">Net Banking</option>
+                </select>
+              </div>
             </div>
+            
+            <!-- Balance Amount in Edit -->
             <div class="mb-3">
               <label for="editBalance" class="form-label">Balance Amount (₹)</label>
               <input type="number" class="form-control" id="editBalance">
             </div>
+            
+            <!-- Notes in Edit -->
+            <div class="mb-3">
+              <label for="editComments" class="form-label">Notes</label>
+              <textarea class="form-control" id="editComments" rows="2"></textarea>
+            </div>
+            
             <input type="hidden" id="editGuestId">
           </form>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
           <button type="button" class="btn btn-primary" id="saveGuestChanges">Save Changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Checkout Confirmation Modal -->
+  <div class="modal fade" id="checkoutModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Confirm Checkout</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="checkoutForm">
+            <div class="mb-3">
+              <label class="form-label">Balance Due (₹)</label>
+              <input type="number" class="form-control" id="checkoutBalance" readonly>
+            </div>
+            <div class="mb-3">
+              <label for="checkoutPaymentType" class="form-label">Payment Mode</label>
+              <select class="form-select" id="checkoutPaymentType" required>
+                <option value="">Select Payment Mode</option>
+                <option value="UPI">UPI</option>
+                <option value="Cash">Cash</option>
+                <option value="Card">Card</option>
+                <option value="NetBanking">Net Banking</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="checkoutComments" class="form-label">Comments</label>
+              <textarea class="form-control" id="checkoutComments" rows="3"></textarea>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" id="confirmCheckout">Complete Checkout</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Food Orders Modal -->
+  <div class="modal fade" id="foodOrdersModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Food & Amenities Orders</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="foodOrdersModalBody">
+          Loading...
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Registration Success Modal -->
+  <div class="modal fade registration-success-modal" id="registrationSuccessModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Guest Registered Successfully</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="registration-success-details" id="registrationSuccessDetails">
+            <!-- Guest details will be shown here -->
+          </div>
+          <div class="input-group-copy">
+            <input type="text" class="form-control" id="guestLinkInput" readonly>
+            <button class="btn btn-outline-secondary" onclick="navigator.clipboard.writeText(document.getElementById('guestLinkInput').value);showToast('Link copied to clipboard!', 'success')">📋 Copy</button>
+          </div>
+          <div class="registration-success-actions">
+            <button class="btn btn-primary" id="sendEmailFromModal">
+              <i class="fas fa-envelope"></i> Email
+            </button>
+            <button class="btn btn-success" id="sendWhatsappFromModal">
+              <i class="fab fa-whatsapp"></i> WhatsApp
+            </button>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
         </div>
       </div>
     </div>
@@ -701,6 +1030,11 @@
       <li class="nav-item" role="presentation">
         <button class="nav-link" id="manage-footer-tab" data-tab-target="manage" type="button" role="tab">
           <i class="fas fa-users-cog"></i> Manage
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="logs-footer-tab" data-tab-target="logs" type="button" role="tab">
+          <i class="fas fa-terminal"></i> Logs
         </button>
       </li>
     </ul>
@@ -725,7 +1059,33 @@
         guestPortal: 'https://ocbstays.github.io/ocbstaysfagu/guest/index.html',
         guestMenu: 'https://ocbstays.github.io/ocbstaysfagu/guest/menu.html'
       },
-      rooms: ["Stargazing Deck (0)", "Stargazing Cabin (1)", "A Frame Cottage"]
+      rooms: ["Stargazing Deck (0)", "Stargazing Cabin (1)", "A Frame Cottage"],
+      paymentModes: ["UPI", "Cash", "Card", "NetBanking"]
+    };
+
+    // Logging system
+    const logger = {
+      logs: [],
+      log: function(message, type = 'info') {
+        const timestamp = new Date().toISOString();
+        this.logs.push({ timestamp, message, type });
+        this.renderLogs();
+      },
+      renderLogs: function() {
+        const container = document.getElementById('logs-container');
+        if (!container) return;
+        
+        container.innerHTML = this.logs.map(log => `
+          <div class="log-entry">
+            <span class="log-timestamp">${new Date(log.timestamp).toLocaleTimeString()}</span>
+            <span class="log-${log.type}">${log.message}</span>
+          </div>
+        `).reverse().join('');
+      },
+      clear: function() {
+        this.logs = [];
+        this.renderLogs();
+      }
     };
 
     // Helper functions
@@ -744,6 +1104,7 @@
       fetchAirtable: async (endpoint, options = {}) => {
         const url = `https://api.airtable.com/v0/${config.airtable.baseId}/${endpoint}`;
         try {
+          logger.log(`API Request: ${url}`, 'info');
           const response = await fetch(url, {
             headers: { 
               'Authorization': `Bearer ${config.airtable.token}`,
@@ -751,12 +1112,18 @@
             },
             ...options
           });
+          
           if (!response.ok) {
             const error = await response.json();
+            logger.log(`API Error: ${error.error.message || 'API request failed'}`, 'error');
             throw new Error(error.error.message || 'API request failed');
           }
-          return await response.json();
+          
+          const data = await response.json();
+          logger.log(`API Success: ${url}`, 'success');
+          return data;
         } catch (error) {
+          logger.log(`API Error: ${error.message}`, 'error');
           console.error('Airtable API error:', error);
           throw error;
         }
@@ -767,15 +1134,29 @@
         if (spinner) spinner.style.display = show ? 'inline-block' : 'none';
       },
       
-      showAlert: (containerId, message, type = 'success') => {
-        const container = document.getElementById(containerId);
-        if (!container) return;
+      showToast: (message, type = 'success') => {
+        const toastContainer = document.querySelector('.toast-container');
+        if (!toastContainer) return;
         
-        const alert = document.createElement('div');
-        alert.className = `alert alert-${type} mt-3`;
-        alert.textContent = message;
-        container.prepend(alert);
-        setTimeout(() => alert.remove(), 5000);
+        const toast = document.createElement('div');
+        toast.className = `toast show align-items-center text-white bg-${type} border-0`;
+        toast.role = 'alert';
+        toast.setAttribute('aria-live', 'assertive');
+        toast.setAttribute('aria-atomic', 'true');
+        toast.innerHTML = `
+          <div class="d-flex">
+            <div class="toast-body">${message}</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+          </div>
+        `;
+        
+        toastContainer.appendChild(toast);
+        
+        // Auto remove after 5 seconds
+        setTimeout(() => {
+          toast.classList.remove('show');
+          setTimeout(() => toast.remove(), 300);
+        }, 5000);
       },
       
       datesOverlap: (start1, end1, start2, end2) => {
@@ -811,6 +1192,30 @@
         const start = new Date(checkin);
         const end = new Date(checkout);
         return Math.round(Math.abs((start - end) / oneDay));
+      },
+      
+      isSameDay: (date1, date2) => {
+        const d1 = new Date(date1);
+        const d2 = new Date(date2);
+        return d1.getFullYear() === d2.getFullYear() && 
+               d1.getMonth() === d2.getMonth() && 
+               d1.getDate() === d2.getDate();
+      },
+      
+      isToday: (dateStr) => {
+        const today = new Date();
+        const date = new Date(dateStr);
+        return date.getFullYear() === today.getFullYear() && 
+               date.getMonth() === today.getMonth() && 
+               date.getDate() === today.getDate();
+      },
+      
+      isPastDate: (dateStr) => {
+        const today = new Date();
+        const date = new Date(dateStr);
+        today.setHours(0, 0, 0, 0);
+        date.setHours(0, 0, 0, 0);
+        return date < today;
       }
     };
 
@@ -903,95 +1308,237 @@
       },
       
       async loadActiveGuests() {
-        const guestSelect = document.getElementById('guestSelect');
-        const pastGuestSelect = document.getElementById('pastGuestSelect');
-        if (!guestSelect || !pastGuestSelect) return;
-
+        const guestList = document.getElementById('guestList');
+        if (!guestList) return;
+        
         try {
-          guestSelect.disabled = true;
-          pastGuestSelect.disabled = true;
-          guestSelect.innerHTML = '<option value="">Loading guests...</option>';
-          pastGuestSelect.innerHTML = '<option value="">Loading past guests...</option>';
-
-          // Fetch all guests
-          const data = await helpers.fetchAirtable(`${config.airtable.tables.guests}`);
-          guestSelect.innerHTML = '<option value="">Select Guest</option>';
-          pastGuestSelect.innerHTML = '<option value="">Select Past Guest</option>';
-
+          guestList.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>';
+          const data = await helpers.fetchAirtable(
+            `${config.airtable.tables.guests}?filterByFormula={status}="Active"`
+          );
+          
+          if (data.records.length === 0) {
+            guestList.innerHTML = '<div class="text-center py-3 text-muted">No active guests found</div>';
+            document.getElementById('selectedGuestInfo').style.display = 'none';
+            return;
+          }
+          
+          // Sort by check-in date
+          data.records.sort((a, b) => new Date(a.fields.checkin) - new Date(b.fields.checkin));
+          
+          guestList.innerHTML = '';
           data.records.forEach(record => {
             const guest = record.fields;
-            const option = new Option(
-              `${guest.name || 'Unnamed'} (${guest.guestID}) - ${guest.room}`,
-              record.id
-            );
-            option.dataset.guest = JSON.stringify(guest);
-
-            if (guest.status === "Active") {
-              guestSelect.add(option.cloneNode(true));
-            } else if (guest.status === "Checked Out") {
-              pastGuestSelect.add(option.cloneNode(true));
-            }
+            const item = document.createElement('div');
+            item.className = 'guest-list-item';
+            item.dataset.guestId = record.id;
+            item.dataset.guest = JSON.stringify(guest);
+            item.innerHTML = `
+              <div class="guest-list-name">${guest.name || 'Unnamed Guest'} (${guest.guestID})</div>
+              <div class="guest-list-room">${guest.room}</div>
+              <div class="guest-list-dates">${helpers.formatDate(guest.checkin)} - ${helpers.formatDate(guest.checkout)}</div>
+            `;
+            guestList.appendChild(item);
           });
+          
+          // Restore selected guest if any
+          const selectedGuestId = window.selectedGuestId;
+          if (selectedGuestId) {
+            const selectedItem = guestList.querySelector(`[data-guest-id="${selectedGuestId}"]`);
+            if (selectedItem) {
+              selectedItem.classList.add('active');
+              document.getElementById('selectedGuestInfo').style.display = 'block';
+              this.loadGuestDetailsForDisplay(selectedGuestId, JSON.parse(selectedItem.dataset.guest));
+            }
+          }
         } catch (error) {
           console.error('Error loading guests:', error);
-          helpers.showAlert('billOutput', `Failed to load guests: ${error.message}`, 'danger');
-        } finally {
-          guestSelect.disabled = false;
-          pastGuestSelect.disabled = false;
+          guestList.innerHTML = '<div class="text-center py-3 text-danger">Failed to load guests</div>';
+        }
+      },
+      
+      async loadPastGuests() {
+        const pastGuestList = document.getElementById('pastGuestList');
+        if (!pastGuestList) return;
+        
+        try {
+          pastGuestList.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>';
+          
+          // Get past guests sorted by checkout date descending
+          const data = await helpers.fetchAirtable(
+            `${config.airtable.tables.guests}?filterByFormula={status}="Checked Out"&sort[0][field]=checkout&sort[0][direction]=desc`
+          );
+          
+          if (data.records.length === 0) {
+            pastGuestList.innerHTML = '<div class="text-center py-3 text-muted">No past guests found</div>';
+            document.getElementById('selectedPastGuestInfo').style.display = 'none';
+            return;
+          }
+          
+          pastGuestList.innerHTML = '';
+          data.records.forEach(record => {
+            const guest = record.fields;
+            const item = document.createElement('div');
+            item.className = 'guest-list-item';
+            item.dataset.guestId = record.id;
+            item.dataset.guest = JSON.stringify(guest);
+            item.innerHTML = `
+              <div class="guest-list-name">${guest.name || 'Unnamed Guest'} (${guest.guestID})</div>
+              <div class="guest-list-room">${guest.room}</div>
+              <div class="guest-list-dates">${helpers.formatDate(guest.checkout)}</div>
+            `;
+            pastGuestList.appendChild(item);
+          });
+          
+          // Restore selected past guest if any
+          const selectedPastGuestId = window.selectedPastGuestId;
+          if (selectedPastGuestId) {
+            const selectedItem = pastGuestList.querySelector(`[data-guest-id="${selectedPastGuestId}"]`);
+            if (selectedItem) {
+              selectedItem.classList.add('active');
+              document.getElementById('selectedPastGuestInfo').style.display = 'block';
+              this.loadPastGuestDetails(selectedPastGuestId);
+            }
+          }
+        } catch (error) {
+          console.error('Error loading past guests:', error);
+          pastGuestList.innerHTML = '<div class="text-center py-3 text-danger">Failed to load past guests</div>';
+        }
+      },
+      
+      async loadAnalytics() {
+        const container = document.getElementById('analyticsSummary');
+        if (!container) return;
+        
+        try {
+          container.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>';
+          
+          // Get all past guests
+          const data = await helpers.fetchAirtable(
+            `${config.airtable.tables.guests}?filterByFormula={status}="Checked Out"`
+          );
+          
+          // Calculate analytics
+          const now = new Date();
+          const thisMonth = now.getMonth();
+          const thisYear = now.getFullYear();
+          
+          let monthlyRevenue = 0;
+          let yearlyRevenue = 0;
+          let totalRevenue = 0;
+          
+          data.records.forEach(record => {
+            const guest = record.fields;
+            const checkoutDate = new Date(guest.checkout);
+            const amount = (parseFloat(guest.advanceAmount) || 0) + (parseFloat(guest.balanceAmount) || 0);
+            
+            totalRevenue += amount;
+            
+            if (checkoutDate.getFullYear() === thisYear) {
+              yearlyRevenue += amount;
+              
+              if (checkoutDate.getMonth() === thisMonth) {
+                monthlyRevenue += amount;
+              }
+            }
+          });
+          
+          // Get food orders total
+          const ordersData = await helpers.fetchAirtable(
+            `${config.airtable.tables.orders}?filterByFormula={Status}!="Cancelled"`
+          );
+          
+          let foodTotal = 0;
+          ordersData.records.forEach(order => {
+            foodTotal += parseFloat(order.fields.TotalAmount) || 0;
+          });
+          
+          container.innerHTML = `
+            <div class="guest-details-grid">
+              <div class="detail-item">
+                <div class="detail-label">Monthly Revenue</div>
+                <div class="detail-value">₹${monthlyRevenue.toFixed(2)}</div>
+              </div>
+              <div class="detail-item">
+                <div class="detail-label">Yearly Revenue</div>
+                <div class="detail-value">₹${yearlyRevenue.toFixed(2)}</div>
+              </div>
+              <div class="detail-item">
+                <div class="detail-label">Total Revenue</div>
+                <div class="detail-value">₹${totalRevenue.toFixed(2)}</div>
+              </div>
+              <div class="detail-item">
+                <div class="detail-label">Total Food Orders</div>
+                <div class="detail-value">₹${foodTotal.toFixed(2)}</div>
+              </div>
+            </div>
+          `;
+        } catch (error) {
+          console.error('Error loading analytics:', error);
+          container.innerHTML = '<div class="alert alert-danger">Failed to load analytics</div>';
         }
       },
       
       async loadTodaysGuests() {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todayStr = today.toISOString().split('T')[0];
         const container = document.getElementById('today-guests-list');
         if (!container) return;
         
         try {
           container.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>';
           
-          // Get all active guests
-          const formula = `{status}="Active"`;
+          // Get guests with checkin date <= today AND checkout date >= today
+          const formula = `AND({checkin} <= '${todayStr}', {checkout} >= '${todayStr}')`;
           
           const data = await helpers.fetchAirtable(
-            `${config.airtable.tables.guests}?filterByFormula=${formula}`
+            `${config.airtable.tables.guests}?filterByFormula=AND(${formula}, {status}="Active")`
           );
           
           if (data.records.length === 0) {
-            container.innerHTML = '<div class="alert alert-info">No guests for today</div>';
+            container.innerHTML = '<div class="alert alert-info">No guests staying today</div>';
             return;
           }
           
           container.innerHTML = '';
           data.records.forEach(record => {
             const guest = record.fields;
+            const isCheckingInToday = helpers.isSameDay(guest.checkin, todayStr);
+            const isCheckingOutToday = helpers.isSameDay(guest.checkout, todayStr);
+            
             const card = document.createElement('div');
-            card.className = 'guest-card compact-guest-card';
+            card.className = 'guest-card';
+            card.dataset.guestId = record.id;
             card.innerHTML = `
-              <div class="compact-guest-info">
-                <div><strong>${guest.name || 'Unnamed Guest'}</strong></div>
-                <div class="compact-meta">
-                  ${guest.room} • ${helpers.formatShortDate(guest.checkin)} to ${helpers.formatShortDate(guest.checkout)}
+              <div class="guest-summary">
+                <div>
+                  <h5>${guest.name || 'Unnamed Guest'}</h5>
+                  <div class="guest-meta">
+                    ${guest.room} • ${helpers.formatShortDate(guest.checkin)} to ${helpers.formatShortDate(guest.checkout)}
+                    ${isCheckingInToday ? '<span class="badge bg-primary">Checking In</span>' : ''}
+                    ${isCheckingOutToday ? '<span class="badge bg-danger">Checking Out</span>' : ''}
+                    ${!isCheckingInToday && !isCheckingOutToday ? '<span class="badge bg-success">Staying</span>' : ''}
+                  </div>
                 </div>
-              </div>
-              <div class="compact-guest-actions">
-                <button class="btn btn-sm btn-outline-primary manage-guest-btn" data-guest-id="${record.id}">
-                  <i class="fas fa-cog"></i>
-                </button>
               </div>
             `;
             container.appendChild(card);
           });
           
-          // Add event listeners to manage buttons
-          document.querySelectorAll('.manage-guest-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
+          // Add click handlers to guest cards
+          document.querySelectorAll('#today-guests-list .guest-card').forEach(card => {
+            card.addEventListener('click', () => {
               // Switch to manage tab and select this guest
               document.querySelector('#manage-footer-tab').click();
               setTimeout(() => {
-                const guestSelect = document.getElementById('guestSelect');
-                guestSelect.value = btn.dataset.guestId;
-                guestSelect.dispatchEvent(new Event('change'));
-                // Scroll to top of manage section
-                document.getElementById('manage-content').scrollIntoView({ behavior: 'smooth' });
+                document.querySelector('#active-tab').click();
+                const guestId = card.dataset.guestId;
+                const guestList = document.getElementById('guestList');
+                const guestItem = guestList.querySelector(`[data-guest-id="${guestId}"]`);
+                if (guestItem) {
+                  guestItem.click();
+                }
               }, 100);
             });
           });
@@ -1002,7 +1549,13 @@
       },
       
       async loadUpcomingGuests() {
-        const today = new Date().toISOString().split('T')[0];
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todayStr = today.toISOString().split('T')[0];
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const tomorrowStr = tomorrow.toISOString().split('T')[0];
+        
         const container = document.getElementById('upcoming-guests-list');
         if (!container) return;
         
@@ -1010,8 +1563,10 @@
           container.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>';
           
           // Get upcoming guests (checking in after today)
+          const formula = `AND({checkin} > '${todayStr}', {status}="Active")`;
+          
           const data = await helpers.fetchAirtable(
-            `${config.airtable.tables.guests}?filterByFormula=AND({checkin} > '${today}', {status}="Active")`
+            `${config.airtable.tables.guests}?filterByFormula=${formula}`
           );
           
           if (data.records.length === 0) {
@@ -1020,42 +1575,44 @@
           }
           
           // Sort by check-in date
-          data.records.sort((a, b) => new Date(a.fields.checkin) - new Date(b.fields.checkout));
+          data.records.sort((a, b) => new Date(a.fields.checkin) - new Date(b.fields.checkin));
           
           container.innerHTML = '';
           data.records.forEach(record => {
             const guest = record.fields;
-            const daysToCheckin = Math.ceil((new Date(guest.checkin) - new Date()) / (1000 * 60 * 60 * 24));
+            const checkinDate = new Date(guest.checkin);
+            const todayDate = new Date();
+            const daysToCheckin = Math.ceil((checkinDate - todayDate) / (1000 * 60 * 60 * 24));
             
             const card = document.createElement('div');
-            card.className = 'guest-card compact-guest-card';
+            card.className = 'guest-card';
+            card.dataset.guestId = record.id;
             card.innerHTML = `
-              <div class="compact-guest-info">
-                <div><strong>${guest.name || 'Unnamed Guest'}</strong></div>
-                <div class="compact-meta">
-                  ${guest.room} • ${helpers.formatShortDate(guest.checkin)} • ${daysToCheckin} days
+              <div class="guest-summary">
+                <div>
+                  <h5>${guest.name || 'Unnamed Guest'}</h5>
+                  <div class="guest-meta">
+                    ${guest.room} • ${helpers.formatDate(guest.checkin)} • ${daysToCheckin} days
+                  </div>
                 </div>
-              </div>
-              <div class="compact-guest-actions">
-                <button class="btn btn-sm btn-outline-primary manage-guest-btn" data-guest-id="${record.id}">
-                  <i class="fas fa-cog"></i>
-                </button>
               </div>
             `;
             container.appendChild(card);
           });
           
-          // Add event listeners to manage buttons
-          document.querySelectorAll('.manage-guest-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
+          // Add click handlers to guest cards
+          document.querySelectorAll('#upcoming-guests-list .guest-card').forEach(card => {
+            card.addEventListener('click', () => {
               // Switch to manage tab and select this guest
               document.querySelector('#manage-footer-tab').click();
               setTimeout(() => {
-                const guestSelect = document.getElementById('guestSelect');
-                guestSelect.value = btn.dataset.guestId;
-                guestSelect.dispatchEvent(new Event('change'));
-                // Scroll to top of manage section
-                document.getElementById('manage-content').scrollIntoView({ behavior: 'smooth' });
+                document.querySelector('#active-tab').click();
+                const guestId = card.dataset.guestId;
+                const guestList = document.getElementById('guestList');
+                const guestItem = guestList.querySelector(`[data-guest-id="${guestId}"]`);
+                if (guestItem) {
+                  guestItem.click();
+                }
               }, 100);
             });
           });
@@ -1110,24 +1667,25 @@
           for (let day = 1; day <= daysInMonth; day++) {
             const date = new Date(currentYear, currentMonth, day);
             const dateStr = date.toISOString().split('T')[0];
-            const isToday = dateStr === today.toISOString().split('T')[0];
+            const isToday = helpers.isSameDay(dateStr, today);
             
             // Find bookings for this day
-            const dayBookings = bookings.filter(b => 
-              helpers.datesOverlap(
-                b.fields.checkin, 
-                b.fields.checkout, 
+            const dayBookings = bookings.filter(b => {
+              const guest = b.fields;
+              return helpers.datesOverlap(
+                guest.checkin, 
+                guest.checkout, 
                 dateStr, 
                 dateStr
-              )
-            );
+              );
+            });
             
             const isBooked = dayBookings.length > 0;
             const dayClass = [
               'calendar-day',
               isToday ? 'today' : '',
               isBooked ? 'booked-day' : 'available-day',
-              date < today ? 'past-day' : ''
+              helpers.isPastDate(dateStr) ? 'past-day' : ''
             ].filter(Boolean).join(' ');
             
             html += `<div class="${dayClass}" data-date="${dateStr}">
@@ -1172,23 +1730,43 @@
         });
         
         // Find bookings for this day
-        const dayBookings = allBookings.filter(b => 
-          helpers.datesOverlap(
-            b.fields.checkin, 
-            b.fields.checkout, 
+        const dayBookings = allBookings.filter(b => {
+          const guest = b.fields;
+          return helpers.datesOverlap(
+            guest.checkin, 
+            guest.checkout, 
             date, 
             date
-          )
-        );
+          );
+        });
         
         if (dayBookings.length === 0) {
-          modalBody.innerHTML = '<div class="alert alert-info">No bookings for this day</div>';
+          modalBody.innerHTML = `
+            <div class="alert alert-info">No bookings for this day</div>
+            <div class="modal-event-actions">
+              <button class="btn btn-sm btn-primary" id="bookThisDateBtn">Book This Date</button>
+            </div>
+          `;
         } else {
           modalBody.innerHTML = dayBookings.map(booking => {
             const guest = booking.fields;
+            const isCheckingIn = helpers.isSameDay(guest.checkin, date);
+            const isCheckingOut = helpers.isSameDay(guest.checkout, date);
+            
+            let statusBadge = '';
+            if (isCheckingIn && isCheckingOut) {
+              statusBadge = '<span class="badge bg-warning">Same Day</span>';
+            } else if (isCheckingIn) {
+              statusBadge = '<span class="badge bg-primary">Check-in</span>';
+            } else if (isCheckingOut) {
+              statusBadge = '<span class="badge bg-danger">Check-out</span>';
+            } else {
+              statusBadge = '<span class="badge bg-success">Staying</span>';
+            }
+            
             return `
-              <div class="modal-event manage-guest-btn" data-guest-id="${booking.id}">
-                <div><strong>${guest.name || 'Unnamed Guest'}</strong></div>
+              <div class="modal-event" data-guest-id="${booking.id}">
+                <div><strong>${guest.name || 'Unnamed Guest'}</strong> ${statusBadge}</div>
                 <div>Room: ${guest.room}</div>
                 <div>Dates: ${helpers.formatDate(guest.checkin)} to ${helpers.formatDate(guest.checkout)}</div>
                 <div>Mobile: ${guest.mobile || 'Not provided'}</div>
@@ -1199,20 +1777,30 @@
         
         modal.show();
         
-        // Add event listeners to manage buttons
-        document.querySelectorAll('#dayModalBody .manage-guest-btn').forEach(btn => {
-          btn.addEventListener('click', () => {
+        // Add event listeners to guest details
+        document.querySelectorAll('#dayModalBody .modal-event').forEach(detail => {
+          detail.addEventListener('click', () => {
             // Switch to manage tab and select this guest
             modal.hide();
             document.querySelector('#manage-footer-tab').click();
             setTimeout(() => {
-              const guestSelect = document.getElementById('guestSelect');
-              guestSelect.value = btn.dataset.guestId;
-              guestSelect.dispatchEvent(new Event('change'));
-              // Scroll to top of manage section
-              document.getElementById('manage-content').scrollIntoView({ behavior: 'smooth' });
+              document.querySelector('#active-tab').click();
+              const guestId = detail.dataset.guestId;
+              const guestList = document.getElementById('guestList');
+              const guestItem = guestList.querySelector(`[data-guest-id="${guestId}"]`);
+              if (guestItem) {
+                guestItem.click();
+              }
             }, 100);
           });
+        });
+        
+        // Add event listener to book button
+        document.getElementById('bookThisDate')?.addEventListener('click', () => {
+          modal.hide();
+          document.querySelector('#register-footer-tab').click();
+          // Set the date in the date picker
+          document.getElementById('dateRange')._flatpickr.setDate([date, date]);
         });
       },
       
@@ -1228,6 +1816,79 @@
         }
       },
       
+      async showFoodOrdersModal(guestId) {
+        try {
+          const guest = await this.loadGuestDetails(guestId);
+          const orders = await this.getGuestOrders(guest.guestID);
+          
+          const modalBody = document.getElementById('foodOrdersModalBody');
+          modalBody.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>';
+          
+          const modal = new bootstrap.Modal(document.getElementById('foodOrdersModal'));
+          modal.show();
+          
+          if (orders.length === 0) {
+            modalBody.innerHTML = '<div class="alert alert-info">No food orders found for this guest</div>';
+            return;
+          }
+          
+          let html = '';
+          
+          orders.forEach(order => {
+            const orderDate = new Date(order.fields.createdAt || order.createdTime).toLocaleString();
+            const items = JSON.parse(order.fields.Items || '[]');
+            const totalAmount = order.fields.TotalAmount || 
+              items.reduce((sum, item) => sum + (item.price || 0) * (item.quantity || 1), 0);
+            
+            html += `
+              <div class="card mb-3">
+                <div class="card-header">
+                  <div class="d-flex justify-content-between">
+                    <div>Order #${order.fields.OrderID || order.id}</div>
+                    <div>${orderDate}</div>
+                  </div>
+                  <div class="d-flex justify-content-between mt-1">
+                    <div>Status: <span class="badge bg-${order.fields.Status === 'Delivered' ? 'success' : 'warning'}">${order.fields.Status}</span></div>
+                    <div>Total: ₹${totalAmount.toFixed(2)}</div>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <h6 class="card-subtitle mb-2 text-muted">Items</h6>
+                  <div class="order-items">
+            `;
+            
+            items.forEach(item => {
+              html += `
+                <div class="order-item">
+                  <div class="order-item-details">
+                    ${item.quantity} × ${item.name}
+                    ${item.specialInstructions ? `<div class="text-muted small">${item.specialInstructions}</div>` : ''}
+                  </div>
+                  <div class="order-item-price">₹${(item.price * item.quantity).toFixed(2)}</div>
+                </div>
+              `;
+            });
+            
+            html += `
+                  </div>
+                  ${order.fields.SpecialInstructions ? `
+                  <div class="mt-2">
+                    <strong>Special Instructions:</strong>
+                    <div>${order.fields.SpecialInstructions}</div>
+                  </div>
+                  ` : ''}
+                </div>
+              </div>
+            `;
+          });
+          
+          modalBody.innerHTML = html;
+        } catch (error) {
+          console.error('Error loading food orders:', error);
+          modalBody.innerHTML = '<div class="alert alert-danger">Failed to load food orders</div>';
+        }
+      },
+      
       async createFoodBill(guestRecordId, guestDetails, orders) {
         try {
           let totalAmount = 0;
@@ -1238,27 +1899,54 @@
             totalAmount += orderTotal;
             return items.map(item => ({
               item: item.name || 'Unspecified item',
+              quantity: item.quantity || 1,
+              price: item.price || 0,
               amount: (item.price || 0) * (item.quantity || 1),
               date: order.fields.createdAt || new Date().toISOString()
             }));
           });
 
-          const billData = {
-            fields: {
-              billID: `BIL-${Date.now().toString().slice(-6)}`,
-              guestID: [guestRecordId],
-              totalAmount: totalAmount,
-              status: "Pending",
-              orderDetails: JSON.stringify(allOrderItems)
-            }
-          };
+          // Check if bill already exists for this guest
+          const existingBills = await helpers.fetchAirtable(
+            `${config.airtable.tables.bills}?filterByFormula={guestID} = '${guestRecordId}'`
+          );
+          
+          let billId;
+          if (existingBills.records.length > 0) {
+            // Update existing bill
+            billId = existingBills.records[0].id;
+            await helpers.fetchAirtable(`${config.airtable.tables.bills}/${billId}`, {
+              method: 'PATCH',
+              body: JSON.stringify({
+                fields: {
+                  totalAmount: totalAmount,
+                  orderDetails: JSON.stringify(allOrderItems),
+                  updatedAt: new Date().toISOString()
+                }
+              })
+            });
+            logger.log(`Updated existing bill for guest ${guestRecordId}`, 'info');
+          } else {
+            // Create new bill
+            const billData = {
+              fields: {
+                billID: `BIL-${Date.now().toString().slice(-6)}`,
+                guestID: [guestRecordId],
+                totalAmount: totalAmount,
+                status: "Pending",
+                orderDetails: JSON.stringify(allOrderItems)
+              }
+            };
 
-          await helpers.fetchAirtable(config.airtable.tables.bills, {
-            method: 'POST',
-            body: JSON.stringify(billData)
-          });
+            const response = await helpers.fetchAirtable(config.airtable.tables.bills, {
+              method: 'POST',
+              body: JSON.stringify(billData)
+            });
+            billId = response.id;
+            logger.log(`Created new bill for guest ${guestRecordId}`, 'success');
+          }
 
-          return { guest: guestDetails, orders: allOrderItems, totalAmount };
+          return { guest: guestDetails, orders: allOrderItems, totalAmount, billId };
         } catch (error) {
           console.error('Error creating food bill:', error);
           throw error;
@@ -1266,8 +1954,8 @@
       },
       
       downloadBillAsImage() {
-        const billDetails = document.querySelector('.bill-details');
-        if (!billDetails) return alert('No bill generated to download');
+        const billDetails = document.querySelector('.bill-container');
+        if (!billDetails) return helpers.showToast('No bill generated to download', 'warning');
         html2canvas(billDetails).then(canvas => {
           const link = document.createElement('a');
           link.download = 'food-bill.png';
@@ -1320,6 +2008,120 @@ Team OCB Stays`;
         }
       },
       
+      async loadGuestDetailsForDisplay(guestId, guestData) {
+        try {
+          const guest = guestData || await this.loadGuestDetails(guestId);
+          const foodTotal = await this.calculateFoodTotal(guest.guestID);
+          
+          // Calculate nights
+          const nights = helpers.calculateNights(guest.checkin, guest.checkout);
+          
+          // Calculate total due (balance + food orders)
+          const totalDue = (parseFloat(guest.balanceAmount) || 0) + foodTotal;
+          
+          // Render guest details with enhanced layout
+          document.getElementById('guestDetailsContent').innerHTML = `
+            <div class="guest-details-section">
+              <h6>Guest Information</h6>
+              <div class="guest-details-grid">
+                <div class="detail-item">
+                  <div class="detail-label">Name</div>
+                  <div class="detail-value">${guest.name || 'Unnamed Guest'}</div>
+                </div>
+                <div class="detail-item">
+                  <div class="detail-label">Mobile</div>
+                  <div class="detail-value">${guest.mobile || 'Not provided'}</div>
+                </div>
+                <div class="detail-item">
+                  <div class="detail-label">Room</div>
+                  <div class="detail-value">${guest.room}</div>
+                </div>
+                <div class="detail-item">
+                  <div class="detail-label">Nights</div>
+                  <div class="detail-value">${nights}</div>
+                </div>
+                <div class="detail-item">
+                  <div class="detail-label">Check-in</div>
+                  <div class="detail-value">${helpers.formatDate(guest.checkin)}</div>
+                </div>
+                <div class="detail-item">
+                  <div class="detail-label">Check-out</div>
+                  <div class="detail-value">${helpers.formatDate(guest.checkout)}</div>
+                </div>
+              </div>
+              
+              ${guest.Comments ? `
+              <div class="notes-section">
+                <div class="detail-label">Notes</div>
+                <div class="notes-content">${guest.Comments}</div>
+              </div>
+              ` : ''}
+              
+              <div class="food-orders-card" id="viewFoodOrders">
+                <h6>
+                  <span>Food & Amenities</span>
+                  <span class="badge bg-primary">₹${foodTotal.toFixed(2)}</span>
+                </h6>
+              </div>
+            </div>
+            
+            <div class="guest-details-section">
+              <h6>Payment Summary</h6>
+              <div class="payment-summary">
+                <div class="payment-summary-item">
+                  <span>Advance Paid:</span>
+                  <span>₹${guest.advanceAmount || 0} 
+                    <span class="payment-mode">${guest.advanceMode ? `(${guest.advanceMode})` : ''}</span>
+                  </span>
+                </div>
+                <div class="payment-summary-item">
+                  <span>Food Orders:</span>
+                  <span>₹${foodTotal.toFixed(2)}</span>
+                </div>
+                <div class="payment-summary-item">
+                  <span>Balance Due:</span>
+                  <span>₹${guest.balanceAmount || 0}</span>
+                </div>
+                <div class="payment-summary-item total">
+                  <span>Total Due:</span>
+                  <span>₹${totalDue.toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+          `;
+          
+          // Setup action buttons
+          const homeLink = guest.homeLink;
+          document.getElementById('copyGuestLink').onclick = () => {
+            navigator.clipboard.writeText(homeLink);
+            helpers.showToast('Link copied to clipboard!', 'success');
+          };
+          
+          document.getElementById('sendEmailToGuest').onclick = () => window.open(
+            `mailto:?subject=OCB Stays Information&body=${encodeURIComponent(this.generateEmailBody(guest, homeLink))}`
+          );
+          
+          document.getElementById('sendWhatsappToGuest').onclick = () => window.open(
+            `https://wa.me/${guest.mobile}?text=${encodeURIComponent(this.generateWhatsappMessage(guest, homeLink))}`
+          );
+          
+          document.getElementById('callGuest').href = `tel:${guest.mobile}`;
+          
+          // Setup food orders click
+          document.getElementById('viewFoodOrders').addEventListener('click', () => {
+            this.showFoodOrdersModal(guestId);
+          });
+          
+          return guest;
+        } catch (error) {
+          console.error('Error loading guest details:', error);
+          document.getElementById('guestDetailsContent').innerHTML = `
+            <div class="alert alert-danger">Failed to load guest details</div>
+          `;
+          throw error;
+        }
+      },
+      
       async calculateFoodTotal(guestId) {
         try {
           const orders = await this.getGuestOrders(guestId);
@@ -1348,13 +2150,158 @@ Team OCB Stays`;
         
         flatpickr("#editCheckin", {
           minDate: "today",
-          dateFormat: "Y-m-d"
+          dateFormat: "Y-m-d",
+          defaultDate: null
         });
         
         flatpickr("#editCheckout", {
           minDate: "today",
-          dateFormat: "Y-m-d"
+          dateFormat: "Y-m-d",
+          defaultDate: null
         });
+      },
+      
+      async showCheckoutModal(guestId) {
+        try {
+          const guest = await this.loadGuestDetails(guestId);
+          const foodTotal = await this.calculateFoodTotal(guest.guestID);
+          const totalDue = (parseFloat(guest.balanceAmount) || 0) + foodTotal;
+          
+          document.getElementById('checkoutBalance').value = totalDue.toFixed(2);
+          document.getElementById('checkoutPaymentType').value = '';
+          document.getElementById('checkoutComments').value = '';
+          
+          const modal = new bootstrap.Modal(document.getElementById('checkoutModal'));
+          modal.show();
+        } catch (error) {
+          console.error('Error preparing checkout:', error);
+          helpers.showToast(`Error: ${error.message}`, 'danger');
+        }
+      },
+      
+      async loadPastGuestDetails(guestId) {
+        try {
+          const guest = await this.loadGuestDetails(guestId);
+          const foodTotal = await this.calculateFoodTotal(guest.guestID);
+          const nights = helpers.calculateNights(guest.checkin, guest.checkout);
+          
+          // Render past guest details
+          document.getElementById('pastGuestDetailsContent').innerHTML = `
+            <div class="guest-details-section">
+              <h6>Guest Information</h6>
+              <div class="guest-details-grid">
+                <div class="detail-item">
+                  <div class="detail-label">Name</div>
+                  <div class="detail-value">${guest.name || 'Unnamed Guest'}</div>
+                </div>
+                <div class="detail-item">
+                  <div class="detail-label">Mobile</div>
+                  <div class="detail-value">${guest.mobile || 'Not provided'}</div>
+                </div>
+                <div class="detail-item">
+                  <div class="detail-label">Room</div>
+                  <div class="detail-value">${guest.room}</div>
+                </div>
+                <div class="detail-item">
+                  <div class="detail-label">Nights</div>
+                  <div class="detail-value">${nights}</div>
+                </div>
+                <div class="detail-item">
+                  <div class="detail-label">Check-in</div>
+                  <div class="detail-value">${helpers.formatDate(guest.checkin)}</div>
+                </div>
+                <div class="detail-item">
+                  <div class="detail-label">Check-out</div>
+                  <div class="detail-value">${helpers.formatDate(guest.checkout)}</div>
+                </div>
+              </div>
+              
+              ${guest.Comments ? `
+              <div class="notes-section">
+                <div class="detail-label">Notes</div>
+                <div class="notes-content">${guest.Comments}</div>
+              </div>
+              ` : ''}
+              
+              <div class="food-orders-card" id="viewPastFoodOrders">
+                <h6>
+                  <span>Food & Amenities</span>
+                  <span class="badge bg-primary">₹${foodTotal.toFixed(2)}</span>
+                </h6>
+              </div>
+            </div>
+            
+            <div class="guest-details-section">
+              <h6>Payment Summary</h6>
+              <div class="payment-summary">
+                <div class="payment-summary-item">
+                  <span>Advance Paid:</span>
+                  <span>₹${guest.advanceAmount || 0} 
+                    <span class="payment-mode">${guest.advanceMode ? `(${guest.advanceMode})` : ''}</span>
+                  </span>
+                </div>
+                <div class="payment-summary-item">
+                  <span>Food Orders:</span>
+                  <span>₹${foodTotal.toFixed(2)}</span>
+                </div>
+                <div class="payment-summary-item">
+                  <span>Balance Paid:</span>
+                  <span>₹${guest.balanceAmount || 0} 
+                    <span class="payment-mode">${guest.PaymentType ? `(${guest.PaymentType})` : ''}</span>
+                  </span>
+                </div>
+                <div class="payment-summary-item total">
+                  <span>Total Paid:</span>
+                  <span>₹${((parseFloat(guest.advanceAmount) || 0) + (parseFloat(guest.balanceAmount) || 0)).toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+          `;
+          
+          // Setup food orders click
+          document.getElementById('viewPastFoodOrders').addEventListener('click', () => {
+            this.showFoodOrdersModal(guestId);
+          });
+        } catch (error) {
+          console.error('Error loading past guest details:', error);
+          document.getElementById('pastGuestDetailsContent').innerHTML = `
+            <div class="alert alert-danger">Failed to load guest details</div>
+          `;
+        }
+      },
+      
+      async loadLogs() {
+        const container = document.getElementById('logs-container');
+        if (!container) return;
+        
+        logger.renderLogs();
+      },
+      
+      showRegistrationSuccess(guest, homeLink) {
+        const modal = new bootstrap.Modal(document.getElementById('registrationSuccessModal'));
+        const detailsDiv = document.getElementById('registrationSuccessDetails');
+        const linkInput = document.getElementById('guestLinkInput');
+        
+        detailsDiv.innerHTML = `
+          <div class="mb-2"><strong>Name:</strong> ${guest.name || 'Unnamed Guest'}</div>
+          <div class="mb-2"><strong>Room:</strong> ${guest.room}</div>
+          <div class="mb-2"><strong>Dates:</strong> ${helpers.formatDate(guest.checkin)} to ${helpers.formatDate(guest.checkout)}</div>
+          <div class="mb-2"><strong>Mobile:</strong> ${guest.mobile || 'Not provided'}</div>
+          <div class="mb-2"><strong>Advance:</strong> ₹${guest.advanceAmount || 0} ${guest.advanceMode ? `(${guest.advanceMode})` : ''}</div>
+        `;
+        
+        linkInput.value = homeLink;
+        
+        // Setup action buttons
+        document.getElementById('sendEmailFromModal').onclick = () => {
+          window.open(`mailto:?subject=OCB Stays Booking Confirmation&body=${encodeURIComponent(this.generateEmailBody(guest, homeLink))}`);
+        };
+        
+        document.getElementById('sendWhatsappFromModal').onclick = () => {
+          window.open(`https://wa.me/${guest.mobile}?text=${encodeURIComponent(this.generateWhatsappMessage(guest, homeLink))}`);
+        };
+        
+        modal.show();
       }
     };
 
@@ -1378,8 +2325,14 @@ Team OCB Stays`;
             name: document.getElementById('name').value,
             mobile: document.getElementById('mobile').value,
             advanceAmount: document.getElementById('advanceAmount').value || 0,
-            balanceAmount: document.getElementById('balanceAmount').value || 0
+            advanceMode: document.getElementById('advanceMode').value || '',
+            balanceAmount: document.getElementById('balanceAmount').value || 0,
+            Comments: document.getElementById('comments').value || ''
           };
+          
+          if (!formData.room) throw new Error('Please select a room');
+          if (!formData.name) throw new Error('Please enter guest name');
+          if (!formData.mobile) throw new Error('Please enter mobile number');
           
           const guestID = helpers.generateGuestId();
           const homeLink = `${config.urls.guestPortal}?guestID=${guestID}&room=${encodeURIComponent(formData.room)}`;
@@ -1401,33 +2354,21 @@ Team OCB Stays`;
 
           if (!response.id) throw new Error('Failed to create guest record');
           
-          document.getElementById('linkOutput').innerHTML = `
-            <div class="alert alert-success">Guest registered successfully! Record ID: ${response.id}</div>
-            <div class="input-group-copy">
-              <input type="text" class="form-control" value="${homeLink}" readonly>
-              <button class="btn btn-outline-secondary" onclick="navigator.clipboard.writeText('${homeLink}');alert('Copied!')">📋 Copy</button>
-            </div>
-          `;
+          // Clear form
+          document.getElementById('guestForm').reset();
           
-          // Enable action buttons
-          const guest = { ...formData, guestID };
-          document.getElementById('sendEmailBtn').onclick = () => window.open(
-            `mailto:?subject=OCB Stays Booking Confirmation&body=${encodeURIComponent(app.generateEmailBody(guest, homeLink))}`
-          );
-          document.getElementById('sendWhatsappBtn').onclick = () => window.open(
-            `https://wa.me/?text=${encodeURIComponent(app.generateWhatsappMessage(guest, homeLink))}`
-          );
-          document.getElementById('sendEmailBtn').disabled = false;
-          document.getElementById('sendWhatsappBtn').disabled = false;
+          // Show success modal
+          app.showRegistrationSuccess(formData, homeLink);
           
           await app.loadActiveGuests();
           await app.loadAvailableRooms();
           await app.loadTodaysGuests();
           await app.loadUpcomingGuests();
           await app.generateCalendarView();
+          
         } catch (error) {
           console.error("Registration error:", error);
-          helpers.showAlert('linkOutput', `Error: ${error.message}`, 'danger');
+          helpers.showToast(`Error: ${error.message}`, 'danger');
         } finally {
           btn.disabled = false;
           helpers.toggleSpinner('registerSpinner', false);
@@ -1435,53 +2376,82 @@ Team OCB Stays`;
       },
       
       async generateBill() {
-        const guestSelect = document.getElementById('guestSelect');
-        const btn = document.getElementById('generateBill');
-        if (!guestSelect || !guestSelect.value) {
-          return helpers.showAlert('billOutput', 'Please select a guest', 'danger');
+        const guestList = document.getElementById('guestList');
+        const selectedGuest = guestList.querySelector('.guest-list-item.active');
+        if (!selectedGuest) {
+          return helpers.showToast('Please select a guest', 'warning');
         }
         
+        const btn = document.getElementById('generateBill');
         btn.disabled = true;
         helpers.toggleSpinner('billSpinner', true);
         document.getElementById('billOutput').innerHTML = '<div class="alert alert-info">Generating food bill...</div>';
         
         try {
-          const guestData = JSON.parse(guestSelect.options[guestSelect.selectedIndex].dataset.guest);
+          const guestId = selectedGuest.dataset.guestId;
+          const guestData = JSON.parse(selectedGuest.dataset.guest);
           const orders = await app.getGuestOrders(guestData.guestID);
-          if (!orders.length) return helpers.showAlert('billOutput', 'No food orders found', 'warning');
+          if (!orders.length) return helpers.showToast('No food orders found', 'warning');
           
-          const billResult = await app.createFoodBill(guestSelect.value, guestData, orders);
+          const billResult = await app.createFoodBill(guestId, guestData, orders);
           
-          let ordersHTML = billResult.orders.map(order => `
-            <div class="order-item">
-              <span>${order.item}</span>
-              <span>₹${order.amount.toFixed(2)}</span>
-            </div>
+          // Format bill items with proper alignment
+          const billItems = billResult.orders.map(order => `
+            <tr>
+              <td>${order.item}</td>
+              <td class="text-center">${order.quantity}</td>
+              <td class="text-right">₹${order.price.toFixed(2)}</td>
+              <td class="text-right">₹${order.amount.toFixed(2)}</td>
+            </tr>
           `).join('');
-          
-          ordersHTML += `
-            <div class="order-total">
-              <span>Total:</span>
-              <span>₹${billResult.totalAmount.toFixed(2)}</span>
-            </div>
-          `;
           
           document.getElementById('billOutput').innerHTML = `
             <div class="alert alert-success">Food bill generated!</div>
-            <div class="bill-details">
-              <h5>Guest: ${billResult.guest.name || 'Unnamed'} (${billResult.guest.guestID})</h5>
-              <h6>Order Items:</h6>
-              ${ordersHTML}
-            </div>
-            <div class="action-buttons mt-3">
-              <div class="action-icon download-icon" onclick="app.downloadBillAsImage()" title="Download Bill">
-                <i class="fas fa-download"></i>
+            <div class="bill-container">
+              <div class="bill-header">
+                <div class="bill-title">OCB Stays</div>
+                <div class="bill-subtitle">Food Order Bill</div>
               </div>
+              
+              <div class="bill-meta">
+                <div>
+                  <div><strong>Guest:</strong> ${billResult.guest.name || 'Unnamed'}</div>
+                  <div><strong>Room:</strong> ${billResult.guest.room}</div>
+                </div>
+                <div>
+                  <div><strong>Bill ID:</strong> ${billResult.billId}</div>
+                  <div><strong>Date:</strong> ${new Date().toLocaleDateString()}</div>
+                </div>
+              </div>
+              
+              <table class="bill-items">
+                <thead>
+                  <tr>
+                    <th>Item</th>
+                    <th class="text-center">Qty</th>
+                    <th class="text-right">Price</th>
+                    <th class="text-right">Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${billItems}
+                </tbody>
+              </table>
+              
+              <div class="bill-total">
+                Total Amount: ₹${billResult.totalAmount.toFixed(2)}
+              </div>
+            </div>
+            
+            <div class="action-buttons mt-3">
+              <button class="btn btn-primary" onclick="app.downloadBillAsImage()">
+                <i class="fas fa-download"></i> Download Bill
+              </button>
             </div>
           `;
         } catch (error) {
           console.error("Bill generation error:", error);
-          helpers.showAlert('billOutput', `Error: ${error.message}`, 'danger');
+          helpers.showToast(`Error: ${error.message}`, 'danger');
         } finally {
           btn.disabled = false;
           helpers.toggleSpinner('billSpinner', false);
@@ -1489,359 +2459,411 @@ Team OCB Stays`;
       },
       
       async checkoutGuest() {
-        const guestId = document.getElementById('guestSelect').value;
-        if (!guestId || !confirm('Are you sure you want to check out this guest?')) return;
+        const guestList = document.getElementById('guestList');
+        const selectedGuest = guestList.querySelector('.guest-list-item.active');
+        if (!selectedGuest) {
+          return helpers.showToast('Please select a guest', 'warning');
+        }
         
-        const btn = document.getElementById('checkoutGuest');
+        await app.showCheckoutModal(selectedGuest.dataset.guestId);
+      },
+      
+      async confirmCheckout() {
+        const guestList = document.getElementById('guestList');
+        const selectedGuest = guestList.querySelector('.guest-list-item.active');
+        if (!selectedGuest) return;
+        
+        const btn = document.getElementById('confirmCheckout');
         btn.disabled = true;
-        helpers.toggleSpinner('checkoutSpinner', true);
         
         try {
+          const paymentType = document.getElementById('checkoutPaymentType').value;
+          const comments = document.getElementById('checkoutComments').value;
+          
+          if (!paymentType) {
+            throw new Error('Please select payment mode');
+          }
+          
+          // Get current guest details to calculate food total
+          const guestId = selectedGuest.dataset.guestId;
+          const guest = await app.loadGuestDetails(guestId);
+          const foodTotal = await app.calculateFoodTotal(guest.guestID);
+          
+          // Update guest record
           await helpers.fetchAirtable(`${config.airtable.tables.guests}/${guestId}`, {
             method: 'PATCH',
-            body: JSON.stringify({ fields: { status: "Checked Out" } })
+            body: JSON.stringify({ 
+              fields: { 
+                status: "Checked Out",
+                PaymentType: paymentType,
+                Comments: comments || guest.Comments || '',
+                balanceAmount: parseFloat(guest.balanceAmount) || 0 // Keep original balance amount
+              }
+            })
           });
           
-          helpers.showAlert('billOutput', 'Guest checked out successfully');
+          // Close modal
+          const modal = bootstrap.Modal.getInstance(document.getElementById('checkoutModal'));
+          modal.hide();
+          
+          helpers.showToast('Guest checked out successfully', 'success');
           document.getElementById('selectedGuestInfo').style.display = 'none';
           await app.loadActiveGuests();
+          await app.loadPastGuests();
           await app.loadTodaysGuests();
           await app.loadUpcomingGuests();
           await app.generateCalendarView();
         } catch (error) {
           console.error("Checkout error:", error);
-          helpers.showAlert('billOutput', `Error: ${error.message}`, 'danger');
+          helpers.showToast(`Error: ${error.message}`, 'danger');
         } finally {
           btn.disabled = false;
-          helpers.toggleSpinner('checkoutSpinner', false);
         }
       },
       
-      async setupGuestSelection() {
-        const guestSelect = document.getElementById('guestSelect');
-        const pastGuestSelect = document.getElementById('pastGuestSelect');
-
-        // Active guest logic
-        if (guestSelect) {
-          guestSelect.addEventListener('change', async function() {
-            const guestInfoDiv = document.getElementById('selectedGuestInfo');
-            if (!this.value) {
-              guestInfoDiv.style.display = 'none';
-              return;
-            }
-            // Do NOT hide past guest info here
-
-            const guest = JSON.parse(this.options[this.selectedIndex].dataset.guest);
-            const homeLink = guest.homeLink;
-
-            // Show loading state
+      setupGuestSelection() {
+        const guestList = document.getElementById('guestList');
+        if (!guestList) return;
+        
+        guestList.addEventListener('click', async function(e) {
+          const guestItem = e.target.closest('.guest-list-item');
+          if (!guestItem) return;
+          
+          // Update selected item
+          const items = guestList.querySelectorAll('.guest-list-item');
+          items.forEach(item => item.classList.remove('active'));
+          guestItem.classList.add('active');
+          
+          // Store selected guest ID
+          window.selectedGuestId = guestItem.dataset.guestId;
+          
+          // Show loading state
+          document.getElementById('guestDetailsContent').innerHTML = `
+            <div class="text-center py-3">
+              <div class="spinner-border text-primary" role="status"></div>
+              <div>Loading guest details...</div>
+            </div>
+          `;
+          
+          document.getElementById('selectedGuestInfo').style.display = 'block';
+          document.getElementById('billOutput').innerHTML = ''; // Clear previous bill
+          
+          try {
+            await app.loadGuestDetailsForDisplay(guestItem.dataset.guestId, JSON.parse(guestItem.dataset.guest));
+          } catch (error) {
+            console.error('Error loading guest details:', error);
             document.getElementById('guestDetailsContent').innerHTML = `
-              <div class="text-center py-3">
-                <div class="spinner-border text-primary" role="status"></div>
-                <div>Loading guest details...</div>
-              </div>
+              <div class="alert alert-danger">Failed to load guest details</div>
             `;
-            guestInfoDiv.style.display = 'block';
-
-            try {
-              // Calculate food total
-              const foodTotal = await app.calculateFoodTotal(guest.guestID);
-              // Calculate nights
-              const nights = helpers.calculateNights(guest.checkin, guest.checkout);
-
-              // Render guest details
-              document.getElementById('guestDetailsContent').innerHTML = `
-                <h5>${guest.name || 'Unnamed Guest'}</h5>
-                <div class="guest-details-grid">
-                  <div class="detail-item">
-                    <div class="detail-label">Room</div>
-                    <div class="detail-value">${guest.room}</div>
-                  </div>
-                  <div class="detail-item">
-                    <div class="detail-label">Mobile</div>
-                    <div class="detail-value">${guest.mobile || 'Not provided'}</div>
-                  </div>
-                  <div class="detail-item">
-                    <div class="detail-label">Check-in</div>
-                    <div class="detail-value">${helpers.formatDate(guest.checkin)}</div>
-                  </div>
-                  <div class="detail-item">
-                    <div class="detail-label">Check-out</div>
-                    <div class="detail-value">${helpers.formatDate(guest.checkout)}</div>
-                  </div>
-                  <div class="detail-item">
-                    <div class="detail-label">Nights</div>
-                    <div class="detail-value">${nights}</div>
-                  </div>
-                  <div class="detail-item">
-                    <div class="detail-label">Advance Paid</div>
-                    <div class="detail-value">₹${guest.advanceAmount || 0}</div>
-                  </div>
-                  <div class="detail-item">
-                    <div class="detail-label">Balance Due</div>
-                    <div class="detail-value">₹${guest.balanceAmount || 0}</div>
-                  </div>
-                  <div class="detail-item">
-                    <div class="detail-label">Food Orders</div>
-                    <div class="detail-value">₹${foodTotal}</div>
-                  </div>
-                </div>
-              `;
-
-              // Setup action buttons
-              document.getElementById('copyGuestLink').onclick = () => {
-                navigator.clipboard.writeText(homeLink);
-                helpers.showAlert('billOutput', 'Link copied to clipboard!');
-              };
-              document.getElementById('sendEmailToGuest').onclick = () => window.open(
-                `mailto:?subject=OCB Stays Information&body=${encodeURIComponent(app.generateEmailBody(guest, homeLink))}`
-              );
-              document.getElementById('sendWhatsappToGuest').onclick = () => window.open(
-                `https://wa.me/${guest.mobile}?text=${encodeURIComponent(app.generateWhatsappMessage(guest, homeLink))}`
-              );
-              document.getElementById('callGuest').href = `tel:${guest.mobile}`;
-            } catch (error) {
-              console.error('Error loading guest details:', error);
-              document.getElementById('guestDetailsContent').innerHTML = `
-                <div class="alert alert-danger">Failed to load guest details</div>
-              `;
-            }
-          });
-        }
-
-        // Past guest logic (read-only)
-        if (pastGuestSelect) {
-          pastGuestSelect.addEventListener('change', function() {
-            const pastGuestInfoDiv = document.getElementById('selectedPastGuestInfo');
-            if (!this.value) {
-              pastGuestInfoDiv.style.display = 'none';
-              return;
-            }
-            // Do NOT hide active guest info here
-
-            const guest = JSON.parse(this.options[this.selectedIndex].dataset.guest);
+          }
+        });
+      },
+      
+      setupPastGuestSelection() {
+        const pastGuestList = document.getElementById('pastGuestList');
+        if (!pastGuestList) return;
+        
+        pastGuestList.addEventListener('click', async function(e) {
+          const guestItem = e.target.closest('.guest-list-item');
+          if (!guestItem) return;
+          
+          // Update selected item
+          const items = pastGuestList.querySelectorAll('.guest-list-item');
+          items.forEach(item => item.classList.remove('active'));
+          guestItem.classList.add('active');
+          
+          // Store selected guest ID
+          window.selectedPastGuestId = guestItem.dataset.guestId;
+          
+          // Show loading state
+          document.getElementById('pastGuestDetailsContent').innerHTML = `
+            <div class="text-center py-3">
+              <div class="spinner-border text-primary" role="status"></div>
+              <div>Loading guest details...</div>
+            </div>
+          `;
+          
+          document.getElementById('selectedPastGuestInfo').style.display = 'block';
+          
+          try {
+            await app.loadPastGuestDetails(guestItem.dataset.guestId);
+          } catch (error) {
+            console.error('Error loading past guest details:', error);
             document.getElementById('pastGuestDetailsContent').innerHTML = `
-              <h5>${guest.name || 'Unnamed Guest'}</h5>
-              <div class="guest-details-grid">
-                <div class="detail-item">
-                  <div class="detail-label">Room</div>
-                  <div class="detail-value">${guest.room}</div>
-                </div>
-                <div class="detail-item">
-                  <div class="detail-label">Mobile</div>
-                  <div class="detail-value">${guest.mobile || 'Not provided'}</div>
-                </div>
-                <div class="detail-item">
-                  <div class="detail-label">Check-in</div>
-                  <div class="detail-value">${helpers.formatDate(guest.checkin)}</div>
-                </div>
-                <div class="detail-item">
-                  <div class="detail-label">Check-out</div>
-                  <div class="detail-value">${helpers.formatDate(guest.checkout)}</div>
-                </div>
-                <div class="detail-item">
-                  <div class="detail-label">Nights</div>
-                  <div class="detail-value">${helpers.calculateNights(guest.checkin, guest.checkout)}</div>
-                </div>
-                <div class="detail-item">
-                  <div class="detail-label">Advance Paid</div>
-                  <div class="detail-value">₹${guest.advanceAmount || 0}</div>
-                </div>
-                <div class="detail-item">
-                  <div class="detail-label">Balance Due</div>
-                  <div class="detail-value">₹${guest.balanceAmount || 0}</div>
-                </div>
-              </div>
+              <div class="alert alert-danger">Failed to load guest details</div>
             `;
-            pastGuestInfoDiv.style.display = 'block';
+          }
+        });
+      },
+      
+      setupPlaceOrder() {
+        const placeOrderBtn = document.getElementById('placeOrder');
+        if (!placeOrderBtn) return;
+        
+        placeOrderBtn.addEventListener('click', () => {
+          const guestList = document.getElementById('guestList');
+          const selectedGuest = guestList.querySelector('.guest-list-item.active');
+          if (!selectedGuest) {
+            return helpers.showToast('Please select a guest', 'warning');
+          }
+          
+          const guest = JSON.parse(selectedGuest.dataset.guest);
+          const menuLink = `${config.urls.guestMenu}?guestID=${guest.guestID}&room=${encodeURIComponent(guest.room)}`;
+          window.open(menuLink, '_blank');
+        });
+      },
+      
+      setupEditGuest() {
+        const editBtn = document.getElementById('editGuestBtn');
+        if (!editBtn) return;
+        
+        editBtn.addEventListener('click', async () => {
+          const guestList = document.getElementById('guestList');
+          const selectedGuest = guestList.querySelector('.guest-list-item.active');
+          if (!selectedGuest) return;
+          
+          const guestId = selectedGuest.dataset.guestId;
+          const guest = JSON.parse(selectedGuest.dataset.guest);
+          
+          // Populate edit form
+          document.getElementById('editName').value = guest.name || '';
+          document.getElementById('editMobile').value = guest.mobile || '';
+          document.getElementById('editRoom').value = guest.room || '';
+          document.getElementById('editCheckin')._flatpickr.setDate(guest.checkin);
+          document.getElementById('editCheckout')._flatpickr.setDate(guest.checkout);
+          document.getElementById('editAdvance').value = guest.advanceAmount || 0;
+          document.getElementById('editAdvanceMode').value = guest.advanceMode || '';
+          document.getElementById('editBalance').value = guest.balanceAmount || 0;
+          document.getElementById('editComments').value = guest.Comments || '';
+          document.getElementById('editGuestId').value = guestId;
+          
+          // Show modal
+          const modal = new bootstrap.Modal(document.getElementById('editGuestModal'));
+          modal.show();
+        });
+      },
+      
+      async saveGuestChanges() {
+        const guestId = document.getElementById('editGuestId').value;
+        if (!guestId) return;
+        
+        const btn = document.getElementById('saveGuestChanges');
+        btn.disabled = true;
+        
+        try {
+          const formData = {
+            name: document.getElementById('editName').value,
+            mobile: document.getElementById('editMobile').value,
+            room: document.getElementById('editRoom').value,
+            checkin: document.getElementById('editCheckin').value,
+            checkout: document.getElementById('editCheckout').value,
+            advanceAmount: document.getElementById('editAdvance').value || 0,
+            advanceMode: document.getElementById('editAdvanceMode').value || '',
+            balanceAmount: document.getElementById('editBalance').value || 0,
+            Comments: document.getElementById('editComments').value || ''
+          };
+          
+          if (!formData.name) throw new Error('Name is required');
+          if (!formData.mobile) throw new Error('Mobile is required');
+          if (!formData.room) throw new Error('Room is required');
+          if (!formData.checkin) throw new Error('Check-in date is required');
+          if (!formData.checkout) throw new Error('Check-out date is required');
+          
+          await helpers.fetchAirtable(`${config.airtable.tables.guests}/${guestId}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ fields: formData })
           });
+          
+          // Close modal
+          const modal = bootstrap.Modal.getInstance(document.getElementById('editGuestModal'));
+          modal.hide();
+          
+          // Reload guest data
+          helpers.showToast('Guest details updated successfully!', 'success');
+          await app.loadActiveGuests();
+          await app.loadTodaysGuests();
+          await app.loadUpcomingGuests();
+          await app.generateCalendarView();
+          
+          // Refresh selected guest
+          window.selectedGuestId = guestId;
+          const guestList = document.getElementById('guestList');
+          const guestItem = guestList.querySelector(`[data-guest-id="${guestId}"]`);
+          if (guestItem) {
+            guestItem.click();
+          }
+          
+        } catch (error) {
+          console.error('Error updating guest:', error);
+          helpers.showToast(`Error: ${error.message}`, 'danger');
+        } finally {
+          btn.disabled = false;
         }
       },
       
-      // Setup tab navigation
-      setupTabNavigation() {
-        // Hide all tab contents except dashboard on load
-        document.querySelectorAll('.main-content > div').forEach(content => {
-          content.style.display = 'none';
+      setupContactIcon() {
+        const contactIcon = document.getElementById('openContacts');
+        if (!contactIcon) return;
+        
+        contactIcon.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const mobileInput = document.getElementById('mobile');
+          mobileInput.focus();
+          
+          // This will trigger native contact picker on mobile devices
+          if (navigator.contacts && navigator.contacts.select) {
+            navigator.contacts.select(['name', 'tel'], { multiple: false })
+              .then(contacts => {
+                if (contacts && contacts.length > 0) {
+                  const contact = contacts[0];
+                  mobileInput.value = contact.tel ? contact.tel[0] : '';
+                }
+              })
+              .catch(console.error);
+          } else {
+            // Fallback for browsers without Contact Picker API
+            if (typeof mobileInput.select === 'function') {
+              mobileInput.select();
+            }
+          }
         });
-        document.getElementById('dashboard-content').style.display = 'block';
-
+      },
+      
+      setupAvailabilityCheck() {
+        const dateRange = document.getElementById('dateRange');
+        if (!dateRange) return;
+        
+        dateRange.addEventListener('change', () => {
+          if (dateRange.value) {
+            app.checkRoomAvailability();
+          }
+        });
+      },
+      
+      setupPropertyFilter() {
+        const filter = document.getElementById('propertyFilter');
+        if (!filter) return;
+        
+        filter.addEventListener('change', () => {
+          app.generateCalendarView(filter.value);
+        });
+      },
+      
+      setupTabNavigation() {
+        // Main tabs (footer)
         document.querySelectorAll('#mainTabs .nav-link').forEach(tab => {
-          tab.addEventListener('click', function (e) {
+          tab.addEventListener('click', (e) => {
             e.preventDefault();
-            // Hide all tab contents
+            const target = tab.dataset.tabTarget;
+            
+            // Hide all content
             document.querySelectorAll('.main-content > div').forEach(content => {
               content.style.display = 'none';
             });
-            // Show selected tab content
-            const target = tab.dataset.tabTarget;
+            
+            // Show selected content
             document.getElementById(`${target}-content`).style.display = 'block';
-            // Set active tab
-            document.querySelectorAll('#mainTabs .nav-link').forEach(t => t.classList.remove('active'));
+            
+            // Update active tab
+            document.querySelectorAll('#mainTabs .nav-link').forEach(t => {
+              t.classList.remove('active');
+            });
             tab.classList.add('active');
+            
+            // Load data if needed
+            if (target === 'dashboard') {
+              app.loadTodaysGuests();
+              app.loadUpcomingGuests();
+              app.generateCalendarView();
+              app.loadAnalytics();
+            } else if (target === 'manage') {
+              app.loadActiveGuests();
+              app.loadPastGuests();
+            } else if (target === 'register') {
+              app.loadAvailableRooms();
+            } else if (target === 'logs') {
+              app.loadLogs();
+            }
           });
+        });
+        
+        // Manage tabs
+        document.getElementById('past-tab')?.addEventListener('click', () => {
+          app.loadPastGuests();
+        });
+      },
+      
+      setupAutoFocus() {
+        // Auto-focus next input when current input is filled
+        document.querySelectorAll('input, select').forEach(input => {
+          input.addEventListener('change', function() {
+            if (this.value) {
+              helpers.focusNextInput(this);
+            }
+          });
+          
+          // Also for keypress Enter
+          input.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+              helpers.focusNextInput(this);
+            }
+          });
+        });
+      },
+      
+      setupLogsButtons() {
+        document.getElementById('refreshLogs')?.addEventListener('click', () => {
+          app.loadLogs();
+        });
+        
+        document.getElementById('clearLogs')?.addEventListener('click', () => {
+          logger.clear();
         });
       }
     };
 
+    // Initialize
     window.addEventListener('DOMContentLoaded', async () => {
-      // Setup tab navigation FIRST so tabs are always clickable
-      handlers.setupTabNavigation();
-
-      // Attach guest selection listeners ONCE, before any async/await
+      // Initialize logger
+      window.logger = logger;
+      logger.log('Dashboard initialized', 'info');
+      
+      // Setup event listeners
+      document.getElementById('guestForm')?.addEventListener('submit', handlers.registerGuest);
+      document.getElementById('generateBill')?.addEventListener('click', handlers.generateBill);
+      document.getElementById('checkoutGuest')?.addEventListener('click', handlers.checkoutGuest);
+      document.getElementById('saveGuestChanges')?.addEventListener('click', handlers.saveGuestChanges);
+      document.getElementById('confirmCheckout')?.addEventListener('click', handlers.confirmCheckout);
+      document.getElementById('bookThisDate')?.addEventListener('click', () => {
+        document.querySelector('#register-footer-tab').click();
+      });
+      
       handlers.setupGuestSelection();
-
-      // Initialize components (these can load async, tabs will work regardless)
+      handlers.setupPastGuestSelection();
+      handlers.setupPlaceOrder();
+      handlers.setupEditGuest();
+      handlers.setupContactIcon();
+      handlers.setupAvailabilityCheck();
+      handlers.setupPropertyFilter();
+      handlers.setupTabNavigation();
+      handlers.setupAutoFocus();
+      handlers.setupLogsButtons();
+      
+      // Initialize calendar
       app.initCalendar();
-      await app.loadActiveGuests();
-      await app.loadAvailableRooms();
+      
+      // Load initial data
       await app.loadTodaysGuests();
       await app.loadUpcomingGuests();
       await app.generateCalendarView();
+      await app.loadActiveGuests();
+      await app.loadPastGuests();
+      await app.loadAnalytics();
+      
+      // Make app functions available globally
+      window.app = app;
+      window.showToast = helpers.showToast;
     });
-
-    // Edit guest handler
-    document.getElementById('saveGuestChanges').onclick = async function() {
-      const guestId = document.getElementById('editGuestId').value;
-      if (!guestId) return;
-      const updatedFields = {
-        name: document.getElementById('editName').value,
-        mobile: document.getElementById('editMobile').value,
-        room: document.getElementById('editRoom').value,
-        checkin: document.getElementById('editCheckin').value,
-        checkout: document.getElementById('editCheckout').value,
-        advanceAmount: parseFloat(document.getElementById('editAdvance').value) || 0,
-        balanceAmount: parseFloat(document.getElementById('editBalance').value) || 0
-      };
-      try {
-        await helpers.fetchAirtable(`${config.airtable.tables.guests}/${guestId}`, {
-          method: 'PATCH',
-          body: JSON.stringify({ fields: updatedFields })
-        });
-        // Hide modal
-        bootstrap.Modal.getInstance(document.getElementById('editGuestModal')).hide();
-        // Refresh guest info and dropdowns
-        await app.loadActiveGuests();
-        // Optionally, re-select the guest to refresh info
-        document.getElementById('guestSelect').value = guestId;
-        document.getElementById('guestSelect').dispatchEvent(new Event('change'));
-        helpers.showAlert('billOutput', 'Guest details updated!');
-      } catch (error) {
-        helpers.showAlert('billOutput', 'Failed to update guest: ' + error.message, 'danger');
-      }
-    };
-
-    // Update the loadTodaysGuests function to show Active guests
-    app.loadTodaysGuests = async function() {
-      const container = document.getElementById('today-guests-list');
-      if (!container) return;
-      
-      try {
-        container.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>';
-        
-        // Get all active guests
-        const formula = `{status}="Active"`;
-        
-        const data = await helpers.fetchAirtable(
-          `${config.airtable.tables.guests}?filterByFormula=${formula}`
-        );
-        
-        if (data.records.length === 0) {
-          container.innerHTML = '<div class="alert alert-info">No guests for today</div>';
-          return;
-        }
-        
-        container.innerHTML = '';
-        data.records.forEach(record => {
-          const guest = record.fields;
-          const card = document.createElement('div');
-          card.className = 'guest-card compact-guest-card';
-          card.innerHTML = `
-            <div class="compact-guest-info">
-              <div><strong>${guest.name || 'Unnamed Guest'}</strong></div>
-              <div class="compact-meta">
-                ${guest.room} • ${helpers.formatShortDate(guest.checkin)} to ${helpers.formatShortDate(guest.checkout)}
-              </div>
-            </div>
-            <div class="compact-guest-actions">
-              <button class="btn btn-sm btn-outline-primary manage-guest-btn" data-guest-id="${record.id}">
-                <i class="fas fa-cog"></i>
-              </button>
-            </div>
-          `;
-          container.appendChild(card);
-        });
-        
-        // Add event listeners to manage buttons
-        document.querySelectorAll('.manage-guest-btn').forEach(btn => {
-          btn.addEventListener('click', () => {
-            // Switch to manage tab and select this guest
-            document.querySelector('#manage-footer-tab').click();
-            setTimeout(() => {
-              const guestSelect = document.getElementById('guestSelect');
-              guestSelect.value = btn.dataset.guestId;
-              guestSelect.dispatchEvent(new Event('change'));
-              // Scroll to top of manage section
-              document.getElementById('manage-content').scrollIntoView({ behavior: 'smooth' });
-            }, 100);
-          });
-        });
-      } catch (error) {
-        console.error('Error loading today\'s guests:', error);
-        container.innerHTML = '<div class="alert alert-danger">Failed to load today\'s guests</div>';
-      }
-    };
-
-    // Add Manage tab sub-navigation handling
-    document.querySelectorAll('#manageSubnav .nav-link').forEach(link => {
-      link.addEventListener('click', function(e) {
-        e.preventDefault();
-        // Update active state
-        document.querySelectorAll('#manageSubnav .nav-link').forEach(l => l.classList.remove('active'));
-        this.classList.add('active');
-        
-        // Show corresponding section
-        document.querySelectorAll('.manage-section').forEach(section => section.style.display = 'none');
-        document.querySelector(this.getAttribute('href')).style.display = 'block';
-      });
-    });
-
-    // Update WhatsApp link generation
-    app.generateWhatsappLink = function(mobile, message) {
-      // Remove any non-numeric characters from mobile
-      const cleanMobile = mobile.replace(/\D/g, '');
-      // Add country code if not present
-      const fullMobile = cleanMobile.startsWith('91') ? cleanMobile : '91' + cleanMobile;
-      return `https://wa.me/${fullMobile}?text=${encodeURIComponent(message)}`;
-    };
-
-    // Update edit button functionality
-    document.getElementById('editGuestBtn').onclick = function() {
-      const guestSelect = document.getElementById('guestSelect');
-      const guest = JSON.parse(guestSelect.options[guestSelect.selectedIndex].dataset.guest);
-      
-      // Populate edit form
-      document.getElementById('editGuestId').value = guestSelect.value;
-      document.getElementById('editName').value = guest.name || '';
-      document.getElementById('editMobile').value = guest.mobile || '';
-      document.getElementById('editRoom').value = guest.room || '';
-      document.getElementById('editCheckin').value = guest.checkin || '';
-      document.getElementById('editCheckout').value = guest.checkout || '';
-      document.getElementById('editAdvance').value = guest.advanceAmount || '';
-      document.getElementById('editBalance').value = guest.balanceAmount || '';
-      
-      // Show modal
-      new bootstrap.Modal(document.getElementById('editGuestModal')).show();
-    };
-
-    // Add food order handling
-    document.getElementById('placeOrder').onclick = function() {
-      const guestSelect = document.getElementById('guestSelect');
-      const guest = JSON.parse(guestSelect.options[guestSelect.selectedIndex].dataset.guest);
-      window.open(`${config.urls.guestMenu}?guestID=${guest.guestID}`, '_blank');
-    };
-
-    // ...rest of existing script...
   </script>
 </body>
 </html>
