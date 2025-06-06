@@ -1217,6 +1217,36 @@
         date.setHours(0, 0, 0, 0);
         return date < today;
       }
+
+      getLocalDateString: (date = new Date()) => {
+        const d = new Date(date);
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      },
+    
+      isSameLocalDay: (date1, date2) => {
+        const d1 = new Date(date1);
+        const d2 = new Date(date2);
+        return d1.getFullYear() === d2.getFullYear() && 
+               d1.getMonth() === d2.getMonth() && 
+               d1.getDate() === d2.getDate();
+      },
+    
+      isLocalToday: (dateStr) => {
+        const today = new Date();
+        const date = new Date(dateStr);
+        return helpers.isSameLocalDay(date, today);
+      },
+    
+      isLocalPastDate: (dateStr) => {
+        const today = new Date();
+        const date = new Date(dateStr);
+        today.setHours(0, 0, 0, 0);
+        date.setHours(0, 0, 0, 0);
+        return date < today;
+      }
     };
 
     // Core functions
@@ -1643,6 +1673,7 @@ async generateCalendarView(propertyFilter = 'all') {
     const today = new Date();
     const currentMonth = today.getMonth();
     const currentYear = today.getFullYear();
+    const todayStr = helpers.getLocalDateString();
     
     // Create month calendar
     const monthName = today.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
@@ -1666,8 +1697,8 @@ async generateCalendarView(propertyFilter = 'all') {
     // Add days of the month
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(currentYear, currentMonth, day);
-      const dateStr = date.toISOString().split('T')[0];
-      const isToday = helpers.isSameDay(dateStr, today);
+      const dateStr = helpers.getLocalDateString(date);
+      const isToday = helpers.isSameLocalDay(dateStr, todayStr);
       
       // Find bookings for this day
       const dayBookings = bookings.filter(b => {
@@ -1676,7 +1707,7 @@ async generateCalendarView(propertyFilter = 'all') {
         const checkout = new Date(guest.checkout);
         const currentDate = new Date(dateStr);
         
-        // Check if current date is between checkin and checkout (inclusive)
+        // Check if current date is between checkin and checkout (inclusive of checkin, exclusive of checkout)
         return currentDate >= checkin && currentDate < checkout;
       });
       
@@ -1685,7 +1716,7 @@ async generateCalendarView(propertyFilter = 'all') {
         'calendar-day',
         isToday ? 'today' : '',
         isBooked ? 'booked-day' : 'available-day',
-        helpers.isPastDate(dateStr) ? 'past-day' : ''
+        helpers.isLocalPastDate(dateStr) ? 'past-day' : ''
       ].filter(Boolean).join(' ');
       
       html += `<div class="${dayClass}" data-date="${dateStr}">
