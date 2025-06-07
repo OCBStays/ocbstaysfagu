@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>OCB Stays – Host Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <link rel="stylesheet" href="host_style.css">
+</head>
+<body>
+  <div class="toast-container"></div>
+  
+  <div class="container-fluid main-container">
+    <h1 class="text-center mb-4">OCB Stays – Host Dashboard</h1>
+
+    <!-- Main Content Area -->
+    <div class="main-content">
+      <!-- Dashboard Tab Content -->
+      <div id="dashboard-content">
+        <div class="dashboard-header">
+          <button class="btn btn-primary" id="addGuestBtn">
+            <i class="fas fa-user-plus"></i> Add Guest
+          </button>
+        </div>
+        
+        <div class="dashboard-scrollable">
+          <div class="dashboard-section">
+            <h2><i class="fas fa-calendar-day"></i> Today's Guests</h2>
+            <div class="guest-list-container">
+              <div id="today-guests-list" class="guest-cards-grid"></div>
+            </div>
+          </div>
+          
+          <div class="dashboard-section">
+            <h2><i class="fas fa-calendar-week"></i> Upcoming Guests</h2>
+            <div class="guest-list-container">
+              <div id="upcoming-guests-list" class="guest-cards-grid"></div>
+            </div>
+          </div>
+          
+          <div class="dashboard-section">
+            <h2><i class="fas fa-calendar-alt"></i> Booking Calendar</h2>
+            <div class="calendar-controls">
+              <button class="btn btn-sm btn-outline-secondary" id="prevMonthBtn">
+                <i class="fas fa-chevron-left"></i>
+              </button>
+              <h4 id="currentMonthDisplay" class="text-center"></h4>
+              <button class="btn btn-sm btn-outline-secondary" id="nextMonthBtn">
+                <i class="fas fa-chevron-right"></i>
+              </button>
+            </div>
+            <div class="mb-3">
+              <select class="form-select" id="propertyFilter">
+                <option value="all">All Properties</option>
+                <option value="Stargazing Deck (0)">Stargazing Deck (0)</option>
+                <option value="Stargazing Cabin (1)">Stargazing Cabin (1)</option>
+                <option value="A Frame Cottage">A Frame Cottage</option>
+              </select>
+            </div>
+            <div id="property-calendar-view" class="calendar-container"></div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Manage Tab Content -->
+      <div id="manage-content" style="display: none;">
+        <ul class="nav nav-tabs manage-tabs" id="manageTabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="active-tab" data-bs-toggle="tab" data-bs-target="#active-guests" type="button" role="tab">Active Guests</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="past-tab" data-bs-toggle="tab" data-bs-target="#past-guests" type="button" role="tab">Past Guests</button>
+          </li>
+        </ul>
+        
+        <div class="tab-content mt-3">
+          <div class="tab-pane fade show active" id="active-guests" role="tabpanel">
+            <div class="mb-3">
+              <div class="guest-list" id="guestList"></div>
+            </div>
+            <div id="selectedGuestInfo" style="display: none;"></div>
+          </div>
+          <div class="tab-pane fade" id="past-guests" role="tabpanel">
+            <div class="mb-3">
+              <div class="guest-list" id="pastGuestList"></div>
+            </div>
+            <div id="selectedPastGuestInfo" style="display: none;"></div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Orders Tab Content -->
+      <div id="orders-content" style="display: none;">
+        <iframe src="orders.html" frameborder="0" class="orders-iframe"></iframe>
+      </div>
+      
+      <!-- Logs Tab Content -->
+      <div id="logs-content" style="display: none;">
+        <div class="dashboard-section">
+          <h2><i class="fas fa-terminal"></i> System Logs</h2>
+          <div class="mb-3">
+            <button class="btn btn-sm btn-primary" id="refreshLogs">
+              <i class="fas fa-sync-alt"></i> Refresh
+            </button>
+            <button class="btn btn-sm btn-danger ms-2" id="clearLogs">
+              <i class="fas fa-trash"></i> Clear
+            </button>
+          </div>
+          <div id="logs-container" class="guest-list-container"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Guest Modal -->
+    <div class="modal fade" id="addGuestModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Register New Guest</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="guestForm">
+              <div class="date-selection mb-3">
+                <div class="date-fields-row">
+                  <div class="form-group">
+                    <label for="dateRange" class="form-label">Dates</label>
+                    <input type="text" class="form-control flatpickr-input" id="dateRange" placeholder="Select dates" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="room" class="form-label">Room</label>
+                    <select class="form-select" id="room" required disabled>
+                      <option value="">Select dates first</option>
+                    </select>
+                  </div>
+                </div>
+                <div id="availabilityStatus" class="availability-status"></div>
+              </div>
+              
+              <div class="mb-3">
+                <label for="name" class="form-label">Name</label>
+                <input type="text" class="form-control" id="name" required>
+              </div>
+              <div class="mb-3">
+                <label for="mobile" class="form-label">Mobile Number</label>
+                <div class="contact-button-wrapper">
+                  <input type="tel" class="form-control" id="mobile" required>
+                  <i class="fas fa-address-book contact-icon" id="openContacts"></i>
+                </div>
+              </div>
+              
+              <div class="mb-3">
+                <label class="form-label">Advance Payment</label>
+                <div class="payment-mode-group">
+                  <input type="number" class="form-control" id="advanceAmount" placeholder="Amount (₹)">
+                  <select class="form-select" id="advanceMode">
+                    <option value="">Payment Mode</option>
+                    <option value="UPI">UPI</option>
+                    <option value="Cash">Cash</option>
+                    <option value="Card">Card</option>
+                    <option value="NetBanking">Net Banking</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div class="mb-3">
+                <label for="balanceAmount" class="form-label">Balance Amount (₹)</label>
+                <input type="number" class="form-control" id="balanceAmount">
+              </div>
+              
+              <div class="mb-3">
+                <label for="comments" class="form-label">Notes</label>
+                <textarea class="form-control" id="comments" rows="2"></textarea>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-primary" id="registerBtn">Register</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Calendar Day Modal -->
+    <div class="modal fade" id="dayModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="dayModalTitle">Day Details</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body" id="dayModalBody">
+            Loading...
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" id="bookThisDate">Book This Date</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Guest Modal -->
+    <div class="modal fade" id="editGuestModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Edit Guest Details</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="editGuestForm">
+              <div class="mb-3">
+                <label for="editName" class="form-label">Name</label>
+                <input type="text" class="form-control" id="editName" required>
+              </div>
+              <div class="mb-3">
+                <label for="editMobile" class="form-label">Mobile Number</label>
+                <input type="tel" class="form-control" id="editMobile" required>
+              </div>
+              <div class="mb-3">
+                <label for="editRoom" class="form-label">Room</label>
+                <select class="form-select" id="editRoom" required>
+                  <option value="">Select Room</option>
+                  <option value="Stargazing Deck (0)">Stargazing Deck (0)</option>
+                  <option value="Stargazing Cabin (1)">Stargazing Cabin (1)</option>
+                  <option value="A Frame Cottage">A Frame Cottage</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label for="editCheckin" class="form-label">Check-in Date</label>
+                <input type="text" class="form-control flatpickr-input" id="editCheckin" required>
+              </div>
+              <div class="mb-3">
+                <label for="editCheckout" class="form-label">Check-out Date</label>
+                <input type="text" class="form-control flatpickr-input" id="editCheckout" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Advance Payment</label>
+                <div class="payment-mode-group">
+                  <input type="number" class="form-control" id="editAdvance" placeholder="Amount (₹)">
+                  <select class="form-select" id="editAdvanceMode">
+                    <option value="">Payment Mode</option>
+                    <option value="UPI">UPI</option>
+                    <option value="Cash">Cash</option>
+                    <option value="Card">Card</option>
+                    <option value="NetBanking">Net Banking</option>
+                  </select>
+                </div>
+              </div>
+              <div class="mb-3">
+                <label for="editBalance" class="form-label">Balance Amount (₹)</label>
+                <input type="number" class="form-control" id="editBalance">
+              </div>
+              <div class="mb-3">
+                <label for="editComments" class="form-label">Notes</label>
+                <textarea class="form-control" id="editComments" rows="2"></textarea>
+              </div>
+              <input type="hidden" id="editGuestId">
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-primary" id="saveGuestChanges">Save Changes</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkout Modal -->
+    <div class="modal fade" id="checkoutModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Confirm Checkout</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="checkoutForm">
+              <div class="mb-3">
+                <label class="form-label">Balance Due (₹)</label>
+                <input type="number" class="form-control" id="checkoutBalance" readonly>
+              </div>
+              <div class="mb-3">
+                <label for="checkoutPaymentType" class="form-label">Payment Mode</label>
+                <select class="form-select" id="checkoutPaymentType" required>
+                  <option value="">Select Payment Mode</option>
+                  <option value="UPI">UPI</option>
+                  <option value="Cash">Cash</option>
+                  <option value="Card">Card</option>
+                  <option value="NetBanking">Net Banking</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label for="checkoutComments" class="form-label">Comments</label>
+                <textarea class="form-control" id="checkoutComments" rows="3"></textarea>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-primary" id="confirmCheckout">Complete Checkout</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Food Orders Modal -->
+    <div class="modal fade" id="foodOrdersModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Food & Amenities Orders</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body" id="foodOrdersModalBody">
+            Loading...
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Registration Success Modal -->
+    <div class="modal fade registration-success-modal" id="registrationSuccessModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Guest Registered Successfully</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="registration-success-details" id="registrationSuccessDetails"></div>
+            <div class="input-group-copy">
+              <input type="text" class="form-control" id="guestLinkInput" readonly>
+              <button class="btn btn-outline-secondary" id="copyGuestLinkBtn">📋 Copy</button>
+            </div>
+            <div class="registration-success-actions">
+              <button class="btn btn-primary" id="sendEmailFromModal">
+                <i class="fas fa-envelope"></i> Email
+              </button>
+              <button class="btn btn-success" id="sendWhatsappFromModal">
+                <i class="fab fa-whatsapp"></i> WhatsApp
+              </button>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fixed Footer Tabs -->
+    <div class="footer-tabs">
+      <ul class="nav nav-tabs" id="mainTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button class="nav-link active" id="dashboard-tab" data-tab-target="dashboard" type="button" role="tab">
+            <i class="fas fa-tachometer-alt"></i> Dashboard
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="manage-footer-tab" data-tab-target="manage" type="button" role="tab">
+            <i class="fas fa-users-cog"></i> Manage
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="orders-footer-tab" data-tab-target="orders" type="button" role="tab">
+            <i class="fas fa-utensils"></i> Orders
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="logs-footer-tab" data-tab-target="logs" type="button" role="tab">
+            <i class="fas fa-terminal"></i> Logs
+          </button>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="host_script.js"></script>
+</body>
+</html>
