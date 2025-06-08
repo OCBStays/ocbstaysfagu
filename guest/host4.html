@@ -80,7 +80,26 @@
             <div class="mb-3">
               <div class="guest-list" id="guestList"></div>
             </div>
-            <div id="selectedGuestInfo" style="display: none;"></div>
+            <div id="selectedGuestInfo" style="display: none;">
+              <div class="guest-card position-relative">
+                <i class="fas fa-edit edit-icon-btn" id="editGuestBtn"></i>
+                <div id="guestDetailsContent"></div>
+              </div>
+              <div class="action-buttons mt-3">
+                <a class="action-icon call-icon" id="callGuest" title="Call Guest">
+                  <i class="fas fa-phone"></i>
+                </a>
+                <div class="action-icon whatsapp-icon" id="sendWhatsappToGuest" title="Send WhatsApp">
+                  <i class="fab fa-whatsapp"></i>
+                </div>
+                <div class="action-icon email-icon" id="sendEmailToGuest" title="Send Email">
+                  <i class="fas fa-envelope"></i>
+                </div>
+                <div class="action-icon copy-icon" id="copyGuestLink" title="Copy Link">
+                  <i class="fas fa-copy"></i>
+                </div>
+              </div>
+            </div>
           </div>
           <div class="tab-pane fade" id="past-guests" role="tabpanel">
             <div class="mb-3">
@@ -127,7 +146,7 @@
                 <div class="date-fields-row">
                   <div class="form-group">
                     <label for="dateRange" class="form-label">Dates</label>
-                    <input type="text" class="form-control flatpickr-input" id="dateRange" placeholder="Select dates" required>
+                    <input type="text" class="form-control flatpickr-input" id="dateRange" placeholder="Select check-in and check-out dates" required>
                   </div>
                   <div class="form-group">
                     <label for="room" class="form-label">Room</label>
@@ -238,6 +257,7 @@
                 <label for="editCheckout" class="form-label">Check-out Date</label>
                 <input type="text" class="form-control flatpickr-input" id="editCheckout" required>
               </div>
+              
               <div class="mb-3">
                 <label class="form-label">Advance Payment</label>
                 <div class="payment-mode-group">
@@ -251,14 +271,17 @@
                   </select>
                 </div>
               </div>
+              
               <div class="mb-3">
                 <label for="editBalance" class="form-label">Balance Amount (₹)</label>
                 <input type="number" class="form-control" id="editBalance">
               </div>
+              
               <div class="mb-3">
                 <label for="editComments" class="form-label">Notes</label>
                 <textarea class="form-control" id="editComments" rows="2"></textarea>
               </div>
+              
               <input type="hidden" id="editGuestId">
             </form>
           </div>
