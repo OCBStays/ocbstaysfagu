@@ -67,6 +67,12 @@ body {
   gap: 0.5rem;
 }
 
+.dashboard-header {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+}
+
 /* Guest Cards */
 .guest-card {
   border: 1px solid #dee2e6;
@@ -92,6 +98,71 @@ body {
   font-size: 0.9rem;
   color: #6c757d;
   margin-bottom: 0.5rem;
+}
+
+.edit-icon-btn {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  cursor: pointer;
+  color: #6c757d;
+  transition: color 0.2s;
+}
+
+.edit-icon-btn:hover {
+  color: #0d6efd;
+}
+
+/* Guest List */
+.guest-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+}
+
+.guest-list-item {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #eee;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.guest-list-item:last-child {
+  border-bottom: none;
+}
+
+.guest-list-item:hover {
+  background-color: #f8f9fa;
+}
+
+.guest-list-item.active {
+  background-color: #e7f5ff;
+}
+
+.guest-list-name {
+  font-weight: 500;
+  flex: 1;
+}
+
+.guest-list-room {
+  color: #6c757d;
+  font-size: 0.9rem;
+  width: 150px;
+  text-align: center;
+}
+
+.guest-list-dates {
+  color: #6c757d;
+  font-size: 0.85rem;
+  width: 200px;
+  text-align: right;
 }
 
 /* Calendar Styles */
@@ -163,6 +234,24 @@ body {
   margin-bottom: 0.1rem;
 }
 
+.day-events {
+  font-size: 0.5rem;
+  text-align: center;
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.day-event-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  margin: 0 1px;
+  background-color: #2e7d32;
+}
+
 /* Day States */
 .past-day {
   background-color: #f8f9fa;
@@ -180,6 +269,12 @@ body {
   background-color: #e8f5e9;
   color: #2e7d32;
   border: 1px solid #c8e6c9;
+}
+
+.selected-day {
+  background-color: #bbdefb;
+  color: #0d47a1;
+  font-weight: bold;
 }
 
 /* Footer Tabs */
@@ -212,17 +307,6 @@ body {
   border: 1px solid #dee2e6;
 }
 
-/* Responsive Adjustments */
-@media (min-width: 992px) {
-  .calendar-month {
-    flex: 0 0 calc(50% - 0.5rem);
-  }
-  
-  .guest-cards-grid {
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  }
-}
-
 /* Toast Notifications */
 .toast-container {
   position: fixed;
@@ -243,4 +327,76 @@ body {
 
 .unavailable {
   color: #dc3545;
+}
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+/* Guest Details */
+.guest-details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.detail-item {
+  padding: 0.5rem;
+  background-color: #f8f9fa;
+  border-radius: 5px;
+  font-size: 0.9rem;
+}
+
+.detail-label {
+  font-weight: bold;
+  font-size: 0.8rem;
+  color: #6c757d;
+}
+
+.detail-value {
+  margin-top: 0.25rem;
+}
+
+/* Payment Summary */
+.payment-summary {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.payment-summary-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.payment-summary-item.total {
+  font-weight: bold;
+  border-top: 1px solid #dee2e6;
+  padding-top: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.payment-mode {
+  font-size: 0.8rem;
+  color: #6c757d;
+  margin-left: 0.5rem;
+}
+
+/* Responsive Adjustments */
+@media (min-width: 992px) {
+  .calendar-month {
+    flex: 0 0 calc(50% - 0.5rem);
+  }
+  
+  .guest-cards-grid {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+  }
 }
