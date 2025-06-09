@@ -1217,36 +1217,6 @@
         date.setHours(0, 0, 0, 0);
         return date < today;
       }
-
-      getLocalDateString: (date = new Date()) => {
-        const d = new Date(date);
-        const year = d.getFullYear();
-        const month = String(d.getMonth() + 1).padStart(2, '0');
-        const day = String(d.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-      },
-    
-      isSameLocalDay: (date1, date2) => {
-        const d1 = new Date(date1);
-        const d2 = new Date(date2);
-        return d1.getFullYear() === d2.getFullYear() && 
-               d1.getMonth() === d2.getMonth() && 
-               d1.getDate() === d2.getDate();
-      },
-    
-      isLocalToday: (dateStr) => {
-        const today = new Date();
-        const date = new Date(dateStr);
-        return helpers.isSameLocalDay(date, today);
-      },
-    
-      isLocalPastDate: (dateStr) => {
-        const today = new Date();
-        const date = new Date(dateStr);
-        today.setHours(0, 0, 0, 0);
-        date.setHours(0, 0, 0, 0);
-        return date < today;
-      }
     };
 
     // Core functions
@@ -1510,246 +1480,245 @@
       },
       
       async loadTodaysGuests() {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const todayStr = today.toISOString().split('T')[0];
-  const container = document.getElementById('today-guests-list');
-  if (!container) return;
-
-  try {
-    container.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>';
-    
-    // Get guests who are checking in today OR already checked in and staying today
-    const formula = `OR(
-      {checkin} = '${todayStr}',
-      AND(
-        {checkin} <= '${todayStr}',
-        {checkout} > '${todayStr}'
-      )
-    )`;
-    
-    const data = await helpers.fetchAirtable(
-      `${config.airtable.tables.guests}?filterByFormula=AND(${formula}, {status}="Active")`
-    );
-
-    if (data.records.length === 0) {
-      container.innerHTML = '<div class="alert alert-info">No guests staying today</div>';
-      return;
-    }
-
-    container.innerHTML = '';
-    data.records.forEach(record => {
-      const guest = record.fields;
-      const isCheckingInToday = helpers.isSameDay(guest.checkin, todayStr);
-      
-      const card = document.createElement('div');
-      card.className = 'guest-card';
-      card.dataset.guestId = record.id;
-      card.innerHTML = `
-        <div class="guest-summary">
-          <div>
-            <h5>${guest.name || 'Unnamed Guest'}</h5>
-            <div class="guest-meta">
-              ${guest.room} • ${helpers.formatShortDate(guest.checkin)} to ${helpers.formatShortDate(guest.checkout)}
-              ${isCheckingInToday ? '<span class="badge bg-primary">Checking In</span>' : '<span class="badge bg-success">Staying</span>'}
-            </div>
-          </div>
-        </div>
-      `;
-      container.appendChild(card);
-    });
-
-    // Add click handlers to guest cards
-    document.querySelectorAll('#today-guests-list .guest-card').forEach(card => {
-      card.addEventListener('click', () => {
-        // Switch to manage tab and select this guest
-        document.querySelector('#manage-footer-tab').click();
-        setTimeout(() => {
-          document.querySelector('#active-tab').click();
-          const guestId = card.dataset.guestId;
-          const guestList = document.getElementById('guestList');
-          const guestItem = guestList.querySelector(`[data-guest-id="${guestId}"]`);
-          if (guestItem) {
-            guestItem.click();
-          }
-        }, 100);
-      });
-    });
-  } catch (error) {
-    console.error('Error loading today\'s guests:', error);
-    container.innerHTML = '<div class="alert alert-danger">Failed to load today\'s guests</div>';
-  }
-},
-
-async loadUpcomingGuests() {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const todayStr = today.toISOString().split('T')[0];
-  const container = document.getElementById('upcoming-guests-list');
-  if (!container) return;
-
-  try {
-    container.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>';
-    
-    // Get upcoming guests (checking in after today)
-    const formula = `AND({checkin} > '${todayStr}', {status}="Active")`;
-    
-    const data = await helpers.fetchAirtable(
-      `${config.airtable.tables.guests}?filterByFormula=${formula}`
-    );
-
-    if (data.records.length === 0) {
-      container.innerHTML = '<div class="alert alert-info">No upcoming guests</div>';
-      return;
-    }
-
-    // Sort by check-in date
-    data.records.sort((a, b) => new Date(a.fields.checkin) - new Date(b.fields.checkin));
-
-    container.innerHTML = '';
-    data.records.forEach(record => {
-      const guest = record.fields;
-      const checkinDate = new Date(guest.checkin);
-      const todayDate = new Date();
-      todayDate.setHours(0, 0, 0, 0);
-      const daysToCheckin = Math.floor((checkinDate - todayDate) / (1000 * 60 * 60 * 24)) + 1;
-      
-      const card = document.createElement('div');
-      card.className = 'guest-card';
-      card.dataset.guestId = record.id;
-      card.innerHTML = `
-        <div class="guest-summary">
-          <div>
-            <h5>${guest.name || 'Unnamed Guest'}</h5>
-            <div class="guest-meta">
-              ${guest.room} • ${helpers.formatDate(guest.checkin)} • ${daysToCheckin} day${daysToCheckin !== 1 ? 's' : ''}
-            </div>
-          </div>
-        </div>
-      `;
-      container.appendChild(card);
-    });
-
-    // Add click handlers to guest cards
-    document.querySelectorAll('#upcoming-guests-list .guest-card').forEach(card => {
-      card.addEventListener('click', () => {
-        // Switch to manage tab and select this guest
-        document.querySelector('#manage-footer-tab').click();
-        setTimeout(() => {
-          document.querySelector('#active-tab').click();
-          const guestId = card.dataset.guestId;
-          const guestList = document.getElementById('guestList');
-          const guestItem = guestList.querySelector(`[data-guest-id="${guestId}"]`);
-          if (guestItem) {
-            guestItem.click();
-          }
-        }, 100);
-      });
-    });
-  } catch (error) {
-    console.error('Error loading upcoming guests:', error);
-    container.innerHTML = '<div class="alert alert-danger">Failed to load upcoming guests</div>';
-  }
-},
-
-async generateCalendarView(propertyFilter = 'all') {
-  const container = document.getElementById('property-calendar-view');
-  if (!container) return;
-
-  try {
-    container.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>';
-    
-    // Get all active bookings
-    const data = await helpers.fetchAirtable(
-      `${config.airtable.tables.guests}?filterByFormula={status}="Active"`
-    );
-    
-    // Filter by property if needed
-    const bookings = propertyFilter === 'all' 
-      ? data.records 
-      : data.records.filter(r => r.fields.room === propertyFilter);
-    
-    // Generate calendar for current month
-    const today = new Date();
-    const currentMonth = today.getMonth();
-    const currentYear = today.getFullYear();
-    const todayStr = helpers.getLocalDateString();
-    
-    // Create month calendar
-    const monthName = today.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-    const daysInMonth = helpers.getDaysInMonth(currentYear, currentMonth);
-    const firstDayOfMonth = helpers.getFirstDayOfMonth(currentYear, currentMonth);
-    
-    let html = `<div class="month-calendar">
-      <div class="month-header">
-        <div class="month-title">${monthName}</div>
-      </div>
-      <div class="weekdays">
-        <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
-      </div>
-      <div class="days-grid">`;
-    
-    // Add empty cells for days before the first day of the month
-    for (let i = 0; i < firstDayOfMonth; i++) {
-      html += `<div class="calendar-day"></div>`;
-    }
-    
-    // Add days of the month
-    for (let day = 1; day <= daysInMonth; day++) {
-      const date = new Date(currentYear, currentMonth, day);
-      const dateStr = helpers.getLocalDateString(date);
-      const isToday = helpers.isSameLocalDay(dateStr, todayStr);
-      
-      // Find bookings for this day
-      const dayBookings = bookings.filter(b => {
-        const guest = b.fields;
-        const checkin = new Date(guest.checkin);
-        const checkout = new Date(guest.checkout);
-        const currentDate = new Date(dateStr);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todayStr = today.toISOString().split('T')[0];
+        const container = document.getElementById('today-guests-list');
+        if (!container) return;
         
-        // Check if current date is between checkin and checkout (inclusive of checkin, exclusive of checkout)
-        return currentDate >= checkin && currentDate < checkout;
-      });
-      
-      const isBooked = dayBookings.length > 0;
-      const dayClass = [
-        'calendar-day',
-        isToday ? 'today' : '',
-        isBooked ? 'booked-day' : 'available-day',
-        helpers.isLocalPastDate(dateStr) ? 'past-day' : ''
-      ].filter(Boolean).join(' ');
-      
-      html += `<div class="${dayClass}" data-date="${dateStr}">
-        <div class="day-number">${day}</div>
-        <div class="day-events">`;
-      
-      if (isBooked) {
-        html += `<span class="day-event-dot" style="background-color: #2e7d32;"></span>`;
-        if (dayBookings.length > 1) {
-          html += `<span class="day-event-dot" style="background-color: #2e7d32;"></span>`;
+        try {
+          container.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>';
+          
+          // Get guests with checkin date <= today AND checkout date >= today
+          const formula = `AND({checkin} <= '${todayStr}', {checkout} >= '${todayStr}')`;
+          
+          const data = await helpers.fetchAirtable(
+            `${config.airtable.tables.guests}?filterByFormula=AND(${formula}, {status}="Active")`
+          );
+          
+          if (data.records.length === 0) {
+            container.innerHTML = '<div class="alert alert-info">No guests staying today</div>';
+            return;
+          }
+          
+          container.innerHTML = '';
+          data.records.forEach(record => {
+            const guest = record.fields;
+            const isCheckingInToday = helpers.isSameDay(guest.checkin, todayStr);
+            const isCheckingOutToday = helpers.isSameDay(guest.checkout, todayStr);
+            
+            const card = document.createElement('div');
+            card.className = 'guest-card';
+            card.dataset.guestId = record.id;
+            card.innerHTML = `
+              <div class="guest-summary">
+                <div>
+                  <h5>${guest.name || 'Unnamed Guest'}</h5>
+                  <div class="guest-meta">
+                    ${guest.room} • ${helpers.formatShortDate(guest.checkin)} to ${helpers.formatShortDate(guest.checkout)}
+                    ${isCheckingInToday ? '<span class="badge bg-primary">Checking In</span>' : ''}
+                    ${isCheckingOutToday ? '<span class="badge bg-danger">Checking Out</span>' : ''}
+                    ${!isCheckingInToday && !isCheckingOutToday ? '<span class="badge bg-success">Staying</span>' : ''}
+                  </div>
+                </div>
+              </div>
+            `;
+            container.appendChild(card);
+          });
+          
+          // Add click handlers to guest cards
+          document.querySelectorAll('#today-guests-list .guest-card').forEach(card => {
+            card.addEventListener('click', () => {
+              // Switch to manage tab and select this guest
+              document.querySelector('#manage-footer-tab').click();
+              setTimeout(() => {
+                document.querySelector('#active-tab').click();
+                const guestId = card.dataset.guestId;
+                const guestList = document.getElementById('guestList');
+                const guestItem = guestList.querySelector(`[data-guest-id="${guestId}"]`);
+                if (guestItem) {
+                  guestItem.click();
+                }
+              }, 100);
+            });
+          });
+        } catch (error) {
+          console.error('Error loading today\'s guests:', error);
+          container.innerHTML = '<div class="alert alert-danger">Failed to load today\'s guests</div>';
         }
-      }
+      },
       
-      html += `</div></div>`;
-    }
-    
-    html += `</div></div>`;
-    container.innerHTML = html;
-    
-    // Add click handlers to days
-    document.querySelectorAll('.calendar-day').forEach(day => {
-      day.addEventListener('click', () => {
-        const date = day.dataset.date;
-        if (date) {
-          this.showDayDetails(date, bookings);
+      async loadUpcomingGuests() {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todayStr = today.toISOString().split('T')[0];
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const tomorrowStr = tomorrow.toISOString().split('T')[0];
+        
+        const container = document.getElementById('upcoming-guests-list');
+        if (!container) return;
+        
+        try {
+          container.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>';
+          
+          // Get upcoming guests (checking in after today)
+          const formula = `AND({checkin} > '${todayStr}', {status}="Active")`;
+          
+          const data = await helpers.fetchAirtable(
+            `${config.airtable.tables.guests}?filterByFormula=${formula}`
+          );
+          
+          if (data.records.length === 0) {
+            container.innerHTML = '<div class="alert alert-info">No upcoming guests</div>';
+            return;
+          }
+          
+          // Sort by check-in date
+          data.records.sort((a, b) => new Date(a.fields.checkin) - new Date(b.fields.checkin));
+          
+          container.innerHTML = '';
+          data.records.forEach(record => {
+            const guest = record.fields;
+            const checkinDate = new Date(guest.checkin);
+            const todayDate = new Date();
+            const daysToCheckin = Math.ceil((checkinDate - todayDate) / (1000 * 60 * 60 * 24));
+            
+            const card = document.createElement('div');
+            card.className = 'guest-card';
+            card.dataset.guestId = record.id;
+            card.innerHTML = `
+              <div class="guest-summary">
+                <div>
+                  <h5>${guest.name || 'Unnamed Guest'}</h5>
+                  <div class="guest-meta">
+                    ${guest.room} • ${helpers.formatDate(guest.checkin)} • ${daysToCheckin} days
+                  </div>
+                </div>
+              </div>
+            `;
+            container.appendChild(card);
+          });
+          
+          // Add click handlers to guest cards
+          document.querySelectorAll('#upcoming-guests-list .guest-card').forEach(card => {
+            card.addEventListener('click', () => {
+              // Switch to manage tab and select this guest
+              document.querySelector('#manage-footer-tab').click();
+              setTimeout(() => {
+                document.querySelector('#active-tab').click();
+                const guestId = card.dataset.guestId;
+                const guestList = document.getElementById('guestList');
+                const guestItem = guestList.querySelector(`[data-guest-id="${guestId}"]`);
+                if (guestItem) {
+                  guestItem.click();
+                }
+              }, 100);
+            });
+          });
+        } catch (error) {
+          console.error('Error loading upcoming guests:', error);
+          container.innerHTML = '<div class="alert alert-danger">Failed to load upcoming guests</div>';
         }
-      });
-    });
-  } catch (error) {
-    console.error('Error generating calendar:', error);
-    container.innerHTML = '<div class="alert alert-danger">Failed to load calendar</div>';
-  }
-},
+      },
+      
+      async generateCalendarView(propertyFilter = 'all') {
+        const container = document.getElementById('property-calendar-view');
+        if (!container) return;
+        
+        try {
+          container.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>';
+          
+          // Get all active bookings
+          const data = await helpers.fetchAirtable(
+            `${config.airtable.tables.guests}?filterByFormula={status}="Active"`
+          );
+          
+          // Filter by property if needed
+          const bookings = propertyFilter === 'all' 
+            ? data.records 
+            : data.records.filter(r => r.fields.room === propertyFilter);
+          
+          // Generate calendar for current month
+          const today = new Date();
+          const currentMonth = today.getMonth();
+          const currentYear = today.getFullYear();
+          
+          // Create month calendar
+          const monthName = today.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+          const daysInMonth = helpers.getDaysInMonth(currentYear, currentMonth);
+          const firstDayOfMonth = helpers.getFirstDayOfMonth(currentYear, currentMonth);
+          
+          let html = `<div class="month-calendar">
+            <div class="month-header">
+              <div class="month-title">${monthName}</div>
+            </div>
+            <div class="weekdays">
+              <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+            </div>
+            <div class="days-grid">`;
+          
+          // Add empty cells for days before the first day of the month
+          for (let i = 0; i < firstDayOfMonth; i++) {
+            html += `<div class="calendar-day"></div>`;
+          }
+          
+          // Add days of the month
+          for (let day = 1; day <= daysInMonth; day++) {
+            const date = new Date(currentYear, currentMonth, day);
+            const dateStr = date.toISOString().split('T')[0];
+            const isToday = helpers.isSameDay(dateStr, today);
+            
+            // Find bookings for this day
+            const dayBookings = bookings.filter(b => {
+              const guest = b.fields;
+              return helpers.datesOverlap(
+                guest.checkin, 
+                guest.checkout, 
+                dateStr, 
+                dateStr
+              );
+            });
+            
+            const isBooked = dayBookings.length > 0;
+            const dayClass = [
+              'calendar-day',
+              isToday ? 'today' : '',
+              isBooked ? 'booked-day' : 'available-day',
+              helpers.isPastDate(dateStr) ? 'past-day' : ''
+            ].filter(Boolean).join(' ');
+            
+            html += `<div class="${dayClass}" data-date="${dateStr}">
+              <div class="day-number">${day}</div>
+              <div class="day-events">`;
+            
+            if (isBooked) {
+              html += `<span class="day-event-dot" style="background-color: #2e7d32;"></span>`;
+              if (dayBookings.length > 1) {
+                html += `<span class="day-event-dot" style="background-color: #2e7d32;"></span>`;
+              }
+            }
+            
+            html += `</div></div>`;
+          }
+          
+          html += `</div></div>`;
+          container.innerHTML = html;
+          
+          // Add click handlers to days
+          document.querySelectorAll('.calendar-day').forEach(day => {
+            day.addEventListener('click', () => {
+              const date = day.dataset.date;
+              if (date) {
+                this.showDayDetails(date, bookings);
+              }
+            });
+          });
+        } catch (error) {
+          console.error('Error generating calendar:', error);
+          container.innerHTML = '<div class="alert alert-danger">Failed to load calendar</div>';
+        }
+      },
       
       async showDayDetails(date, allBookings) {
         const modalTitle = document.getElementById('dayModalTitle');
@@ -1921,68 +1890,90 @@ async generateCalendarView(propertyFilter = 'all') {
       },
       
       async createFoodBill(guestRecordId, guestDetails, orders) {
-        try {
-          let totalAmount = 0;
-          const allOrderItems = orders.flatMap(order => {
+    try {
+        let totalAmount = 0;
+        const itemMap = new Map(); // To club identical items
+        
+        orders.forEach(order => {
             const items = JSON.parse(order.fields.Items || '[]');
             const orderTotal = order.fields.TotalAmount || 
-              items.reduce((sum, item) => sum + (item.price || 0) * (item.quantity || 1), 0);
+                items.reduce((sum, item) => sum + (item.price || 0) * (item.quantity || 1), 0);
             totalAmount += orderTotal;
-            return items.map(item => ({
-              item: item.name || 'Unspecified item',
-              quantity: item.quantity || 1,
-              price: item.price || 0,
-              amount: (item.price || 0) * (item.quantity || 1),
-              date: order.fields.createdAt || new Date().toISOString()
-            }));
-          });
+            
+            items.forEach(item => {
+                const itemKey = `${item.name || 'Unspecified item'}-${item.price || 0}`;
+                const existingItem = itemMap.get(itemKey);
+                
+                if (existingItem) {
+                    // Update existing item with new quantity
+                    existingItem.quantity += item.quantity || 1;
+                    existingItem.amount = existingItem.price * existingItem.quantity;
+                    // Keep the earliest date
+                    if (order.fields.createdAt && (!existingItem.date || order.fields.createdAt < existingItem.date)) {
+                        existingItem.date = order.fields.createdAt;
+                    }
+                } else {
+                    // Add new item
+                    itemMap.set(itemKey, {
+                        item: item.name || 'Unspecified item',
+                        quantity: item.quantity || 1,
+                        price: item.price || 0,
+                        amount: (item.price || 0) * (item.quantity || 1),
+                        date: order.fields.createdAt || new Date().toISOString()
+                    });
+                }
+            });
+        });
 
-          // Check if bill already exists for this guest
-          const existingBills = await helpers.fetchAirtable(
+        // Convert map to array of items
+        const allOrderItems = Array.from(itemMap.values());
+
+        // Check if bill already exists for this guest
+        const existingBills = await helpers.fetchAirtable(
             `${config.airtable.tables.bills}?filterByFormula={guestID} = '${guestRecordId}'`
-          );
-          
-          let billId;
-          if (existingBills.records.length > 0) {
+        );
+        
+        let billId;
+        if (existingBills.records.length > 0) {
             // Update existing bill
             billId = existingBills.records[0].id;
             await helpers.fetchAirtable(`${config.airtable.tables.bills}/${billId}`, {
-              method: 'PATCH',
-              body: JSON.stringify({
-                fields: {
-                  totalAmount: totalAmount,
-                  orderDetails: JSON.stringify(allOrderItems),
-                  updatedAt: new Date().toISOString()
-                }
-              })
+                method: 'PATCH',
+                body: JSON.stringify({
+                    fields: {
+                        totalAmount: totalAmount,
+                        orderDetails: JSON.stringify(allOrderItems),
+                        updatedAt: new Date().toISOString()
+                    }
+                })
             });
             logger.log(`Updated existing bill for guest ${guestRecordId}`, 'info');
-          } else {
+        } else {
             // Create new bill
             const billData = {
-              fields: {
-                billID: `BIL-${Date.now().toString().slice(-6)}`,
-                guestID: [guestRecordId],
-                totalAmount: totalAmount,
-                status: "Pending",
-                orderDetails: JSON.stringify(allOrderItems)
-              }
+                fields: {
+                    billID: `BIL-${Date.now().toString().slice(-6)}`,
+                    guestID: [guestRecordId],
+                    totalAmount: totalAmount,
+                    status: "Pending",
+                    orderDetails: JSON.stringify(allOrderItems)
+                }
             };
 
             const response = await helpers.fetchAirtable(config.airtable.tables.bills, {
-              method: 'POST',
-              body: JSON.stringify(billData)
+                method: 'POST',
+                body: JSON.stringify(billData)
             });
             billId = response.id;
             logger.log(`Created new bill for guest ${guestRecordId}`, 'success');
-          }
-
-          return { guest: guestDetails, orders: allOrderItems, totalAmount, billId };
-        } catch (error) {
-          console.error('Error creating food bill:', error);
-          throw error;
         }
-      },
+
+        return { guest: guestDetails, orders: allOrderItems, totalAmount, billId };
+    } catch (error) {
+        console.error('Error creating food bill:', error);
+        throw error;
+    }
+},
       
       downloadBillAsImage() {
         const billDetails = document.querySelector('.bill-container');
