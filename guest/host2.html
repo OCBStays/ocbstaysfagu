@@ -1430,7 +1430,7 @@
           data.records.forEach(record => {
             const guest = record.fields;
             const checkoutDate = new Date(guest.checkout);
-            const amount = (parseFloat(guest.advanceAmount) || 0) + (parseFloat(guest.balanceAmount) || 0);
+            const amount = (parseFloat(guest.advanceAmount) || 0) + (parseFloat(guest.balanceAmount) || 0) + (parseFloat(guest.foodTotal) || 0);
             
             totalRevenue += amount;
             
