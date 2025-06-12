@@ -181,7 +181,7 @@ const ui = {
       month: 'short',
       year: 'numeric'
     });
-    elements.checkin.textContent = `${formattedDate} at 11:00 AM`;
+    elements.checkin.textContent = `${formattedDate} at 01:30 PM`;
     
     elements.welcomeMessage.textContent = `Hello, ${state.currentGuest.name}! Welcome to OCB Stays 🌲`;
 
