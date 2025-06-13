@@ -324,79 +324,88 @@
     }
 
     async function loadMenu() {
-      try {
-        const isValidGuest = await validateGuestAccess();
-        if (!isValidGuest) return;
-        
-        checkKitchenStatus();
-        
-        const res = await fetch(MENU_SHEET_URL);
-        const data = await res.json();
-        const grouped = {};
+  try {
+    const isValidGuest = await validateGuestAccess();
+    if (!isValidGuest) return;
+    
+    checkKitchenStatus();
+    
+    const res = await fetch(MENU_SHEET_URL);
+    const data = await res.json();
+    const grouped = {};
 
-        data.forEach(item => {
-          if (item["Available?"] === 'Yes') {
-            if (!grouped[item.Category]) grouped[item.Category] = [];
-            grouped[item.Category].push(item);
-          }
-        });
-
-        const container = document.getElementById('menuContainer');
-        const dropdown = document.getElementById('categoryDropdown');
-
-        for (const category in grouped) {
-          const anchor = category.replace(/\s+/g, '-').toLowerCase();
-
-          const section = document.createElement('div');
-          section.className = 'menu-category';
-          section.id = anchor;
-          section.innerHTML = `
-            <h4 class="collapsible">${category} <button class="btn btn-sm btn-outline-secondary toggle-section">Toggle</button></h4>
-            <div class="category-items"></div>
-          `;
-
-          const dropdownItem = document.createElement('li');
-          dropdownItem.innerHTML = `<a class="dropdown-item" href="#${anchor}">${category}</a>`;
-          dropdown.appendChild(dropdownItem);
-
-          const itemsContainer = section.querySelector('.category-items');
-
-          grouped[category].forEach(item => {
-            const row = document.createElement('div');
-            row.className = 'item-row';
-            const itemId = generateItemId(item);
-
-            row.innerHTML = `
-              <div>
-                <div><strong>${item.Item}</strong></div>
-                <div class="text-muted small">₹${item["Price (₹)"]}</div>
-                ${item.Description ? `<div class="text-muted small">${item.Description}</div>` : ''}
-              </div>
-              <div id="controls-${itemId}">
-                <button class="btn btn-outline-primary btn-sm" onclick="addItem('${item.Item.replace(/'/g, "\\'")}', ${item["Price (₹)"]}, '${itemId}')">Add</button>
-              </div>
-            `;
-            itemsContainer.appendChild(row);
-          });
-          container.appendChild(section);
-        }
-
-        document.querySelectorAll('.toggle-section').forEach(btn => {
-          btn.addEventListener('click', e => {
-            const categoryItems = e.target.closest('h4').nextElementSibling;
-            categoryItems.style.display = categoryItems.style.display === 'none' ? '' : 'none';
-          });
-        });
-      } catch (error) {
-        console.error('Error loading menu:', error);
-        document.getElementById('menuContainer').innerHTML = `
-          <div class="alert alert-danger">
-            Failed to load menu. Please try again later.
-          </div>
-        `;
+    data.forEach(item => {
+      if (item["Available?"] === 'Yes') {
+        if (!grouped[item.Category]) grouped[item.Category] = [];
+        grouped[item.Category].push(item);
       }
+    });
+
+    const container = document.getElementById('menuContainer');
+    const dropdown = document.getElementById('categoryDropdown');
+
+    for (const category in grouped) {
+      const anchor = category.replace(/\s+/g, '-').toLowerCase();
+
+      const section = document.createElement('div');
+      section.className = 'menu-category';
+      section.id = anchor;
+      section.innerHTML = `
+        <h4 class="collapsible">${category} <button class="btn btn-sm btn-outline-secondary toggle-section">Toggle</button></h4>
+        <div class="category-items"></div>
+      `;
+
+      const dropdownItem = document.createElement('li');
+      dropdownItem.innerHTML = `<a class="dropdown-item" href="#${anchor}">${category}</a>`;
+      dropdown.appendChild(dropdownItem);
+
+      const itemsContainer = section.querySelector('.category-items');
+
+      grouped[category].forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'item-row';
+        const itemId = generateItemId(item);
+
+        // Create button element separately to avoid quote escaping issues
+        const addButton = document.createElement('button');
+        addButton.className = 'btn btn-outline-primary btn-sm';
+        addButton.textContent = 'Add';
+        addButton.onclick = function() {
+          addItem(item.Item, item["Price (₹)"], itemId);
+        };
+
+        row.innerHTML = `
+          <div>
+            <div><strong>${item.Item}</strong></div>
+            <div class="text-muted small">₹${item["Price (₹)"]}</div>
+            ${item.Description ? `<div class="text-muted small">${item.Description}</div>` : ''}
+          </div>
+          <div id="controls-${itemId}"></div>
+        `;
+        
+        // Append the button directly to avoid HTML string issues
+        row.querySelector(`#controls-${itemId}`).appendChild(addButton);
+        itemsContainer.appendChild(row);
+      });
+      container.appendChild(section);
     }
 
+    document.querySelectorAll('.toggle-section').forEach(btn => {
+      btn.addEventListener('click', e => {
+        const categoryItems = e.target.closest('h4').nextElementSibling;
+        categoryItems.style.display = categoryItems.style.display === 'none' ? '' : 'none';
+      });
+    });
+  } catch (error) {
+    console.error('Error loading menu:', error);
+    document.getElementById('menuContainer').innerHTML = `
+      <div class="alert alert-danger">
+        Failed to load menu. Please try again later.
+      </div>
+    `;
+  }
+}
+    
     function addItem(name, price, itemId) {
       if (!name || isNaN(price)) {
         console.error('Invalid item parameters:', {name, price, itemId});
