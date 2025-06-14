@@ -476,10 +476,11 @@
         message += `📝 *Order Items:*\n`;
         
         orderDetails.items.forEach(item => {
-          message += `- ${item.name} x ${item.quantity} = ₹${item.price * item.quantity}\n`;
+          //message += `- ${item.name} x ${item.quantity} = ₹${item.price * item.quantity}\n`;
+          message += `- ${item.name} x ${item.quantity}\n`;
         });
         
-        message += `\n💰 *Total:* ₹${orderDetails.totalAmount}\n`;
+        //message += `\n💰 *Total:* ₹${orderDetails.totalAmount}\n`;
         if (orderDetails.instructions) {
           message += `\n📌 *Special Instructions:*\n${orderDetails.instructions}\n`;
         }
