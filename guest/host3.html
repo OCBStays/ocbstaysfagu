@@ -1692,34 +1692,33 @@
 			  const checkout = new Date(guest.checkout);
 			  const currentDate = new Date(dateStr);
 			  
-			  // Set all dates to midnight for accurate comparison
+			  // Set time to midnight for accurate comparison
 			  checkin.setHours(0, 0, 0, 0);
 			  checkout.setHours(0, 0, 0, 0);
 			  currentDate.setHours(0, 0, 0, 0);
 			  
+			  // Guest is staying on this date if it's >= checkin and < checkout
 			  return currentDate >= checkin && currentDate < checkout;
 			});
             
             const isBooked = dayBookings.length > 0;
-            const dayClass = [
-              'calendar-day',
-              isToday ? 'today' : '',
-              isBooked ? 'booked-day' : 'available-day',
-              helpers.isPastDate(dateStr) ? 'past-day' : ''
-            ].filter(Boolean).join(' ');
-            
-            html += `<div class="${dayClass}" data-date="${dateStr}">
-              <div class="day-number">${day}</div>
-              <div class="day-events">`;
-            
-            if (isBooked) {
-              html += `<span class="day-event-dot" style="background-color: #2e7d32;"></span>`;
-              if (dayBookings.length > 1) {
-                html += `<span class="day-event-dot" style="background-color: #2e7d32;"></span>`;
-              }
-            }
-            
-            html += `</div></div>`;
+			const dayClass = [
+			  'calendar-day',
+			  isToday ? 'today' : '',
+			  isBooked ? 'booked-day' : 'available-day',
+			  helpers.isPastDate(dateStr) ? 'past-day' : ''
+			].filter(Boolean).join(' ');
+
+			html += `<div class="${dayClass}" data-date="${dateStr}">
+			  <div class="day-number">${day}</div>
+			  <div class="day-events">`;
+
+			if (isBooked) {
+			  // Show one dot per unique guest staying on this day
+			  html += Array(dayBookings.length).fill('<span class="day-event-dot" style="background-color: #2e7d32;"></span>').join('');
+			}
+
+			html += `</div></div>`;
           }
           
           html += `</div></div>`;
@@ -1741,96 +1740,97 @@
       },
       
       async showDayDetails(date, allBookings) {
-        const modalTitle = document.getElementById('dayModalTitle');
-        const modalBody = document.getElementById('dayModalBody');
-        const modal = new bootstrap.Modal(document.getElementById('dayModal'));
-        
-        modalTitle.textContent = new Date(date).toLocaleDateString('en-US', { 
-          weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
-        });
-        
-        // Find bookings for this day
-        const dayBookings = allBookings.filter(b => {
-          const guest = b.fields;
-          return helpers.datesOverlap(
-            guest.checkin, 
-            guest.checkout, 
-            date, 
-            date
-          );
-        });
-        
-        if (dayBookings.length === 0) {
-          modalBody.innerHTML = `
-            <div class="alert alert-info">No bookings for this day</div>
-            <div class="modal-event-actions">
-              <button class="btn btn-sm btn-primary" id="bookThisDateBtn">Book This Date</button>
-            </div>
-          `;
-        } else {
-          modalBody.innerHTML = dayBookings.map(booking => {
-            const guest = booking.fields;
-            const isCheckingIn = helpers.isSameDay(guest.checkin, date);
-            const isCheckingOut = helpers.isSameDay(guest.checkout, date);
-            
-            let statusBadge = '';
-            if (isCheckingIn && isCheckingOut) {
-              statusBadge = '<span class="badge bg-warning">Same Day</span>';
-            } else if (isCheckingIn) {
-              statusBadge = '<span class="badge bg-primary">Check-in</span>';
-            } else if (isCheckingOut) {
-              statusBadge = '<span class="badge bg-danger">Check-out</span>';
-            } else {
-              statusBadge = '<span class="badge bg-success">Staying</span>';
-            }
-            
-            return `
-              <div class="modal-event" data-guest-id="${booking.id}">
-                <div><strong>${guest.name || 'Unnamed Guest'}</strong> ${statusBadge}</div>
-                <div>Room: ${guest.room}</div>
-                <div>Dates: ${helpers.formatDate(guest.checkin)} to ${helpers.formatDate(guest.checkout)}</div>
-                <div>Mobile: ${guest.mobile || 'Not provided'}</div>
-              </div>
-            `;
-          }).join('');
-        }
-        
-        modal.show();
-        
-        // Add event listeners to guest details
-        document.querySelectorAll('#dayModalBody .modal-event').forEach(detail => {
-          detail.addEventListener('click', () => {
-		  modal.hide();
-		  document.querySelector('#manage-footer-tab').click();
+		  const modalTitle = document.getElementById('dayModalTitle');
+		  const modalBody = document.getElementById('dayModalBody');
+		  const modal = new bootstrap.Modal(document.getElementById('dayModal'));
 		  
-		  // Add a small delay to ensure the manage tab is loaded
-		  setTimeout(() => {
-			document.querySelector('#active-tab').click();
+		  modalTitle.textContent = new Date(date).toLocaleDateString('en-US', { 
+			weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+		  });
+		  
+		  // Find all bookings that include this date
+		  const dayBookings = allBookings.filter(b => {
+			const guest = b.fields;
+			const checkin = new Date(guest.checkin);
+			const checkout = new Date(guest.checkout);
+			const currentDate = new Date(date);
 			
-			// Additional delay to ensure guest list is loaded
-			setTimeout(() => {
-			  const guestId = detail.dataset.guestId;
-			  const guestList = document.getElementById('guestList');
-			  if (guestList) {
-				const guestItem = guestList.querySelector(`[data-guest-id="${guestId}"]`);
-				if (guestItem) {
-				  guestItem.click();
-				  guestItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
-				}
+			checkin.setHours(0, 0, 0, 0);
+			checkout.setHours(0, 0, 0, 0);
+			currentDate.setHours(0, 0, 0, 0);
+			
+			return currentDate >= checkin && currentDate < checkout;
+		  });
+
+		  if (dayBookings.length === 0) {
+			modalBody.innerHTML = `
+			  <div class="alert alert-info">No bookings for this day</div>
+			  <div class="modal-event-actions">
+				<button class="btn btn-sm btn-primary" id="bookThisDateBtn">Book This Date</button>
+			  </div>
+			`;
+		  } else {
+			modalBody.innerHTML = dayBookings.map(booking => {
+			  const guest = booking.fields;
+			  const isCheckingIn = helpers.isSameDay(guest.checkin, date);
+			  const isCheckingOut = helpers.isSameDay(guest.checkout, date);
+			  
+			  let statusBadge = '';
+			  if (isCheckingIn && isCheckingOut) {
+				statusBadge = '<span class="badge bg-warning">Same Day</span>';
+			  } else if (isCheckingIn) {
+				statusBadge = '<span class="badge bg-primary">Check-in</span>';
+			  } else if (isCheckingOut) {
+				statusBadge = '<span class="badge bg-danger">Check-out</span>';
+			  } else {
+				statusBadge = '<span class="badge bg-success">Staying</span>';
 			  }
-			}, 300);
-		  }, 100);
-		});
-        });
-        
-        // Add event listener to book button
-        document.getElementById('bookThisDate')?.addEventListener('click', () => {
-          modal.hide();
-          document.querySelector('#register-footer-tab').click();
-          // Set the date in the date picker
-          document.getElementById('dateRange')._flatpickr.setDate([date, date]);
-        });
-      },
+			  
+			  return `
+				<div class="modal-event" data-guest-id="${booking.id}">
+				  <div><strong>${guest.name || 'Unnamed Guest'}</strong> ${statusBadge}</div>
+				  <div>Room: ${guest.room}</div>
+				  <div>Dates: ${helpers.formatDate(guest.checkin)} to ${helpers.formatDate(guest.checkout)}</div>
+				  <div>Mobile: ${guest.mobile || 'Not provided'}</div>
+				</div>
+			  `;
+			}).join('');
+		  }
+		  
+		  modal.show();
+		  
+		  // Add event listeners to guest details
+		  document.querySelectorAll('#dayModalBody .modal-event').forEach(detail => {
+			detail.addEventListener('click', () => {
+			  modal.hide();
+			  document.querySelector('#manage-footer-tab').click();
+			  
+			  setTimeout(() => {
+				document.querySelector('#active-tab').click();
+				
+				setTimeout(() => {
+				  const guestId = detail.dataset.guestId;
+				  const guestList = document.getElementById('guestList');
+				  if (guestList) {
+					const guestItem = guestList.querySelector(`[data-guest-id="${guestId}"]`);
+					if (guestItem) {
+					  guestItem.click();
+					  guestItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+					}
+				  }
+				}, 300);
+			  }, 100);
+			});
+		  });
+		  
+		  // Add event listener to book button
+		  document.getElementById('bookThisDate')?.addEventListener('click', () => {
+			modal.hide();
+			document.querySelector('#register-footer-tab').click();
+			// Set the date in the date picker
+			document.getElementById('dateRange')._flatpickr.setDate([date, date]);
+		  });
+		},
       
       async getGuestOrders(guestID) {
         try {
