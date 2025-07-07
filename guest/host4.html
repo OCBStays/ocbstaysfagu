@@ -1194,36 +1194,38 @@
       },
       
       isSameDay: (date1, date2) => {
-        const d1 = new Date(date1);
-        const d2 = new Date(date2);
-        return d1.getFullYear() === d2.getFullYear() && 
-               d1.getMonth() === d2.getMonth() && 
-               d1.getDate() === d2.getDate();
-      },
-      
-      isToday: (dateStr) => {
-        const today = new Date();
-        const date = new Date(dateStr);
-        return date.getFullYear() === today.getFullYear() && 
-               date.getMonth() === today.getMonth() && 
-               date.getDate() === today.getDate();
-      },
-      
-      isPastDate: (dateStr) => {
-        const today = new Date();
-        const date = new Date(dateStr);
-        today.setHours(0, 0, 0, 0);
-        date.setHours(0, 0, 0, 0);
-        return date < today;
-      }
-    };
+	  const d1 = helpers.convertToIST(date1);
+	  const d2 = helpers.convertToIST(date2);
+	  return d1.getFullYear() === d2.getFullYear() && 
+	         d1.getMonth() === d2.getMonth() && 
+	         d1.getDate() === d2.getDate();
+	},
+	
+	isToday: (dateStr) => {
+	  const today = helpers.convertToIST(new Date());
+	  const date = helpers.convertToIST(dateStr);
+	  return date.getFullYear() === today.getFullYear() && 
+	         date.getMonth() === today.getMonth() && 
+	         date.getDate() === today.getDate();
+	},
+	
+	isPastDate: (dateStr) => {
+	  const today = helpers.convertToIST(new Date());
+	  const date = helpers.convertToIST(dateStr);
+	  today.setHours(0, 0, 0, 0);
+	  date.setHours(0, 0, 0, 0);
+	  return date < today;
+	},
 
-	helpers.normalizeDate = (dateStr) => {
-	  const date = new Date(dateStr);
-	  // Adjust for timezone offset to get the correct local date
-	  const timezoneOffset = date.getTimezoneOffset() * 60000;
-	  return new Date(date.getTime() + timezoneOffset);
-	};
+	convertToIST: function(date) {
+	  // IST is UTC+5:30
+	  const istOffset = 5.5 * 60 * 60 * 1000;
+	  if (typeof date === 'string') {
+	    date = new Date(date);
+	  }
+	  return new Date(date.getTime() + istOffset);
+	}
+    };
 
     // Core functions
     const app = {
@@ -1644,7 +1646,8 @@
         }
       },
       
-      async generateCalendarView(propertyFilter = 'all') {
+      // Replace the generateCalendarView function with this updated version
+async generateCalendarView(propertyFilter = 'all') {
 	  const container = document.getElementById('property-calendar-view');
 	  if (!container) return;
 	  
@@ -1661,13 +1664,18 @@
 	      ? data.records 
 	      : data.records.filter(r => r.fields.room === propertyFilter);
 	    
-	    // Generate calendar for current month
-	    const today = new Date();
-	    const currentMonth = today.getMonth();
-	    const currentYear = today.getFullYear();
+	    // Generate calendar for current month using IST
+	    const todayIST = helpers.convertToIST(new Date());
+	    const currentMonth = todayIST.getMonth();
+	    const currentYear = todayIST.getFullYear();
 	    
 	    // Create month calendar
-	    const monthName = today.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+	    const monthName = todayIST.toLocaleDateString('en-US', { 
+	      month: 'long', 
+	      year: 'numeric',
+	      timeZone: 'Asia/Kolkata'
+	    });
+	    
 	    const daysInMonth = helpers.getDaysInMonth(currentYear, currentMonth);
 	    const firstDayOfMonth = helpers.getFirstDayOfMonth(currentYear, currentMonth);
 	    
@@ -1689,19 +1697,22 @@
 	    for (let day = 1; day <= daysInMonth; day++) {
 	      const date = new Date(currentYear, currentMonth, day);
 	      const dateStr = date.toISOString().split('T')[0];
-	      const isToday = helpers.isSameDay(dateStr, new Date().toISOString().split('T')[0]);
+	      const dateIST = helpers.convertToIST(date);
+	      const isToday = helpers.isSameDay(dateIST, todayIST);
 	      
-	      // Find bookings for this day using normalized dates
+	      // Find bookings for this day
 	      const dayBookings = bookings.filter(b => {
 	        const guest = b.fields;
-	        const checkin = helpers.normalizeDate(guest.checkin);
-	        const checkout = helpers.normalizeDate(guest.checkout);
-	        const currentDate = helpers.normalizeDate(dateStr);
+	        const checkin = helpers.convertToIST(guest.checkin);
+	        const checkout = helpers.convertToIST(guest.checkout);
+	        const currentDate = helpers.convertToIST(dateStr);
 	        
+	        // Set time to midnight for accurate comparison
 	        checkin.setHours(0, 0, 0, 0);
 	        checkout.setHours(0, 0, 0, 0);
 	        currentDate.setHours(0, 0, 0, 0);
 	        
+	        // Guest is staying on this date if it's >= checkin and < checkout
 	        return currentDate >= checkin && currentDate < checkout;
 	      });
 	      
@@ -1710,18 +1721,18 @@
 	        'calendar-day',
 	        isToday ? 'today' : '',
 	        isBooked ? 'booked-day' : 'available-day',
-	        helpers.isPastDate(dateStr) ? 'past-day' : ''
+	        helpers.isPastDate(dateIST) ? 'past-day' : ''
 	      ].filter(Boolean).join(' ');
-	      
+	
 	      html += `<div class="${dayClass}" data-date="${dateStr}">
 	        <div class="day-number">${day}</div>
 	        <div class="day-events">`;
-	      
+	
 	      if (isBooked) {
-	        // Show one dot per guest
-	        html += Array(dayBookings.length).fill('<span class="day-event-dot"></span>').join('');
+	        // Show one dot per unique guest staying on this day
+	        html += Array(dayBookings.length).fill('<span class="day-event-dot" style="background-color: #2e7d32;"></span>').join('');
 	      }
-	      
+	
 	      html += `</div></div>`;
 	    }
 	    
@@ -1748,22 +1759,27 @@
 		  const modalBody = document.getElementById('dayModalBody');
 		  const modal = new bootstrap.Modal(document.getElementById('dayModal'));
 		  
-		  modalTitle.textContent = new Date(date).toLocaleDateString('en-US', { 
-			weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+		  const dateIST = helpers.convertToIST(date);
+		  modalTitle.textContent = dateIST.toLocaleDateString('en-US', { 
+		    weekday: 'long', 
+		    year: 'numeric', 
+		    month: 'long', 
+		    day: 'numeric',
+		    timeZone: 'Asia/Kolkata'
 		  });
 		  
 		  // Find all bookings that include this date
 		  const dayBookings = allBookings.filter(b => {
-			const guest = b.fields;
-			const checkin = new Date(guest.checkin);
-			const checkout = new Date(guest.checkout);
-			const currentDate = new Date(date);
-			
-			checkin.setHours(0, 0, 0, 0);
-			checkout.setHours(0, 0, 0, 0);
-			currentDate.setHours(0, 0, 0, 0);
-			
-			return currentDate >= checkin && currentDate < checkout;
+		    const guest = b.fields;
+		    const checkin = helpers.convertToIST(guest.checkin);
+		    const checkout = helpers.convertToIST(guest.checkout);
+		    const currentDate = helpers.convertToIST(date);
+		    
+		    checkin.setHours(0, 0, 0, 0);
+		    checkout.setHours(0, 0, 0, 0);
+		    currentDate.setHours(0, 0, 0, 0);
+		    
+		    return currentDate >= checkin && currentDate < checkout;
 		  });
 
 		  if (dayBookings.length === 0) {
