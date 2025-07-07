@@ -1482,7 +1482,7 @@
       async loadTodaysGuests() {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        const todayStr = today.toISOString().split('T')[0];
+        const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
         const container = document.getElementById('today-guests-list');
         if (!container) return;
         
@@ -1490,11 +1490,15 @@
           container.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>';
           
           // Get guests with checkin date <= today AND checkout date >= today
-          const formula = `AND({checkin} <= '${todayStr}', {checkout} >= '${todayStr}')`;
+          const formula = `AND(
+			  DATETIME_PARSE({checkin}, 'YYYY-MM-DD') <= DATETIME_PARSE('${todayStr}', 'YYYY-MM-DD'),
+			  DATETIME_PARSE({checkout}, 'YYYY-MM-DD') >= DATETIME_PARSE('${todayStr}', 'YYYY-MM-DD'),
+			  {status}="Active"
+			)`;
           
           const data = await helpers.fetchAirtable(
-            `${config.airtable.tables.guests}?filterByFormula=AND(${formula}, {status}="Active")`
-          );
+			  `${config.airtable.tables.guests}?filterByFormula=${encodeURIComponent(formula)}`
+			);
           
           if (data.records.length === 0) {
             container.innerHTML = '<div class="alert alert-info">No guests staying today</div>';
@@ -1549,25 +1553,23 @@
       },
       
       async loadUpcomingGuests() {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const todayStr = today.toISOString().split('T')[0];
-        const tomorrow = new Date(today);
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        const tomorrowStr = tomorrow.toISOString().split('T')[0];
-        
-        const container = document.getElementById('upcoming-guests-list');
-        if (!container) return;
-        
-        try {
-          container.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>';
-          
-          // Get upcoming guests (checking in after today)
-          const formula = `AND({checkin} > '${todayStr}', {status}="Active")`;
-          
-          const data = await helpers.fetchAirtable(
-            `${config.airtable.tables.guests}?filterByFormula=${formula}`
-          );
+		  const today = new Date();
+		  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+		  
+		  const container = document.getElementById('upcoming-guests-list');
+		  if (!container) return;
+
+		  try {
+			container.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>';
+			
+			const formula = `AND(
+			  DATETIME_PARSE({checkin}, 'YYYY-MM-DD') > DATETIME_PARSE('${todayStr}', 'YYYY-MM-DD'),
+			  {status}="Active"
+			)`;
+			
+			const data = await helpers.fetchAirtable(
+			  `${config.airtable.tables.guests}?filterByFormula=${encodeURIComponent(formula)}`
+			);
           
           if (data.records.length === 0) {
             container.innerHTML = '<div class="alert alert-info">No upcoming guests</div>';
