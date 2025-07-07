@@ -1218,6 +1218,13 @@
       }
     };
 
+	helpers.normalizeDate = (dateStr) => {
+	  const date = new Date(dateStr);
+	  // Adjust for timezone offset to get the correct local date
+	  const timezoneOffset = date.getTimezoneOffset() * 60000;
+	  return new Date(date.getTime() + timezoneOffset);
+	};
+
     // Core functions
     const app = {
       async loadAvailableRooms() {
@@ -1638,105 +1645,103 @@
       },
       
       async generateCalendarView(propertyFilter = 'all') {
-        const container = document.getElementById('property-calendar-view');
-        if (!container) return;
-        
-        try {
-          container.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>';
-          
-          // Get all active bookings
-          const data = await helpers.fetchAirtable(
-            `${config.airtable.tables.guests}?filterByFormula={status}="Active"`
-          );
-          
-          // Filter by property if needed
-          const bookings = propertyFilter === 'all' 
-            ? data.records 
-            : data.records.filter(r => r.fields.room === propertyFilter);
-          
-          // Generate calendar for current month
-          const today = new Date();
-          const currentMonth = today.getMonth();
-          const currentYear = today.getFullYear();
-          
-          // Create month calendar
-          const monthName = today.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-          const daysInMonth = helpers.getDaysInMonth(currentYear, currentMonth);
-          const firstDayOfMonth = helpers.getFirstDayOfMonth(currentYear, currentMonth);
-          
-          let html = `<div class="month-calendar">
-            <div class="month-header">
-              <div class="month-title">${monthName}</div>
-            </div>
-            <div class="weekdays">
-              <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
-            </div>
-            <div class="days-grid">`;
-          
-          // Add empty cells for days before the first day of the month
-          for (let i = 0; i < firstDayOfMonth; i++) {
-            html += `<div class="calendar-day"></div>`;
-          }
-          
-          // Add days of the month
-          for (let day = 1; day <= daysInMonth; day++) {
-            const date = new Date(currentYear, currentMonth, day);
-            const dateStr = date.toISOString().split('T')[0];
-            const isToday = helpers.isSameDay(dateStr, today);
-            
-            // Find bookings for this day
-            const dayBookings = bookings.filter(b => {
-			  const guest = b.fields;
-			  const checkin = new Date(guest.checkin);
-			  const checkout = new Date(guest.checkout);
-			  const currentDate = new Date(dateStr);
-			  
-			  // Set time to midnight for accurate comparison
-			  checkin.setHours(0, 0, 0, 0);
-			  checkout.setHours(0, 0, 0, 0);
-			  currentDate.setHours(0, 0, 0, 0);
-			  
-			  // Guest is staying on this date if it's >= checkin and < checkout
-			  return currentDate >= checkin && currentDate < checkout;
-			});
-            
-            const isBooked = dayBookings.length > 0;
-			const dayClass = [
-			  'calendar-day',
-			  isToday ? 'today' : '',
-			  isBooked ? 'booked-day' : 'available-day',
-			  helpers.isPastDate(dateStr) ? 'past-day' : ''
-			].filter(Boolean).join(' ');
-
-			html += `<div class="${dayClass}" data-date="${dateStr}">
-			  <div class="day-number">${day}</div>
-			  <div class="day-events">`;
-
-			if (isBooked) {
-			  // Show one dot per unique guest staying on this day
-			  html += Array(dayBookings.length).fill('<span class="day-event-dot" style="background-color: #2e7d32;"></span>').join('');
-			}
-
-			html += `</div></div>`;
-          }
-          
-          html += `</div></div>`;
-          container.innerHTML = html;
-          
-          // Add click handlers to days
-          document.querySelectorAll('.calendar-day').forEach(day => {
-            day.addEventListener('click', () => {
-              const date = day.dataset.date;
-              if (date) {
-                this.showDayDetails(date, bookings);
-              }
-            });
-          });
-        } catch (error) {
-          console.error('Error generating calendar:', error);
-          container.innerHTML = '<div class="alert alert-danger">Failed to load calendar</div>';
-        }
-      },
+	  const container = document.getElementById('property-calendar-view');
+	  if (!container) return;
+	  
+	  try {
+	    container.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>';
+	    
+	    // Get all active bookings
+	    const data = await helpers.fetchAirtable(
+	      `${config.airtable.tables.guests}?filterByFormula={status}="Active"`
+	    );
+	    
+	    // Filter by property if needed
+	    const bookings = propertyFilter === 'all' 
+	      ? data.records 
+	      : data.records.filter(r => r.fields.room === propertyFilter);
+	    
+	    // Generate calendar for current month
+	    const today = new Date();
+	    const currentMonth = today.getMonth();
+	    const currentYear = today.getFullYear();
+	    
+	    // Create month calendar
+	    const monthName = today.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+	    const daysInMonth = helpers.getDaysInMonth(currentYear, currentMonth);
+	    const firstDayOfMonth = helpers.getFirstDayOfMonth(currentYear, currentMonth);
+	    
+	    let html = `<div class="month-calendar">
+	      <div class="month-header">
+	        <div class="month-title">${monthName}</div>
+	      </div>
+	      <div class="weekdays">
+	        <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+	      </div>
+	      <div class="days-grid">`;
+	    
+	    // Add empty cells for days before the first day of the month
+	    for (let i = 0; i < firstDayOfMonth; i++) {
+	      html += `<div class="calendar-day"></div>`;
+	    }
+	    
+	    // Add days of the month
+	    for (let day = 1; day <= daysInMonth; day++) {
+	      const date = new Date(currentYear, currentMonth, day);
+	      const dateStr = date.toISOString().split('T')[0];
+	      const isToday = helpers.isSameDay(dateStr, new Date().toISOString().split('T')[0]);
+	      
+	      // Find bookings for this day using normalized dates
+	      const dayBookings = bookings.filter(b => {
+	        const guest = b.fields;
+	        const checkin = helpers.normalizeDate(guest.checkin);
+	        const checkout = helpers.normalizeDate(guest.checkout);
+	        const currentDate = helpers.normalizeDate(dateStr);
+	        
+	        checkin.setHours(0, 0, 0, 0);
+	        checkout.setHours(0, 0, 0, 0);
+	        currentDate.setHours(0, 0, 0, 0);
+	        
+	        return currentDate >= checkin && currentDate < checkout;
+	      });
+	      
+	      const isBooked = dayBookings.length > 0;
+	      const dayClass = [
+	        'calendar-day',
+	        isToday ? 'today' : '',
+	        isBooked ? 'booked-day' : 'available-day',
+	        helpers.isPastDate(dateStr) ? 'past-day' : ''
+	      ].filter(Boolean).join(' ');
+	      
+	      html += `<div class="${dayClass}" data-date="${dateStr}">
+	        <div class="day-number">${day}</div>
+	        <div class="day-events">`;
+	      
+	      if (isBooked) {
+	        // Show one dot per guest
+	        html += Array(dayBookings.length).fill('<span class="day-event-dot"></span>').join('');
+	      }
+	      
+	      html += `</div></div>`;
+	    }
+	    
+	    html += `</div></div>`;
+	    container.innerHTML = html;
+	    
+	    // Add click handlers to days
+	    document.querySelectorAll('.calendar-day').forEach(day => {
+	      day.addEventListener('click', () => {
+	        const date = day.dataset.date;
+	        if (date) {
+	          this.showDayDetails(date, bookings);
+	        }
+	      });
+	    });
+	  } catch (error) {
+	    console.error('Error generating calendar:', error);
+	    container.innerHTML = '<div class="alert alert-danger">Failed to load calendar</div>';
+	  }
+	},
       
       async showDayDetails(date, allBookings) {
 		  const modalTitle = document.getElementById('dayModalTitle');
