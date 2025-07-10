@@ -59,7 +59,7 @@
       },
       rooms: ["Stargazing Deck (0)", "Stargazing Cabin (1)", "A Frame Cottage"],
       paymentMethods: ["UPI", "Cash", "Card", "NetBanking"],
-      currentDate: new Date('2025-07-10T16:39:00+05:30'),
+      currentDate: new Date('2025-07-10T17:00:00+05:30'),
       mockData: {
         guests: [
           { id: 'g1', fields: { name: 'John Doe', guestID: 'G001', room: 'Stargazing Deck (0)', checkin: '2025-07-09', checkout: '2025-07-11', status: 'Active', advance: 5000, advanceMode: 'UPI' } },
@@ -80,7 +80,7 @@
           return response.data;
         } catch (error) {
           console.error('Airtable fetch error (CORS likely):', error);
-          return null; // Return null to trigger mock data
+          return null;
         }
       },
       showToast: (message, type = 'info') => {
@@ -151,7 +151,6 @@
             setBills(billData.records);
             setOrders(orderData.records);
           } else {
-            // Fallback to mock data if API fails
             setGuests(config.mockData.guests.filter(g => g.fields.status === 'Active'));
             setPastGuests(config.mockData.guests.filter(g => g.fields.status === 'Checked Out'));
             setBills(config.mockData.bills);
@@ -232,7 +231,7 @@
                 orderDetails: JSON.stringify(orders.map(o => JSON.parse(o.fields.Items || '[]')).flat())
               }
             };
-            const newBill = { id: `b${Date.now()}`, fields: billData.fields }; // Mock new bill
+            const newBill = { id: `b${Date.now()}`, fields: billData.fields };
             setBills([...bills, newBill]);
             setModal({ type: 'bill', data: { guest: guest.fields, bills: [newBill] } });
             utils.triggerConfetti();
