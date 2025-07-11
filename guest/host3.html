@@ -1511,10 +1511,7 @@
         }
       },
 
-      <script>
-  // ... (previous code up to app object)
 
-  // Event Handlers (continued from async generateBill)
   async generateBill() {
     const selectedGuest = document.querySelector('.guest-list-item.active');
     if (!selectedGuest) return utils.showToast('Please select a guest', 'warning');
