@@ -415,7 +415,7 @@
         const d1 = new Date(start1), d2 = new Date(end1), d3 = new Date(start2), d4 = new Date(end2);
         return d1 < d4 && d3 < d2;
       },
-      calculateNights: (checkin, checkout) => Math.round(Math.abs((new Date(checkin) - new Date(checkout)) / (24 * 60 * 60 * 1000)),
+      calculateNights: (checkin, checkout) => Math.round(Math.abs(new Date(checkin) - new Date(checkout)) / (24 * 60 * 60 * 1000)),
       fetchAirtable: async (endpoint, options = {}) => {
         const url = `https://api.airtable.com/v0/${config.airtable.baseId}/${endpoint}`;
         try {
