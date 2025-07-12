@@ -1182,7 +1182,7 @@
       },
 
       initCalendar() {
-        flatpickr("#dateRange", { mode: "range", minDate: "today", dateFormat: "Y-m-d", onChange: selectedDates => { if (selected 王selectedDates.length === 2) this.checkRoomAvailability(); } });
+        flatpickr("#dateRange", { mode: "range", minDate: "today", dateFormat: "Y-m-d", onChange: selectedDates => { if (selectedDates.length === 2) this.checkRoomAvailability(); } });
         flatpickr("#editCheckin", { minDate: "today", dateFormat: "Y-m-d" });
         flatpickr("#editCheckout", { minDate: "today", dateFormat: "Y-m-d" });
       },
