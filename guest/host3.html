@@ -1290,11 +1290,11 @@
           document.getElementById('room').disabled = true;
           document.getElementById('availabilityStatus').innerHTML = '';
 
-          // Show success modal
+                    // Show success modal
           const modal = new bootstrap.Modal(document.getElementById('registrationSuccessModal'));
           const nights = utils.calculateNights(guestData.checkin, guestData.checkout);
           utils.updateElement('registrationSuccessDetails', `
-            <div class="mb-4">
+            <div class="mb-3">
               <p><strong>Name:</strong> ${guestData.name}</p>
               <p><strong>Room:</strong> ${guestData.room}</p>
               <p><strong>Check-in:</strong> ${utils.formatDate(guestData.checkin)}</p>
@@ -1302,7 +1302,6 @@
               <p><strong>Nights:</strong> ${nights}</p>
               <p><strong>Advance Paid:</strong> ₹${guestData.advanceAmount.toFixed(2)} ${guestData.advanceMode ? `(${guestData.advanceMode})` : ''}</p>
               <p><strong>Balance Due:</strong> ₹${guestData.balanceAmount.toFixed(2)}</p>
-              ${guestData.Comments ? `<p><strong>Notes:</strong> ${guestData.Comments}</p>` : ''}
             </div>
           `);
           document.getElementById('guestLinkInput').value = guestData.homeLink;
@@ -1310,20 +1309,13 @@
             navigator.clipboard.writeText(guestData.homeLink);
             utils.showToast('Link copied!', 'success');
           };
-          document.getElementById('sendEmailFromModal').onclick = () => {
-            window.open(`mailto:?subject=OCB Stays Information&body=${encodeURIComponent(app.generateEmailBody(guestData, guestData.homeLink))}`);
-          };
-          document.getElementById('sendWhatsappFromModal').onclick = () => {
-            window.open(`https://wa.me/${guestData.mobile}?text=${encodeURIComponent(app.generateWhatsappMessage(guestData, guestData.homeLink))}`);
-          };
+          document.getElementById('sendEmailFromModal').onclick = () => window.open(`mailto:?subject=OCB Stays Information&body=${encodeURIComponent(this.generateEmailBody(guestData, guestData.homeLink))}`);
+          document.getElementById('sendWhatsappFromModal').onclick = () => window.open(`https://wa.me/${guestData.mobile}?text=${encodeURIComponent(this.generateWhatsappMessage(guestData, guestData.homeLink))}`);
           modal.show();
-
-          // Refresh dashboard and guest lists
-          await app.loadDashboard();
-          await app.loadGuests('current');
-          await app.loadGuests('past');
-          utils.showToast('Guest registered successfully!', 'success');
+          utils.showToast('Guest registered successfully', 'success');
           bootstrap.Modal.getInstance(document.getElementById('registerModal')).hide();
+          await this.loadDashboard();
+          await this.loadGuests('current');
         } catch (error) {
           utils.showToast('Error registering guest: ' + error.message, 'danger');
         } finally {
@@ -1332,62 +1324,104 @@
         }
       },
 
-      async generateBill(guestId, outputId, spinnerId, isPast = false) {
-        utils.toggleSpinner(spinnerId, true);
-        try {
-          const guest = await this.loadGuestDetails(guestId);
-          const orders = await this.getGuestOrders(guest.guestID);
-          const billData = await this.createFoodBill(guestId, guest, orders);
-          const nights = utils.calculateNights(guest.checkin, guest.checkout);
-          const totalDue = (parseFloat(guest.balanceAmount) || 0) + billData.totalAmount;
+      async checkoutGuest() {
+        const guestId = document.getElementById('editGuestId').value || window.selectedGuestId;
+        const btn = document.getElementById('confirmCheckout');
+        utils.toggleSpinner('checkoutSpinner', true);
+        btn.disabled = true;
 
-          const billHtml = `
-            <div class="p-4 bg-gray-700 rounded-lg">
-              <h6 class="text-lg font-semibold mb-2">Bill for ${guest.name || 'Unnamed Guest'}</h6>
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                <div><span class="text-gray-400">Guest ID</span><br>${guest.guestID} <span class="copy-icon" onclick="navigator.clipboard.writeText('${guest.guestID}');utils.showToast('Guest ID copied!', 'success');"><i class="fas fa-copy"></i></span></div>
-                <div><span class="text-gray-400">Room</span><br>${guest.room}</div>
-                <div><span class="text-gray-400">Check-in</span><br>${utils.formatDate(guest.checkin)}</div>
-                <div><span class="text-gray-400">Check-out</span><br>${utils.formatDate(guest.checkout)}</div>
-                <div><span class="text-gray-400">Nights</span><br>${nights}</div>
-                <div><span class="text-gray-400">Advance Paid</span><br>₹${guest.advanceAmount || 0}${guest.advanceMode ? ` (${guest.advanceMode})` : ''}</div>
-              </div>
-              <h6 class="text-base font-semibold mb-2">Food & Amenities</h6>
-              <div class="mb-4">
-                ${billData.orders.length ? billData.orders.map(item => `
-                  <div class="flex justify-between py-1">
-                    <div>${item.quantity} × ${item.item} <span class="text-gray-400">(${utils.formatDate(item.date)})</span></div>
-                    <div>₹${item.amount.toFixed(2)}</div>
-                  </div>
-                `).join('') : '<div class="text-gray-400">No food orders</div>'}
-              </div>
-              <div class="flex justify-between font-semibold">
-                <span>Total Due</span>
-                <span>₹${totalDue.toFixed(2)}</span>
-              </div>
-              <div class="mt-4 flex gap-2">
-                <button class="btn btn-primary" onclick="app.downloadBill('${guest.guestID}', '${billData.billId}')"><i class="fas fa-download"></i> Download Bill</button>
-              </div>
-            </div>
-          `;
-          utils.updateElement(outputId, billHtml);
-          utils.showToast('Bill generated successfully', 'success');
-          return billData;
+        try {
+          const balance = parseFloat(document.getElementById('checkoutBalance').value) || 0;
+          const paymentType = document.getElementById('checkoutPaymentType').value;
+          const comments = document.getElementById('checkoutComments').value;
+
+          if (!paymentType && balance > 0) {
+            throw new Error('Please select a payment mode for the balance');
+          }
+
+          await utils.fetchAirtable(`${config.airtable.tables.guests}/${guestId}`, {
+            method: 'PATCH',
+            body: JSON.stringify({
+              fields: {
+                Status: 'Checked Out',
+                PaymentType: paymentType,
+                balanceAmount: 0,
+                Comments: comments ? `${comments}\n${(await this.loadGuestDetails(guestId)).Comments || ''}` : undefined
+              }
+            })
+          });
+
+          utils.showToast('Guest checked out successfully', 'success');
+          bootstrap.Modal.getInstance(document.getElementById('checkoutModal')).hide();
+          document.getElementById('selectedGuestInfo').classList.add('hidden');
+          await this.loadDashboard();
+          await this.loadGuests('current');
         } catch (error) {
-          utils.showToast('Error generating bill: ' + error.message, 'danger');
-          utils.updateElement(outputId, '<div class="text-red-400 p-2">Failed to generate bill</div>');
+          utils.showToast('Error checking out guest: ' + error.message, 'danger');
         } finally {
-          utils.toggleSpinner(spinnerId, false);
+          utils.toggleSpinner('checkoutSpinner', false);
+          btn.disabled = false;
         }
       },
 
-      async downloadBill(guestID, billId) {
+      async generateBill(guestId, isPast = false) {
+        const billBtn = document.getElementById(isPast ? 'generatePastBill' : 'generateBill');
+        const spinner = document.getElementById(isPast ? 'pastBillSpinner' : 'billSpinner');
+        const output = document.getElementById(isPast ? 'pastBillOutput' : 'billOutput');
+        utils.toggleSpinner(spinner.id, true);
+        billBtn.disabled = true;
+
         try {
-          const billElement = document.getElementById('billOutput');
+          const guest = await this.loadGuestDetails(guestId);
+          const orders = await this.getGuestOrders(guest.guestID);
+          const billData = await this.createFoodBill(guest.guestID, guest, orders);
+
+          const billContent = `
+            <div class="p-3 bg-gray-600 rounded-lg mt-3">
+              <h6 class="text-base font-semibold mb-2">Bill for ${guest.name || 'Unnamed Guest'}</h6>
+              <div class="mb-2">
+                <div class="flex justify-between"><span>Room</span><span>${guest.room}</span></div>
+                <div class="flex justify-between"><span>Check-in</span><span>${utils.formatDate(guest.checkin)}</span></div>
+                <div class="flex justify-between"><span>Check-out</span><span>${utils.formatDate(guest.checkout)}</span></div>
+                <div class="flex justify-between"><span>Nights</span><span>${utils.calculateNights(guest.checkin, guest.checkout)}</span></div>
+              </div>
+              <div class="mb-2">
+                <h6 class="text-sm font-semibold">Food & Amenities</h6>
+                ${billData.orders.length ? billData.orders.map(item => `
+                  <div class="flex justify-between py-1">
+                    <span>${item.quantity} × ${item.item}</span>
+                    <span>₹${item.amount.toFixed(2)}</span>
+                  </div>
+                `).join('') : '<div class="text-gray-400">No orders</div>'}
+              </div>
+              <div class="flex justify-between font-semibold">
+                <span>Total</span>
+                <span>₹${billData.totalAmount.toFixed(2)}</span>
+              </div>
+              <div class="mt-2 flex justify-between gap-2">
+                <button class="btn btn-primary" onclick="app.downloadBill('${billData.billId}')"><i class="fas fa-download"></i> Download</button>
+                <button class="btn btn-success" onclick="app.shareBill('${billData.billId}', '${guest.mobile}')"><i class="fab fa-whatsapp"></i> Share</button>
+              </div>
+            </div>
+          `;
+          output.innerHTML = billContent;
+          utils.showToast('Bill generated successfully', 'success');
+        } catch (error) {
+          output.innerHTML = '<div class="p-3 bg-red-500/10 text-red-400 rounded-lg">Failed to generate bill</div>';
+          utils.showToast('Error generating bill: ' + error.message, 'danger');
+        } finally {
+          utils.toggleSpinner(spinner.id, false);
+          billBtn.disabled = false;
+        }
+      },
+
+      async downloadBill(billId) {
+        try {
+          const billElement = document.getElementById('billOutput').firstElementChild || document.getElementById('pastBillOutput').firstElementChild;
           const canvas = await html2canvas(billElement);
           const link = document.createElement('a');
           link.href = canvas.toDataURL('image/png');
-          link.download = `Bill_${guestID}_${billId}.png`;
+          link.download = `OCB_Bill_${billId}.png`;
           link.click();
           utils.showToast('Bill downloaded successfully', 'success');
         } catch (error) {
@@ -1395,86 +1429,83 @@
         }
       },
 
-      async completeCheckout() {
-        const guestId = document.getElementById('editGuestId').value || window.selectedGuestId;
-        const btn = document.getElementById('confirmCheckout');
-        btn.disabled = true;
-
+      async shareBill(billId, mobile) {
         try {
-          const paymentType = document.getElementById('checkoutPaymentType').value;
-          const comments = document.getElementById('checkoutComments').value;
-          if (!paymentType) throw new Error('Please select a payment mode');
-
-          await utils.fetchAirtable(`${config.airtable.tables.guests}/${guestId}`, {
-            method: 'PATCH',
-            body: JSON.stringify({ fields: { PaymentType: paymentType, Comments: comments } })
-          });
-
-          utils.showToast('Checkout completed successfully', 'success');
-          bootstrap.Modal.getInstance(document.getElementById('checkoutModal')).hide();
-          await this.loadDashboard();
-          await this.loadGuests('current');
-          await this.loadGuests('past');
-          document.getElementById('selectedGuestInfo').classList.add('hidden');
+          const billElement = document.getElementById('billOutput').firstElementChild || document.getElementById('pastBillOutput').firstElementChild;
+          const canvas = await html2canvas(billElement);
+          const blob = await new Promise(resolve => canvas.toBlob(resolve));
+          const file = new File([blob], `OCB_Bill_${billId}.png`, { type: 'image/png' });
+          if (navigator.share) {
+            await navigator.share({
+              files: [file],
+              text: 'Your OCB Stays bill',
+              url: `${config.urls.guestPortal}?billID=${billId}`
+            });
+            utils.showToast('Bill shared successfully', 'success');
+          } else {
+            window.open(`https://wa.me/${mobile}?text=${encodeURIComponent('Your OCB Stays bill: ' + `${config.urls.guestPortal}?billID=${billId}`)}`);
+          }
         } catch (error) {
-          utils.showToast('Error during checkout: ' + error.message, 'danger');
-        } finally {
-          btn.disabled = false;
+          utils.showToast('Error sharing bill: ' + error.message, 'danger');
         }
+      },
+
+      updateClock() {
+        const now = new Date();
+        document.getElementById('currentTime').textContent = now.toLocaleString('en-US', {
+          hour: 'numeric',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: true,
+          timeZone: 'Asia/Kolkata'
+        });
       }
     };
 
     // Event Listeners
-    document.getElementById('guestForm').onsubmit = app.registerGuest.bind(app);
-    document.getElementById('confirmCheckout').onclick = app.completeCheckout.bind(app);
-    document.getElementById('saveGuestChanges').onclick = app.saveGuestChanges.bind(app);
-    document.getElementById('generateBill').onclick = () => app.generateBill(window.selectedGuestId, 'billOutput', 'billSpinner');
-    document.getElementById('generatePastBill').onclick = () => app.generateBill(window.selectedPastGuestId, 'pastBillOutput', 'pastBillSpinner', true);
-    document.getElementById('guestList').onclick = event => {
-      const guestItem = event.target.closest('.guest-list-item');
-      if (guestItem) {
-        document.querySelectorAll('#guestList .guest-list-item').forEach(item => item.classList.remove('active'));
-        guestItem.classList.add('active');
-        window.selectedGuestId = guestItem.dataset.guestId;
-        document.getElementById('selectedGuestInfo').classList.remove('hidden');
-        app.loadGuestDetailsForDisplay(guestItem.dataset.guestId, JSON.parse(guestItem.dataset.guest));
-      }
-    };
-    document.getElementById('pastGuestList').onclick = event => {
-      const guestItem = event.target.closest('.guest-list-item');
-      if (guestItem) {
-        document.querySelectorAll('#pastGuestList .guest-list-item').forEach(item => item.classList.remove('active'));
-        guestItem.classList.add('active');
-        window.selectedPastGuestId = guestItem.dataset.guestId;
-        document.getElementById('selectedPastGuestInfo').classList.remove('hidden');
-        app.loadPastGuestDetails(guestItem.dataset.guestId);
-      }
-    };
-
-    // Theme Toggle
-    document.getElementById('themeToggle').onclick = () => {
-      const isDark = document.documentElement.dataset.theme === 'dark';
-      document.documentElement.dataset.theme = isDark ? 'light' : 'dark';
-      document.getElementById('themeToggle').className = `fas fa-${isDark ? 'moon' : 'sun'} theme-toggle`;
-      localStorage.setItem('theme', isDark ? 'light' : 'dark');
-    };
-
-    // Clock Update
-    setInterval(() => {
-      const now = new Date();
-      document.getElementById('currentTime').textContent = now.toLocaleString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true });
-    }, 1000);
-
-    // Initialize
-    (async () => {
-      const savedTheme = localStorage.getItem('theme') || 'dark';
-      document.documentElement.dataset.theme = savedTheme;
-      document.getElementById('themeToggle').className = `fas fa-${savedTheme === 'dark' ? 'sun' : 'moon'} theme-toggle`;
+    document.addEventListener('DOMContentLoaded', async () => {
       app.initCalendar();
+      app.updateClock();
+      setInterval(app.updateClock, 1000);
       await app.loadDashboard();
       await app.loadGuests('current');
-      await app.loadGuests('past');
-    })();
+
+      // Theme toggle
+      const themeToggle = document.getElementById('themeToggle');
+      themeToggle.onclick = () => {
+        const isDark = document.documentElement.classList.toggle('dark');
+        themeToggle.classList.toggle('fa-sun', !isDark);
+        themeToggle.classList.toggle('fa-moon', isDark);
+      };
+
+      // Guest selection
+      document.getElementById('guestList').onclick = async e => {
+        const item = e.target.closest('.guest-list-item');
+        if (!item) return;
+        document.querySelectorAll('#guestList .guest-list-item').forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
+        window.selectedGuestId = item.dataset.guestId;
+        document.getElementById('selectedGuestInfo').classList.remove('hidden');
+        await app.loadGuestDetailsForDisplay(item.dataset.guestId, JSON.parse(item.dataset.guest));
+      };
+
+      document.getElementById('pastGuestList').onclick = async e => {
+        const item = e.target.closest('.guest-list-item');
+        if (!item) return;
+        document.querySelectorAll('#pastGuestList .guest-list-item').forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
+        window.selectedPastGuestId = item.dataset.guestId;
+        document.getElementById('selectedPastGuestInfo').classList.remove('hidden');
+        await app.loadPastGuestDetails(item.dataset.guestId);
+      };
+
+      // Form submissions
+      document.getElementById('guestForm').onsubmit = e => app.registerGuest(e);
+      document.getElementById('saveGuestChanges').onclick = () => app.saveGuestChanges();
+      document.getElementById('confirmCheckout').onclick = () => app.checkoutGuest();
+      document.getElementById('generateBill').onclick = () => app.generateBill(window.selectedGuestId);
+      document.getElementById('generatePastBill').onclick = () => app.generateBill(window.selectedPastGuestId, true);
+    });
   </script>
 </body>
 </html>
