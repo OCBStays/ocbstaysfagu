@@ -1,44 +1,690 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OCB Stays - Host Management</title>
-  <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.20.15/babel.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/axios@1.4.0/dist/axios.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>OCB Stays – Host Management</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body { font-family: 'Inter', sans-serif; }
-    .dark { background-color: #1f2937; color: #f3f4f6; }
-    .dark .bg-white { background-color: #374151; }
-    .dark .text-gray-600 { color: #d1d5db; }
-    .dark .border-gray-200 { border-color: #4b5563; }
-    .dark .bg-gray-50 { background-color: #4b5563; }
-    .dark .bg-gray-100 { background-color: #6b7280; }
-    .dark .text-gray-900 { color: #f3f4f6; }
-    .dark .bg-blue-600 { background-color: #2563eb; }
-    .dark .hover\:bg-blue-700:hover { background-color: #1d4ed8; }
-    .tooltip { position: absolute; z-index: 50; background: #1f2937; color: white; padding: 8px; border-radius: 4px; font-size: 0.9rem; }
-    .sortable-chosen { opacity: 0.7; }
-    .sortable-ghost { background: #f3f4f6; }
-    .modal-overlay { backdrop-filter: blur(5px); }
-    .modal-content { animation: slide-in 0.3s ease-out; }
-    @keyframes slide-in { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    :root {
+      --bg-color: #ffffff;
+      --card-bg: #f9fafb;
+      --text-color: #111827;
+      --secondary-text: #6b7280;
+      --border-color: #e5e7eb;
+      --primary-color: #2563eb;
+      --primary-hover: #1d4ed8;
+      --accent-gradient: linear-gradient(45deg, #2563eb, #7c3aed);
+      --shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-color: #111827;
+        --card-bg: #1f2937;
+        --text-color: #e2e8f0;
+        --secondary-text: #9ca3af;
+        --border-color: #374151;
+        --primary-color: #3b82f6;
+        --primary-hover: #2563eb;
+        --shadow: 0 4px 6px rgba(0,0,0,0.2);
+      }
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-color);
+      color: var(--text-color);
+      min-height: 100vh;
+      padding: 1.5rem;
+      margin: 0 auto;
+      max-width: 1600px;
+      display: flex;
+      flex-direction: column;
+      font-size: 0.9rem;
+    }
+
+    .container {
+      flex: 1;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      padding: 1rem;
+      border-radius: 8px;
+      background: var(--accent-gradient);
+    }
+
+    .clock {
+      font-size: 0.85rem;
+      color: var(--secondary-text);
+    }
+
+    .theme-toggle {
+      cursor: pointer;
+      font-size: 1rem;
+      padding: 0.4rem;
+      background: var(--card-bg);
+      border-radius: 50%;
+      border: 1px solid var(--border-color);
+      transition: transform 0.2s;
+    }
+
+    .theme-toggle:hover {
+      transform: scale(1.1);
+    }
+
+    .dashboard-card {
+      background: var(--card-bg);
+      border-radius: 8px;
+      padding: 1rem;
+      box-shadow: var(--shadow);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      max-height: 350px;
+      overflow-y: auto;
+    }
+
+    .dashboard-card.no-scroll {
+      max-height: none;
+      overflow-y: visible;
+    }
+
+    .dashboard-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    .dashboard-card h6 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+    }
+
+    .dashboard-card .card-content {
+      font-size: 0.85rem;
+      line-height: 1.5;
+    }
+
+    .dashboard-card .card-content > div {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 1rem;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .dashboard-card .card-content > div:last-child {
+      border-bottom: none;
+    }
+
+    .action-icon {
+      font-size: 0.85rem;
+      padding: 0.4rem;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 0.2s, background-color 0.2s;
+    }
+
+    .action-icon:hover {
+      transform: translateY(-2px);
+    }
+
+    .copy-icon {
+      color: var(--secondary-text);
+      font-size: 0.8rem;
+      margin-left: 0.4rem;
+      cursor: pointer;
+    }
+
+    .copy-icon:hover {
+      color: var(--primary-color);
+    }
+
+    .calendar-icon {
+      font-size: 0.85rem;
+      padding: 0.4rem;
+      border-radius: 6px;
+      cursor: pointer;
+      background: var(--primary-color);
+      color: white;
+      position: absolute;
+      top: 0.75rem;
+      right: 0.75rem;
+    }
+
+    .calendar-icon:hover {
+      background: var(--primary-hover);
+    }
+
+    .guest-pane {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 1.5rem;
+      max-height: 600px;
+    }
+
+    .guest-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      background: var(--card-bg);
+      overflow-y: auto;
+    }
+
+    .guest-list-item {
+      padding: 0.75rem;
+      border-bottom: 1px solid var(--border-color);
+      cursor: pointer;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.5rem;
+      transition: background-color 0.2s;
+    }
+
+    .guest-list-item:hover {
+      background-color: rgba(59, 130, 246, 0.1);
+    }
+
+    .guest-list-item.active {
+      background: var(--accent-gradient);
+      color: white;
+    }
+
+    .modal-content {
+      background: var(--card-bg);
+      border-radius: 8px;
+      border: none;
+      box-shadow: var(--shadow);
+    }
+
+    .form-control, .form-select {
+      background: var(--card-bg);
+      color: var(--text-color);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 0.85rem;
+    }
+
+    .form-control:focus, .form-select:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25);
+    }
+
+    .btn-primary {
+      background: var(--accent-gradient);
+      border: none;
+      border-radius: 6px;
+      transition: transform 0.2s;
+      font-size: 0.85rem;
+    }
+
+    .btn-primary:hover {
+      transform: scale(1.05);
+    }
+
+    .nav-tabs {
+      border: none;
+      background: var(--card-bg);
+      border-radius: 8px;
+      padding: 0.5rem;
+    }
+
+    .nav-link {
+      color: var(--secondary-text);
+      border: none;
+      border-radius: 6px;
+      padding: 0.5rem 1rem;
+      font-size: 0.85rem;
+      transition: background-color 0.2s, color 0.2s;
+    }
+
+    .nav-link:hover {
+      color: var(--text-color);
+      background: rgba(59, 130, 246, 0.1);
+    }
+
+    .nav-link.active {
+      background: var(--accent-gradient);
+      color: white !important;
+      font-weight: 600;
+    }
+
+    .toast-container {
+      position: fixed;
+      top: 15px;
+      right: 15px;
+      z-index: 1100;
+    }
+
+    .flatpickr-day.booked {
+      background: var(--primary-color);
+      border-color: var(--primary-color);
+      color: white;
+    }
+
+    .flatpickr-day.booked:hover {
+      background: var(--primary-hover);
+      border-color: var(--primary-hover);
+    }
+
+    .flatpickr-calendar.multi-month {
+      width: auto;
+    }
+
+    .edit-icon-btn {
+      font-size: 0.85rem;
+      padding: 0.4rem;
+      border-radius: 6px;
+      cursor: pointer;
+      color: var(--secondary-text);
+      transition: all 0.2s;
+    }
+
+    .edit-icon-btn:hover {
+      color: var(--primary-color);
+      background-color: rgba(59, 130, 246, 0.1);
+    }
+
+    @media (max-width: 768px) {
+      .guest-pane {
+        grid-template-columns: 1fr;
+      }
+
+      .flatpickr-calendar.multi-month {
+        width: 100%;
+      }
+    }
   </style>
 </head>
-<body class="bg-gray-100 min-h-screen">
-  <div id="root"></div>
+<body>
+  <div class="toast-container"></div>
+  <div class="container mx-auto">
+    <div class="header">
+      <div>
+        <h1 class="text-xl font-semibold text-white">OCB Stays – Host Management</h1>
+        <div class="clock" id="currentTime" aria-live="polite"></div>
+      </div>
+      <div class="flex items-center gap-3">
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#registerModal">
+          <i class="fas fa-user-plus"></i> Register Guest
+        </button>
+        <i class="fas fa-sun theme-toggle" id="themeToggle" title="Toggle Theme" aria-label="Toggle Theme"></i>
+      </div>
+    </div>
 
-  <script type="text/babel">
-    const { useState, useEffect } = React;
+    <div class="manage-content">
+      <ul class="nav nav-tabs mb-3" id="manageTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button class="nav-link active" id="dashboard-tab" data-bs-toggle="tab" data-bs-target="#dashboard" type="button" role="tab" aria-controls="dashboard" aria-selected="true">Dashboard</button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="active-tab" data-bs-toggle="tab" data-bs-target="#active-guests" type="button" role="tab" aria-controls="active-guests" aria-selected="false">Current Guests</button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="past-tab" data-bs-toggle="tab" data-bs-target="#past-guests" type="button" role="tab" aria-controls="past-guests" aria-selected="false">Past Guests</button>
+        </li>
+      </ul>
 
+      <div class="tab-content">
+        <div class="tab-pane fade show active" id="dashboard" role="tabpanel" aria-labelledby="dashboard-tab">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div class="dashboard-card relative">
+              <h6 class="text-base font-semibold">Current Guests</h6>
+              <div id="currentGuestsCount" class="mb-2 text-lg"><strong>0</strong> guests</div>
+              <div id="currentGuestsList" class="card-content"></div>
+            </div>
+            <div class="dashboard-card relative">
+              <h6 class="text-base font-semibold">Upcoming Bookings</h6>
+              <div id="upcomingBookings" class="card-content"></div>
+            </div>
+            <div class="dashboard-card relative">
+              <h6 class="text-base font-semibold">Room Occupancy</h6>
+              <i class="fas fa-calendar-alt calendar-icon" data-bs-toggle="modal" data-bs-target="#calendarModal" title="View Occupancy Calendar"></i>
+              <div id="roomOccupancy" class="card-content"></div>
+            </div>
+            <div class="dashboard-card relative">
+              <h6 class="text-base font-semibold">Revenue Snapshot</h6>
+              <div id="revenueSummary" class="card-content"></div>
+            </div>
+            <div class="dashboard-card relative">
+              <h6 class="text-base font-semibold">Pending Balances</h6>
+              <div id="pendingBalances" class="card-content"></div>
+            </div>
+            <div class="dashboard-card relative">
+              <h6 class="text-base font-semibold">Recent Food Orders</h6>
+              <div id="recentOrders" class="card-content"></div>
+            </div>
+            <div class="dashboard-card relative">
+              <h6 class="text-base font-semibold">Check-Outs Today</h6>
+              <div id="checkoutsToday" class="card-content"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-pane fade" id="active-guests" role="tabpanel" aria-labelledby="active-tab">
+          <div class="guest-pane">
+            <div class="guest-list" id="guestList">
+              <div class="text-center py-3"><div class="spinner-border text-blue-500" role="status"><span class="visually-hidden">Loading...</span></div></div>
+            </div>
+            <div id="selectedGuestInfo" class="dashboard-card no-scroll hidden">
+              <i class="fas fa-edit edit-icon-btn absolute top-3 right-3 cursor-pointer" id="editGuestBtn"></i>
+              <div id="guestDetailsContent"></div>
+              <div class="flex gap-2 mt-3 flex-wrap">
+                <a class="action-icon bg-green-600 text-white" id="callGuest" title="Call Guest"><i class="fas fa-phone"></i></a>
+                <div class="action-icon bg-green-500 text-white" id="sendWhatsappToGuest" title="Send WhatsApp"><i class="fab fa-whatsapp"></i></div>
+                <div class="action-icon bg-blue-600 text-white" id="sendEmailToGuest" title="Send Email"><i class="fas fa-envelope"></i></div>
+                <div class="action-icon bg-gray-600 text-white" id="copyGuestLink" title="Copy Link"><i class="fas fa-copy"></i></div>
+                <div class="action-icon bg-red-500 text-white" id="placeOrder" title="Place Food Order"><i class="fas fa-utensils"></i></div>
+                <button id="generateBill" class="btn btn-primary"><i class="fas fa-file-invoice"></i> Generate Bill <span id="billSpinner" class="loading-spinner hidden"></span></button>
+                <button id="checkoutGuest" class="btn btn-danger"><i class="fas fa-sign-out-alt"></i> Checkout <span id="checkoutSpinner" class="loading-spinner hidden"></span></button>
+              </div>
+              <div id="billOutput" class="mt-3"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-pane fade" id="past-guests" role="tabpanel" aria-labelledby="past-tab">
+          <div class="guest-pane">
+            <div class="guest-list" id="pastGuestList">
+              <div class="text-center py-3"><div class="spinner-border text-blue-500" role="status"><span class="visually-hidden">Loading...</span></div></div>
+            </div>
+            <div id="selectedPastGuestInfo" class="dashboard-card no-scroll hidden">
+              <div id="pastGuestDetailsContent"></div>
+              <div class="flex gap-2 mt-3 flex-wrap">
+                <button id="generatePastBill" class="btn btn-primary"><i class="fas fa-file-invoice"></i> Generate Bill <span id="pastBillSpinner" class="loading-spinner hidden"></span></button>
+              </div>
+              <div id="pastBillOutput" class="mt-3"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Register Modal -->
+  <div class="modal fade" id="registerModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header border-b border-gray-600">
+          <h5 class="modal-title text-base font-semibold">Register New Guest</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="guestForm">
+            <div class="mb-3">
+              <label for="dateRange" class="form-label">Dates</label>
+              <input type="text" class="form-control" id="dateRange" placeholder="Select check-in and check-out dates" required>
+            </div>
+            <div class="mb-3">
+              <label for="room" class="form-label">Room</label>
+              <select class="form-select" id="room" required disabled>
+                <option value="">Select dates first</option>
+              </select>
+            </div>
+            <div id="availabilityStatus" class="text-sm"></div>
+            <div class="mb-3">
+              <label for="name" class="form-label">Name</label>
+              <input type="text" class="form-control" id="name" required>
+            </div>
+            <div class="mb-3">
+              <label for="mobile" class="form-label">Mobile Number</label>
+              <div class="relative">
+                <input type="tel" class="form-control" id="mobile" required>
+                <span class="copy-icon absolute right-3 top-1/2 -translate-y-1/2" onclick="navigator.clipboard.writeText(document.getElementById('mobile').value);utils.showToast('Mobile copied!', 'success');"><i class="fas fa-copy"></i></span>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Advance Payment</label>
+              <div class="flex gap-2">
+                <input type="number" class="form-control flex-2" id="advanceAmount" placeholder="Amount (₹)">
+                <select class="form-select flex-1 min-w-[120px]" id="advanceMode">
+                  <option value="">Payment Mode</option>
+                  <option value="UPI">UPI</option>
+                  <option value="Cash">Cash</option>
+                  <option value="Card">Card</option>
+                  <option value="NetBanking">Net Banking</option>
+                </select>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label for="balanceAmount" class="form-label">Balance Amount (₹)</label>
+              <input type="number" class="form-control" id="balanceAmount">
+            </div>
+            <div class="mb-3">
+              <label for="comments" class="form-label">Notes</label>
+              <textarea class="form-control" id="comments" rows="2"></textarea>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer border-t border-gray-600">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="registerBtn" form="guestForm">
+            Register <span id="registerSpinner" class="loading-spinner hidden"></span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Guest Modal -->
+  <div class="modal fade" id="editGuestModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header border-b border-gray-600">
+          <h5 class="modal-title text-base font-semibold">Edit Guest Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="editGuestForm">
+            <div class="mb-3">
+              <label for="editName" class="form-label">Name</label>
+              <input type="text" class="form-control" id="editName" required>
+            </div>
+            <div class="mb-3">
+              <label for="editMobile" class="form-label">Mobile Number</label>
+              <div class="relative flex items-center gap-2">
+                <input type="tel" class="form-control flex-1" id="editMobile" required>
+                <a class="action-icon bg-green-600 text-white" id="editCallMobile" title="Call"><i class="fas fa-phone"></i></a>
+                <div class="action-icon bg-green-500 text-white" id="editWhatsappMobile" title="WhatsApp"><i class="fab fa-whatsapp"></i></div>
+                <div class="action-icon bg-gray-600 text-white" id="editCopyMobile" title="Copy Number"><i class="fas fa-copy"></i></div>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label for="editRoom" class="form-label">Room</label>
+              <select class="form-select" id="editRoom" required>
+                <option value="">Select Room</option>
+                <option value="Stargazing Deck (0)">Stargazing Deck (0)</option>
+                <option value="Stargazing Cabin (1)">Stargazing Cabin (1)</option>
+                <option value="A Frame Cottage">A Frame Cottage</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="editCheckin" class="form-label">Check-in Date</label>
+              <input type="text" class="form-control flatpickr-input" id="editCheckin" required>
+            </div>
+            <div class="mb-3">
+              <label for="editCheckout" class="form-label">Check-out Date</label>
+              <input type="text" class="form-control flatpickr-input" id="editCheckout" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Advance Payment</label>
+              <div class="flex gap-2">
+                <input type="number" class="form-control flex-2" id="editAdvance" placeholder="Amount (₹)">
+                <select class="form-select flex-1 min-w-[120px]" id="editAdvanceMode">
+                  <option value="">Payment Mode</option>
+                  <option value="UPI">UPI</option>
+                  <option value="Cash">Cash</option>
+                  <option value="Card">Card</option>
+                  <option value="NetBanking">Net Banking</option>
+                </select>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label for="editBalance" class="form-label">Balance Amount (₹)</label>
+              <input type="number" class="form-control" id="editBalance">
+            </div>
+            <div class="mb-3">
+              <label for="editComments" class="form-label">Notes</label>
+              <textarea class="form-control" id="editComments" rows="2"></textarea>
+            </div>
+            <input type="hidden" id="editGuestId">
+          </form>
+        </div>
+        <div class="modal-footer border-t border-gray-600">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" id="saveGuestChanges">Save Changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Checkout Confirmation Modal -->
+  <div class="modal fade" id="checkoutModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header border-b border-gray-600">
+          <h5 class="modal-title text-base font-semibold">Confirm Checkout</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="checkoutForm">
+            <div class="mb-3">
+              <label class="form-label">Balance Due (₹)</label>
+              <input type="number" class="form-control" id="checkoutBalance" readonly>
+            </div>
+            <div class="mb-3">
+              <label for="checkoutPaymentType" class="form-label">Payment Mode</label>
+              <select class="form-select" id="checkoutPaymentType" required>
+                <option value="">Select Payment Mode</option>
+                <option value="UPI">UPI</option>
+                <option value="Cash">Cash</option>
+                <option value="Card">Card</option>
+                <option value="NetBanking">Net Banking</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="checkoutComments" class="form-label">Comments</label>
+              <textarea class="form-control" id="checkoutComments" rows="3"></textarea>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer border-t border-gray-600">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" id="confirmCheckout">Complete Checkout</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Food Orders Modal -->
+  <div class="modal fade" id="foodOrdersModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header border-b border-gray-600">
+          <h5 class="modal-title text-base font-semibold">Food & Amenities Orders</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="foodOrdersModalBody">
+          Loading...
+        </div>
+        <div class="modal-footer border-t border-gray-600">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Calendar Modal -->
+  <div class="modal fade" id="calendarModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header border-b border-gray-600">
+          <h5 class="modal-title text-base font-semibold">Room Occupancy Calendar</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="calendarRoomFilter" class="form-label">Filter by Room</label>
+            <select class="form-select" id="calendarRoomFilter">
+              <option value="">All Rooms</option>
+              <option value="Stargazing Deck (0)">Stargazing Deck (0)</option>
+              <option value="Stargazing Cabin (1)">Stargazing Cabin (1)</option>
+              <option value="A Frame Cottage">A Frame Cottage</option>
+            </select>
+          </div>
+          <div id="occupancyCalendar" class="mb-3"></div>
+          <div class="flex justify-between">
+            <button class="btn btn-primary" id="prevMonth"><i class="fas fa-chevron-left"></i> Previous</button>
+            <button class="btn btn-primary" id="nextMonth">Next <i class="fas fa-chevron-right"></i></button>
+          </div>
+        </div>
+        <div class="modal-footer border-t border-gray-600">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Registration Success Modal -->
+  <div class="modal fade" id="registrationSuccessModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header border-b border-gray-600">
+          <h5 class="modal-title text-base font-semibold">Guest Registered Successfully</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="registration-success-details" id="registrationSuccessDetails"></div>
+          <div class="input-group mb-3">
+            <input type="text" class="form-control" id="guestLinkInput" readonly>
+            <button class="btn btn-outline-secondary" id="copyGuestLinkModal" title="Copy Link"><i class="fas fa-copy"></i></button>
+          </div>
+          <div class="flex justify-center gap-2">
+            <button class="btn btn-primary" id="sendEmailFromModal"><i class="fas fa-envelope"></i> Email</button>
+            <button class="btn btn-success" id="sendWhatsappFromModal"><i class="fab fa-whatsapp"></i> WhatsApp</button>
+          </div>
+        </div>
+        <div class="modal-footer border-t border-gray-600">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Revenue Breakdown Modal -->
+  <div class="modal fade" id="revenueBreakdownModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header border-b border-gray-600">
+          <h5 class="modal-title text-base font-semibold" id="revenueBreakdownTitle">Revenue Breakdown</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="revenueBreakdownBody">
+          Loading...
+        </div>
+        <div class="modal-footer border-t border-gray-600">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>  
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script>
     // Configuration
     const config = {
       airtable: {
@@ -57,602 +703,864 @@
     // Utility Functions
     const utils = {
       generateGuestId: () => 'GST' + Array(5).fill().map(() => 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'[Math.floor(Math.random() * 62)]).join(''),
-      formatDate: dateString => new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      formatDate: date => new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      formatDateTime: date => new Date(date).toLocaleString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true }),
+      today: () => new Date().toISOString().split('T')[0],
+      nextWeek: () => new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      datesOverlap: (start1, end1, start2, end2) => {
+        const d1 = new Date(start1), d2 = new Date(end1), d3 = new Date(start2), d4 = new Date(end2);
+        return d1 < d4 && d3 < d2;
+      },
+      calculateNights: (checkin, checkout) => Math.round(Math.abs((new Date(checkin) - new Date(checkout)) / (24 * 60 * 60 * 1000)),
       fetchAirtable: async (endpoint, options = {}) => {
         const url = `https://api.airtable.com/v0/${config.airtable.baseId}/${endpoint}`;
-        const response = await axios({ url, headers: { 'Authorization': `Bearer ${config.airtable.token}`, 'Content-Type': 'application/json' }, ...options });
-        return response.data;
+        try {
+          const response = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${config.airtable.token}`, 'Content-Type': 'application/json' },
+            ...options
+          });
+          if (!response.ok) throw new Error((await response.json()).error?.message || 'API request failed');
+          return response.json();
+        } catch (error) {
+          console.error('Airtable API error:', error);
+          throw error;
+        }
       },
       showToast: (message, type = 'success') => {
         const toast = document.createElement('div');
-        toast.className = `fixed top-5 right-5 p-4 rounded shadow-lg text-white ${type === 'success' ? 'bg-green-500' : 'bg-red-500'} animate-slide-in`;
-        toast.textContent = message;
-        document.body.appendChild(toast);
-        setTimeout(() => { toast.className += ' animate-slide-out'; setTimeout(() => toast.remove(), 300); }, 3000);
+        toast.className = `toast show align-items-center text-white bg-${type === 'success' ? 'green-500' : type === 'warning' ? 'yellow-500' : 'red-500'} border-0`;
+        toast.innerHTML = `<div class="d-flex"><div class="toast-body">${message}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>`;
+        document.querySelector('.toast-container').appendChild(toast);
+        new bootstrap.Toast(toast).show();
+        setTimeout(() => toast.remove(), 5000);
       },
-      datesOverlap: (start1, end1, start2, end2) => {
-        const d1 = new Date(start1), d2 = new Date(end1), d3 = new Date(start2), d4 = new Date(end2);
-        return (d1 < d4) && (d3 < d2);
-      },
-      calculateNights: (checkin, checkout) => Math.round(Math.abs((new Date(checkin) - new Date(checkout)) / (24 * 60 * 60 * 1000))),
+      toggleSpinner: (id, show) => document.getElementById(id).classList.toggle('hidden', !show),
+      updateElement: (id, content) => document.getElementById(id).innerHTML = content
     };
 
-    // Main App Component
-    const App = () => {
-      const [darkMode, setDarkMode] = useState(false);
-      const [activeTab, setActiveTab] = useState('active');
-      const [guests, setGuests] = useState([]);
-      const [pastGuests, setPastGuests] = useState([]);
-      const [selectedGuest, setSelectedGuest] = useState(null);
-      const [searchQuery, setSearchQuery] = useState('');
-      const [filterRoom, setFilterRoom] = useState('');
-      const [sortField, setSortField] = useState('checkin');
-      const [sortOrder, setSortOrder] = useState('asc');
-      const [modal, setModal] = useState(null);
-      const [notifications, setNotifications] = useState([]);
-      const [selectedGuests, setSelectedGuests] = useState([]);
-      const [availableRooms, setAvailableRooms] = useState(config.rooms);
-
-      useEffect(() => {
-        loadGuests();
-        loadPastGuests();
-        loadAvailableRooms();
-        const interval = setInterval(checkForUpdates, 30000);
-        return () => clearInterval(interval);
-      }, []);
-
-      const loadGuests = async () => {
+    // Core Application Logic
+    const app = {
+      cachedGuests: null,
+      cachedOrders: null,
+      calendarInstance: null,
+      async loadDashboard() {
         try {
-          const data = await utils.fetchAirtable(`${config.airtable.tables.guests}?filterByFormula={status}="Active"&sort[0][field]=checkin`);
-          setGuests(data.records);
-        } catch (error) {
-          utils.showToast('Failed to load guests', 'error');
-        }
-      };
+          const today = utils.today();
+          const nextWeek = utils.nextWeek();
+          this.cachedGuests = await utils.fetchAirtable(`${config.airtable.tables.guests}?sort[0][field]=checkin`);
+          this.cachedOrders = await utils.fetchAirtable(`${config.airtable.tables.orders}?sort[0][field]=OrderDate&sort[0][direction]=desc&maxRecords=3`);
 
-      const loadPastGuests = async () => {
-        try {
-          const data = await utils.fetchAirtable(`${config.airtable.tables.guests}?filterByFormula={status}="Checked Out"&sort[0][field]=checkout&sort[0][direction]=desc`);
-          setPastGuests(data.records);
-        } catch (error) {
-          utils.showToast('Failed to load past guests', 'error');
-        }
-      };
+          // Current Guests
+          const currentGuests = this.cachedGuests.records.filter(r => r.fields.Status === 'Active');
+          utils.updateElement('currentGuestsCount', `<strong>${currentGuests.length}</strong> guests`);
+          utils.updateElement('currentGuestsList', currentGuests.length ? currentGuests.map(r => `
+            <div class="cursor-pointer hover:bg-blue-500/10" data-guest-id="${r.id}" onclick="app.selectGuestFromDashboard('${r.id}', 'current')">
+              <span>${r.fields.name || 'Unnamed Guest'} <span class="copy-icon" onclick="navigator.clipboard.writeText('${r.fields.guestID}');utils.showToast('Guest ID copied!', 'success');event.stopPropagation();"><i class="fas fa-copy"></i></span></span>
+              <span class="text-gray-400">${r.fields.room} (${utils.formatDate(r.fields.checkin)} - ${utils.formatDate(r.fields.checkout)})</span>
+            </div>
+          `).join('') : '<div class="text-gray-400 p-2">No current guests</div>');
 
-      const loadAvailableRooms = async () => {
-        try {
-          const data = await utils.fetchAirtable(`${config.airtable.tables.guests}?filterByFormula={status}="Active"`);
-          const occupied = new Set(data.records.map(r => r.fields.room));
-          setAvailableRooms(config.rooms.filter(room => !occupied.has(room)));
-        } catch (error) {
-          utils.showToast('Error loading rooms', 'error');
-        }
-      };
+          // Upcoming Bookings
+          const upcomingGuests = this.cachedGuests.records.filter(r => new Date(r.fields.checkin) > new Date(today) && new Date(r.fields.checkin) <= new Date(nextWeek));
+          utils.updateElement('upcomingBookings', upcomingGuests.length ? upcomingGuests.map(r => `
+            <div class="cursor-pointer hover:bg-blue-500/10" data-guest-id="${r.id}" onclick="app.selectGuestFromDashboard('${r.id}', 'upcoming')">
+              <span>${r.fields.name || 'Unnamed Guest'}</span>
+              <span class="text-gray-400">${r.fields.room} (Check-in: ${utils.formatDate(r.fields.checkin)})</span>
+            </div>
+          `).join('') : '<div class="text-gray-400 p-2">No upcoming bookings</div>');
 
-      const checkForUpdates = async () => {
-        try {
-          const newGuests = await utils.fetchAirtable(`${config.airtable.tables.guests}?filterByFormula={status}="Active"`);
-          if (newGuests.records.length > guests.length) {
-            setNotifications([...notifications, { id: Date.now(), message: 'New guest registered!' }]);
-            loadGuests();
-          }
-        } catch (error) {
-          console.error('Error checking updates:', error);
-        }
-      };
+          // Room Occupancy
+          const occupiedRooms = new Set(currentGuests.map(r => r.fields.room));
+          utils.updateElement('roomOccupancy', config.rooms.map(room => `
+            <div class="cursor-pointer hover:bg-blue-500/10" onclick="app.showCalendarModal('${room}')">
+              <span>${room}</span>
+              <span class="text-${occupiedRooms.has(room) ? 'red' : 'green'}-500">${occupiedRooms.has(room) ? 'Occupied' : 'Available'}</span>
+            </div>
+          `).join(''));
 
-      const filterGuests = (list) => {
-        return list.filter(g => {
-          const fields = g.fields;
-          return (
-            (fields.name?.toLowerCase().includes(searchQuery.toLowerCase()) || fields.guestID?.toLowerCase().includes(searchQuery.toLowerCase())) &&
-            (!filterRoom || fields.room === filterRoom)
+          // Revenue Snapshot
+          const advanceTotal = this.cachedGuests.records.reduce((sum, r) => sum + (parseFloat(r.fields.advanceAmount) || 0), 0);
+          const balanceTotal = this.cachedGuests.records.reduce((sum, r) => sum + (parseFloat(r.fields.balanceAmount) || 0), 0);
+          const foodTotal = this.cachedOrders.records.reduce((sum, r) => sum + (parseFloat(r.fields.TotalAmount) || 0), 0);
+          utils.updateElement('revenueSummary', `
+            <div class="cursor-pointer hover:bg-blue-500/10" onclick="app.showRevenueBreakdown('advance')"><span>Advance Payments</span><span>₹${advanceTotal.toFixed(2)}</span></div>
+            <div class="cursor-pointer hover:bg-blue-500/10" onclick="app.showRevenueBreakdown('balance')"><span>Balance Payments</span><span>₹${balanceTotal.toFixed(2)}</span></div>
+            <div class="cursor-pointer hover:bg-blue-500/10" onclick="app.showRevenueBreakdown('food')"><span>Food Orders</span><span>₹${foodTotal.toFixed(2)}</span></div>
+            <div class="font-semibold"><span>Total Revenue</span><span>₹${(advanceTotal + balanceTotal + foodTotal).toFixed(2)}</span></div>
+          `);
+
+          // Pending Balances
+          const pendingGuests = currentGuests.filter(r => (parseFloat(r.fields.balanceAmount) || 0) > 0);
+          utils.updateElement('pendingBalances', pendingGuests.length ? pendingGuests.map(r => `
+            <div class="cursor-pointer hover:bg-blue-500/10" data-guest-id="${r.id}" onclick="app.selectGuestFromDashboard('${r.id}', 'current')">
+              <span>${r.fields.name || 'Unnamed Guest'}</span>
+              <span class="text-gray-400">₹${(parseFloat(r.fields.balanceAmount) || 0).toFixed(2)}</span>
+            </div>
+          `).join('') : '<div class="text-gray-400 p-2">No pending balances</div>');
+
+          // Recent Food Orders
+          utils.updateElement('recentOrders', this.cachedOrders.records.length ? this.cachedOrders.records.map(r => {
+            const guest = this.cachedGuests.records.find(g => g.id === r.fields.Guest?.[0]);
+            const items = JSON.parse(r.fields.Items || '[]');
+            const totalAmount = r.fields.TotalAmount || items.reduce((sum, item) => sum + (item.price || 0) * (item.quantity || 1), 0);
+            return `
+              <div class="cursor-pointer hover:bg-blue-500/10" data-guest-id="${guest?.id}" onclick="app.showFoodOrdersModal('${guest?.id}')">
+                <span>${guest?.fields.name || 'Unknown Guest'} (#${r.fields.OrderID || r.id}) <span class="copy-icon" onclick="navigator.clipboard.writeText('${r.fields.OrderID || r.id}');utils.showToast('Order ID copied!', 'success');event.stopPropagation();"><i class="fas fa-copy"></i></span></span>
+                <span class="text-gray-400">₹${totalAmount.toFixed(2)} (${utils.formatDate(r.fields.OrderDate)})</span>
+              </div>
+            `;
+          }).join('') : '<div class="text-gray-400 p-2">No recent orders</div>');
+
+          // Check-Outs Today
+          const checkouts = this.cachedGuests.records.filter(r => r.fields.checkout === today);
+          utils.updateElement('checkoutsToday', checkouts.length ? checkouts.map(r => `
+            <div class="cursor-pointer hover:bg-blue-500/10" data-guest-id="${r.id}" onclick="app.selectGuestFromDashboard('${r.id}', 'current')">
+              <span>${r.fields.name || 'Unnamed Guest'}</span>
+              <span class="text-gray-400">${r.fields.room}</span>
+            </div>
+          `).join('') : '<div class="text-gray-400 p-2">No check-outs today</div>');
+
+        } catch (error) {
+          utils.showToast('Error loading dashboard: ' + error.message, 'danger');
+          console.error('Dashboard error:', error);
+          ['currentGuestsList', 'upcomingBookings', 'roomOccupancy', 'revenueSummary', 'pendingBalances', 'recentOrders', 'checkoutsToday'].forEach(id => 
+            utils.updateElement(id, '<div class="text-gray-400 p-2">Failed to load data</div>')
           );
-        }).sort((a, b) => {
-          const fieldA = a.fields[sortField], fieldB = b.fields[sortField];
-          return sortOrder === 'asc' ? (fieldA > fieldB ? 1 : -1) : (fieldA < fieldB ? 1 : -1);
-        });
-      };
+        }
+      },
 
-      const handleSort = field => {
-        if (sortField === field) {
-          setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+      async selectGuestFromDashboard(guestId, source) {
+        if (!guestId) return utils.showToast('Guest not found', 'warning');
+        await this.loadGuests('current');
+        const guestItem = document.querySelector(`#guestList [data-guest-id="${guestId}"]`);
+        if (guestItem) {
+          document.querySelector('#active-tab').click();
+          guestItem.click();
         } else {
-          setSortField(field);
-          setSortOrder('asc');
+          await this.loadGuests('past');
+          const pastGuestItem = document.querySelector(`#pastGuestList [data-guest-id="${guestId}"]`);
+          if (pastGuestItem) {
+            document.querySelector('#past-tab').click();
+            pastGuestItem.click();
+          } else if (source === 'order') {
+            this.showFoodOrdersModal(guestId);
+          }
         }
-      };
+      },
 
-      const toggleGuestSelection = id => {
-        setSelectedGuests(selectedGuests.includes(id) ? selectedGuests.filter(g => g !== id) : [...selectedGuests, id]);
-      };
+      async showCalendarModal(selectedRoom = '') {
+        const modal = new bootstrap.Modal(document.getElementById('calendarModal'));
+        document.getElementById('calendarRoomFilter').value = selectedRoom;
+        this.initOccupancyCalendar();
+        this.updateOccupancyCalendar(selectedRoom);
+        modal.show();
+      },
 
-      const handleBulkAction = action => {
-        if (!selectedGuests.length) return utils.showToast('Select at least one guest', 'error');
-        if (action === 'whatsapp') {
-          const selected = guests.filter(g => selectedGuests.includes(g.id));
-          selected.forEach(g => window.open(`https://wa.me/${g.fields.mobile}?text=${encodeURIComponent(`Hi ${g.fields.name}, thanks for staying with OCB Stays!`)}`));
+      initOccupancyCalendar() {
+        if (this.calendarInstance) this.calendarInstance.destroy();
+        
+        this.calendarInstance = flatpickr('#occupancyCalendar', {
+          inline: true,
+          mode: 'multiple',
+          monthSelectorType: 'static',
+          showMonths: window.innerWidth > 768 ? 2 : 1,
+          onDayCreate: (dObj, dStr, fp, dayElem) => {
+            const date = dayElem.dateObj.toISOString().split('T')[0];
+            const bookings = this.cachedGuests?.records?.filter(r => {
+              const checkin = new Date(r.fields.checkin);
+              const checkout = new Date(r.fields.checkout);
+              const currentDate = new Date(date);
+              return checkin <= currentDate && currentDate <= checkout;
+            }) || [];
+            
+            if (bookings.length) {
+              const roomFilter = document.getElementById('calendarRoomFilter').value;
+              const filteredBookings = roomFilter ? bookings.filter(b => b.fields.room === roomFilter) : bookings;
+              if (filteredBookings.length) {
+                dayElem.classList.add('booked');
+                dayElem.title = filteredBookings.map(b => `${b.fields.room} (${b.fields.name || 'Unnamed Guest'})`).join('\n');
+              }
+            }
+          }
+        });
+        
+        // Set initial date to current month
+        this.calendarInstance.setDate(new Date());
+        
+        document.getElementById('prevMonth').onclick = () => this.calendarInstance.changeMonth(-1);
+        document.getElementById('nextMonth').onclick = () => this.calendarInstance.changeMonth(1);
+        document.getElementById('calendarRoomFilter').onchange = () => 
+          this.updateOccupancyCalendar(document.getElementById('calendarRoomFilter').value);
+      },
+
+      updateOccupancyCalendar(roomFilter) {
+        if (this.calendarInstance) {
+          this.calendarInstance.redraw();
         }
-        setSelectedGuests([]);
-      };
+      },
 
-      const handleRoomDragDrop = async (guestId, newRoom) => {
+      async showRevenueBreakdown(type) {
+        const modal = new bootstrap.Modal(document.getElementById('revenueBreakdownModal'));
+        const title = document.getElementById('revenueBreakdownTitle');
+        const body = document.getElementById('revenueBreakdownBody');
+        title.textContent = `${type.charAt(0).toUpperCase() + type.slice(1)} Breakdown`;
+        body.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-blue-500" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+
         try {
-          await utils.fetchAirtable(`${config.airtable.tables.guests}/${guestId}`, {
-            method: 'PATCH',
-            data: { fields: { room: newRoom } }
-          });
-          utils.showToast('Room reassigned successfully', 'success');
-          loadGuests();
-          loadAvailableRooms();
+          if (type === 'advance') {
+            const guests = this.cachedGuests.records.filter(r => (parseFloat(r.fields.advanceAmount) || 0) > 0);
+            body.innerHTML = guests.length ? guests.map(r => `
+              <div class="p-2 border-b border-gray-600 cursor-pointer hover:bg-blue-500/10" data-guest-id="${r.id}" onclick="app.selectGuestFromDashboard('${r.id}', 'current')">
+                <div class="flex justify-between">
+                  <span>${r.fields.name || 'Unnamed Guest'} (${r.fields.room})</span>
+                  <span class="text-gray-400">₹${(parseFloat(r.fields.advanceAmount) || 0).toFixed(2)} (${r.fields.advanceMode || 'N/A'})</span>
+                </div>
+              </div>
+            `).join('') : '<div class="text-gray-400 p-2">No advance payments</div>';
+          } else if (type === 'balance') {
+            const guests = this.cachedGuests.records.filter(r => (parseFloat(r.fields.balanceAmount) || 0) > 0);
+            body.innerHTML = guests.length ? guests.map(r => `
+              <div class="p-2 border-b border-gray-600 cursor-pointer hover:bg-blue-500/10" data-guest-id="${r.id}" onclick="app.selectGuestFromDashboard('${r.id}', 'current')">
+                <div class="flex justify-between">
+                  <span>${r.fields.name || 'Unnamed Guest'} (${r.fields.room})</span>
+                  <span class="text-gray-400">₹${(parseFloat(r.fields.balanceAmount) || 0).toFixed(2)}</span>
+                </div>
+              </div>
+            `).join('') : '<div class="text-gray-400 p-2">No balance payments</div>';
+          } else if (type === 'food') {
+            const orders = this.cachedOrders.records;
+            body.innerHTML = orders.length ? orders.map(r => {
+              const guest = this.cachedGuests.records.find(g => g.id === r.fields.Guest?.[0]);
+              return `
+                <div class="p-2 border-b border-gray-600 cursor-pointer hover:bg-blue-500/10" data-guest-id="${guest?.id}" onclick="app.showFoodOrdersModal('${guest?.id}')">
+                  <div class="flex justify-between">
+                    <span>${guest?.fields.name || 'Unknown Guest'} (#${r.fields.OrderID || r.id})</span>
+                    <span class="text-gray-400">₹${(r.fields.TotalAmount || 0).toFixed(2)} (${utils.formatDate(r.fields.OrderDate)})</span>
+                  </div>
+                </div>
+              `;
+            }).join('') : '<div class="text-gray-400 p-2">No food orders</div>';
+          }
+          modal.show();
         } catch (error) {
-          utils.showToast('Error reassigning room', 'error');
+          body.innerHTML = '<div class="text-red-400 p-2">Failed to load data</div>';
+          utils.showToast('Error loading breakdown: ' + error.message, 'danger');
         }
-      };
+      },
 
-      const handleRegister = async data => {
+      async checkRoomAvailability() {
+        const [checkin, checkout] = document.getElementById('dateRange').value.split(' to ');
+        const roomSelect = document.getElementById('room');
+        const statusDiv = document.getElementById('availabilityStatus');
+        statusDiv.innerHTML = '<span class="text-gray-400">Checking availability...</span>';
+
         try {
-          const guestID = utils.generateGuestId();
-          const homeLink = `${config.urls.guestPortal}?guestID=${guestID}&room=${encodeURIComponent(data.room)}`;
-          await utils.fetchAirtable(config.airtable.tables.guests, {
-            method: 'POST',
-            data: { fields: { ...data, guestID, status: 'Active', homeLink } }
+          const data = await utils.fetchAirtable(`${config.airtable.tables.guests}`);
+          const bookedRooms = new Set(data.records.filter(r => utils.datesOverlap(r.fields.checkin, r.fields.checkout, checkin, checkout)).map(r => r.fields.room));
+          roomSelect.innerHTML = '<option value="">Select Room</option>';
+          let availableCount = 0;
+          config.rooms.forEach(room => {
+            if (!bookedRooms.has(room)) {
+              roomSelect.innerHTML += `<option value="${room}">${room}</option>`;
+              availableCount++;
+            }
           });
-          setModal(null);
-          utils.showToast('Guest registered successfully', 'success');
-          setNotifications([...notifications, { id: Date.now(), message: `New guest ${data.name} registered` }]);
-          loadGuests();
-          loadAvailableRooms();
+          statusDiv.innerHTML = availableCount ? `<span class="text-green-500">${availableCount} room(s) available</span>` : '<span class="text-red-500">No rooms available</span>';
+          roomSelect.disabled = !availableCount;
         } catch (error) {
-          utils.showToast('Error registering guest', 'error');
+          statusDiv.innerHTML = '<span class="text-red-500">Error checking availability</span>';
         }
-      };
+      },
 
-      const generateBill = async (guestId, isPast = false) => {
+      async loadGuests(type) {
+        const listId = type === 'current' ? 'guestList' : 'pastGuestList';
+        const infoId = type === 'current' ? 'selectedGuestInfo' : 'selectedPastGuestInfo';
+        const contentId = type === 'current' ? 'guestDetailsContent' : 'pastGuestDetailsContent';
+        const list = document.getElementById(listId);
+        list.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-blue-500" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+
         try {
-          const guest = (isPast ? pastGuests : guests).find(g => g.id === guestId);
-          if (!guest) return utils.showToast('Guest not found', 'error');
-          const orders = await utils.fetchAirtable(`${config.airtable.tables.orders}?filterByFormula=AND({Guest} = '${guest.fields.guestID}', {Status} != 'Cancelled')`);
-          if (!orders.records.length) return utils.showToast('No food orders found', 'error');
+          // First load all guests if not already cached
+          if (!this.cachedGuests) {
+            this.cachedGuests = await utils.fetchAirtable(`${config.airtable.tables.guests}?sort[0][field]=checkin`);
+          }
 
-          const bills = await utils.fetchAirtable(`${config.airtable.tables.bills}?filterByFormula={guestID} = '${guestId}'`);
-          if (bills.records.length) {
-            setModal({ type: 'bill', data: { guest: guest.fields, bill: bills.records[0].fields } });
-          } else if (!isPast) {
-            let totalAmount = 0;
-            const itemMap = new Map();
-            orders.records.forEach(order => {
-              const items = JSON.parse(order.fields.Items || '[]');
-              const orderTotal = order.fields.TotalAmount || items.reduce((sum, item) => sum + (item.price || 0) * (item.quantity || 1), 0);
-              totalAmount += orderTotal;
-              items.forEach(item => {
-                const key = `${item.name}-${item.price}`;
-                const existing = itemMap.get(key);
-                if (existing) {
-                  existing.quantity += item.quantity || 1;
-                  existing.amount = existing.price * existing.quantity;
-                } else {
-                  itemMap.set(key, { item: item.name, quantity: item.quantity || 1, price: item.price || 0, amount: (item.price || 0) * (item.quantity || 1) });
-                }
-              });
-            });
-            const billData = {
-              billID: `BIL-${Date.now().toString().slice(-6)}`,
-              guestID: [guestId],
-              totalAmount,
-              status: 'Pending',
-              orderDetails: JSON.stringify(Array.from(itemMap.values()))
-            };
-            const bill = await utils.fetchAirtable(config.airtable.tables.bills, { method: 'POST', data: billData });
-            setModal({ type: 'bill', data: { guest: guest.fields, bill: bill.fields } });
+          const guests = type === 'current' 
+            ? this.cachedGuests.records.filter(r => r.fields.Status === 'Active')
+            : this.cachedGuests.records.filter(r => r.fields.Status !== 'Active');
+          
+          if (!guests.length) {
+            list.innerHTML = `<div class="text-center py-3 text-gray-400">No ${type} guests</div>`;
+            document.getElementById(infoId).classList.add('hidden');
+            return;
+          }
+
+          list.innerHTML = guests.map(r => `
+            <div class="guest-list-item" data-guest-id="${r.id}" data-guest='${JSON.stringify(r.fields)}'>
+              <span>${r.fields.name || 'Unnamed Guest'} (${r.fields.guestID}) <span class="copy-icon" onclick="navigator.clipboard.writeText('${r.fields.guestID}');utils.showToast('Guest ID copied!', 'success');event.stopPropagation();"><i class="fas fa-copy"></i></span></span>
+              <span class="text-gray-400">${r.fields.room} (${utils.formatDate(type === 'current' ? r.fields.checkin : r.fields.checkout)})</span>
+            </div>
+          `).join('');
+
+          const selectedId = type === 'current' ? window.selectedGuestId : window.selectedPastGuestId;
+          if (selectedId) {
+            const selectedItem = list.querySelector(`[data-guest-id="${selectedId}"]`);
+            if (selectedItem) {
+              selectedItem.classList.add('active');
+              document.getElementById(infoId).classList.remove('hidden');
+              type === 'current' 
+                ? this.loadGuestDetailsForDisplay(selectedId, JSON.parse(selectedItem.dataset.guest)) 
+                : this.loadPastGuestDetails(selectedId);
+            }
           }
         } catch (error) {
-          utils.showToast('Error generating bill', 'error');
+          list.innerHTML = `<div class="text-center py-3 text-red-500">Failed to load ${type} guests</div>`;
+          utils.showToast(`Error loading ${type} guests: ${error.message}`, 'danger');
         }
-      };
+      },
 
-      const handleCheckout = async (guestId, paymentData) => {
+      async loadGuestDetails(guestId) {
+        const response = await utils.fetchAirtable(`${config.airtable.tables.guests}/${guestId}`);
+        return response.fields;
+      },
+
+      async loadGuestDetailsForDisplay(guestId, guestData) {
+        const guest = guestData || await this.loadGuestDetails(guestId);
+        const foodTotal = await this.calculateFoodTotal(guest.guestID);
+        const nights = utils.calculateNights(guest.checkin, guest.checkout);
+        const totalDue = (parseFloat(guest.balanceAmount) || 0) + foodTotal;
+
+        utils.updateElement('guestDetailsContent', `
+          <div class="mb-3">
+            <div class="flex justify-between items-center">
+              <h6 class="text-base font-semibold mb-2">Guest Information</h6>
+              <button class="btn btn-sm btn-primary" onclick="app.showEditGuestModal('${guestId}')">
+                <i class="fas fa-edit"></i> Edit
+              </button>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div><span class="text-gray-400">Name</span><br>${guest.name || 'Unnamed Guest'}</div>
+              <div><span class="text-gray-400">Mobile</span><br>${guest.mobile || 'Not provided'} <span class="copy-icon" onclick="navigator.clipboard.writeText('${guest.mobile}');utils.showToast('Mobile copied!', 'success');"><i class="fas fa-copy"></i></span></div>
+              <div><span class="text-gray-400">Room</span><br>${guest.room}</div>
+              <div><span class="text-gray-400">Nights</span><br>${nights}</div>
+              <div><span class="text-gray-400">Check-in</span><br>${utils.formatDate(guest.checkin)}</div>
+              <div><span class="text-gray-400">Check-out</span><br>${utils.formatDate(guest.checkout)}</div>
+            </div>
+            ${guest.Comments ? `<div class="mt-3"><span class="text-gray-400">Notes</span><br><div class="p-2 bg-gray-600 rounded">${guest.Comments}</div></div>` : ''}
+            <div class="mt-3 p-2 bg-gray-600 rounded cursor-pointer" id="viewFoodOrders"><h6 class="text-sm font-semibold"><span>Food & Amenities</span><span class="ml-2 bg-blue-600 text-white px-2 py-1 rounded">₹${foodTotal.toFixed(2)}</span></h6></div>
+          </div>
+          <div>
+            <h6 class="text-base font-semibold mb-2">Payment Summary</h6>
+            <div class="p-2 bg-gray-600 rounded">
+              <div class="flex justify-between mb-2"><span>Advance Paid</span><span>₹${guest.advanceAmount || 0}${guest.advanceMode ? ` (${guest.advanceMode})` : ''}</span></div>
+              <div class="flex justify-between mb-2"><span>Food Orders</span><span>₹${foodTotal.toFixed(2)}</span></div>
+              <div class="flex justify-between mb-2"><span>Balance Due</span><span>₹${guest.balanceAmount || 0}</span></div>
+              <div class="flex justify-between font-semibold"><span>Total Due</span><span>₹${totalDue.toFixed(2)}</span></div>
+            </div>
+          </div>
+        `);
+
+        const homeLink = guest.homeLink;
+        document.getElementById('copyGuestLink').onclick = () => { navigator.clipboard.writeText(homeLink); utils.showToast('Link copied!', 'success'); };
+        document.getElementById('sendEmailToGuest').onclick = () => window.open(`mailto:?subject=OCB Stays Information&body=${encodeURIComponent(this.generateEmailBody(guest, homeLink))}`);
+        document.getElementById('sendWhatsappToGuest').onclick = () => window.open(`https://wa.me/${guest.mobile}?text=${encodeURIComponent(this.generateWhatsappMessage(guest, homeLink))}`);
+        document.getElementById('callGuest').href = `tel:${guest.mobile}`;
+        document.getElementById('viewFoodOrders').onclick = () => this.showFoodOrdersModal(guestId);
+        document.getElementById('editGuestBtn').onclick = () => this.showEditGuestModal(guestId);
+        document.getElementById('checkoutGuest').onclick = () => this.showCheckoutModal(guestId);
+        document.getElementById('placeOrder').onclick = () => window.open(`${config.urls.guestMenu}?guestID=${guest.guestID}&room=${encodeURIComponent(guest.room)}`);
+      },
+
+      async loadPastGuestDetails(guestId) {
+        const guest = await this.loadGuestDetails(guestId);
+        const foodTotal = await this.calculateFoodTotal(guest.guestID);
+        const nights = utils.calculateNights(guest.checkin, guest.checkout);
+
+        utils.updateElement('pastGuestDetailsContent', `
+          <div class="mb-3">
+            <h6 class="text-base font-semibold mb-2">Guest Information</h6>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div><span class="text-gray-400">Name</span><br>${guest.name || 'Unnamed Guest'}</div>
+              <div><span class="text-gray-400">Mobile</span><br>${guest.mobile || 'Not provided'} <span class="copy-icon" onclick="navigator.clipboard.writeText('${guest.mobile}');utils.showToast('Mobile copied!', 'success');"><i class="fas fa-copy"></i></span></div>
+              <div><span class="text-gray-400">Room</span><br>${guest.room}</div>
+              <div><span class="text-gray-400">Nights</span><br>${nights}</div>
+              <div><span class="text-gray-400">Check-in</span><br>${utils.formatDate(guest.checkin)}</div>
+              <div><span class="text-gray-400">Check-out</span><br>${utils.formatDate(guest.checkout)}</div>
+            </div>
+            ${guest.Comments ? `<div class="mt-3"><span class="text-gray-400">Notes</span><br><div class="p-2 bg-gray-600 rounded">${guest.Comments}</div></div>` : ''}
+            <div class="mt-3 p-2 bg-gray-600 rounded cursor-pointer" id="viewPastFoodOrders"><h6 class="text-sm font-semibold"><span>Food & Amenities</span><span class="ml-2 bg-blue-600 text-white px-2 py-1 rounded">₹${foodTotal.toFixed(2)}</span></h6></div>
+          </div>
+          <div>
+            <h6 class="text-base font-semibold mb-2">Payment Summary</h6>
+            <div class="p-2 bg-gray-600 rounded">
+              <div class="flex justify-between mb-2"><span>Advance Paid</span><span>₹${guest.advanceAmount || 0}${guest.advanceMode ? ` (${guest.advanceMode})` : ''}</span></div>
+              <div class="flex justify-between mb-2"><span>Food Orders</span><span>₹${foodTotal.toFixed(2)}</span></div>
+              <div class="flex justify-between mb-2"><span>Balance Paid</span><span>₹${guest.balanceAmount || 0}${guest.PaymentType ? ` (${guest.PaymentType})` : ''}</span></div>
+              <div class="flex justify-between font-semibold"><span>Total Paid</span><span>₹${((parseFloat(guest.advanceAmount) || 0) + (parseFloat(guest.balanceAmount) || 0) + foodTotal).toFixed(2)}</span></div>
+            </div>
+          </div>
+        `);
+        document.getElementById('viewPastFoodOrders').onclick = () => this.showFoodOrdersModal(guestId);
+      },
+
+      async calculateFoodTotal(guestID) {
+        const orders = await this.getGuestOrders(guestID);
+        return orders.reduce((total, order) => total + (order.fields.TotalAmount || 0), 0);
+      },
+
+      async getGuestOrders(guestID) {
         try {
+          return (await utils.fetchAirtable(`${config.airtable.tables.orders}?filterByFormula=SEARCH('${guestID}', {Guest})`)).records;
+        } catch (error) {
+          utils.showToast('Error fetching orders: ' + error.message, 'danger');
+          return [];
+        }
+      },
+
+      async showFoodOrdersModal(guestId) {
+        const modal = new bootstrap.Modal(document.getElementById('foodOrdersModal'));
+        const modalBody = document.getElementById('foodOrdersModalBody');
+        modalBody.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-blue-500" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+        modal.show();
+
+        try {
+          const guest = await this.loadGuestDetails(guestId);
+          const orders = await this.getGuestOrders(guest.guestID);
+          modalBody.innerHTML = orders.length ? orders.map(order => {
+            const orderDate = utils.formatDateTime(order.fields.OrderDate || new Date());
+            const items = JSON.parse(order.fields.Items || '[]');
+            const totalAmount = order.fields.TotalAmount || items.reduce((sum, item) => sum + (item.price || 0) * (item.quantity || 1), 0);
+            
+            return `
+              <div class="mb-3 p-3 bg-gray-600 rounded-lg">
+                <div class="flex justify-between mb-2">
+                  <div>Order #${order.fields.OrderID || order.id}</div>
+                  <div>${orderDate}</div>
+                </div>
+                <div class="flex justify-between mb-2">
+                  <div>Status: <span class="bg-${order.fields.Status === 'Delivered' ? 'green' : order.fields.Status === 'Cancelled' ? 'red' : 'yellow'}-500 text-white px-2 py-1 rounded">${order.fields.Status}</span></div>
+                  <div>Total: ₹${totalAmount.toFixed(2)}</div>
+                </div>
+                <div class="mt-2">
+                  <h6 class="text-sm font-semibold">Items</h6>
+                  ${items.map(item => `
+                    <div class="flex justify-between py-1">
+                      <div>${item.quantity} × ${item.name}${item.specialInstructions ? `<div class="text-gray-400 text-sm">${item.specialInstructions}</div>` : ''}</div>
+                      <div>₹${(item.price * item.quantity).toFixed(2)}</div>
+                    </div>
+                  `).join('')}
+                </div>
+                ${order.fields.SpecialInstructions ? `<div class="mt-2"><strong>Special Instructions:</strong> ${order.fields.SpecialInstructions}</div>` : ''}
+                ${order.fields.Status !== 'Cancelled' && order.fields.Status !== 'Delivered' ? `
+                  <div class="mt-2 flex justify-end gap-2">
+                    <button class="btn btn-sm btn-danger" onclick="app.updateOrderStatus('${order.id}', 'Cancelled')">
+                      Cancel Order
+                    </button>
+                  </div>
+                ` : ''}
+              </div>
+            `;
+          }).join('') : '<div class="p-3 bg-blue-500/10 text-blue-400 rounded-lg">No food orders found</div>';
+        } catch (error) {
+          modalBody.innerHTML = '<div class="p-3 bg-red-500/10 text-red-400 rounded-lg">Failed to load food orders</div>';
+          utils.showToast('Error loading orders: ' + error.message, 'danger');
+        }
+      },
+
+      async updateOrderStatus(orderId, status) {
+        try {
+          await utils.fetchAirtable(`${config.airtable.tables.orders}/${orderId}`, {
+            method: 'PATCH',
+            body: JSON.stringify({
+              fields: { Status: status }
+            })
+          });
+          utils.showToast(`Order ${status.toLowerCase()} successfully`, 'success');
+          // Refresh the orders view
+          if (window.selectedGuestId) {
+            this.showFoodOrdersModal(window.selectedGuestId);
+          }
+        } catch (error) {
+          utils.showToast(`Error updating order: ${error.message}`, 'danger');
+        }
+      },
+
+      async createFoodBill(guestId, guestDetails, orders) {
+        let totalAmount = 0;
+        const itemMap = new Map();
+        orders.forEach(order => {
+          const items = JSON.parse(order.fields.Items || '[]');
+          const orderTotal = order.fields.TotalAmount || items.reduce((sum, item) => sum + (item.price || 0) * (item.quantity || 1), 0);
+          totalAmount += orderTotal;
+          items.forEach(item => {
+            const itemKey = `${item.name || 'Unspecified item'}-${item.price || 0}`;
+            const existingItem = itemMap.get(itemKey);
+            if (existingItem) {
+              existingItem.quantity += item.quantity || 1;
+              existingItem.amount = existingItem.price * existingItem.quantity;
+            } else {
+              itemMap.set(itemKey, {
+                item: item.name || 'Unspecified item',
+                quantity: item.quantity || 1,
+                price: item.price || 0,
+                amount: (item.price || 0) * (item.quantity || 1),
+                date: order.fields.OrderDate
+              });
+            }
+          });
+        });
+
+        const allOrderItems = Array.from(itemMap.values());
+        const existingBills = await utils.fetchAirtable(`${config.airtable.tables.bills}?filterByFormula={guestID} = '${guestId}'`);
+        let billId;
+        if (existingBills.records.length) {
+          billId = existingBills.records[0].id;
+          await utils.fetchAirtable(`${config.airtable.tables.bills}/${billId}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ fields: { totalAmount, orderDetails: JSON.stringify(allOrderItems), updatedAt: new Date().toISOString() } })
+          });
+        } else {
+          billId = (await utils.fetchAirtable(config.airtable.tables.bills, {
+            method: 'POST',
+            body: JSON.stringify({ fields: { billID: `BIL-${Date.now().toString().slice(-6)}`, guestID: [guestId], totalAmount, status: "Pending", orderDetails: JSON.stringify(allOrderItems) } })
+          }).id;
+        }
+        return { guest: guestDetails, orders: allOrderItems, totalAmount, billId };
+      },
+
+      generateEmailBody(guest, link) {
+        return `Hi ${guest.name},\nThank you for choosing OCB Stays.\n\nYour booking for ${guest.room} from ${utils.formatDate(guest.checkin)} is confirmed with advance payment of ₹${guest.advanceAmount || 0} (non-refundable), balance ₹${guest.balanceAmount || 0} due on arrival.\n\nCheck-in: ${utils.formatDate(guest.checkin)} 1pm\nCheck Out: ${utils.formatDate(guest.checkout)} 11am\n\nLink: ${link}\n\nThanks,\nPrateek & Ishika\nOCB Stays`;
+      },
+
+      generateWhatsappMessage(guest, link) {
+        return `Hi ${guest.name},\nThank you for choosing OCB Stays.\nLink: ${link}\n\nCheers,\nTeam OCB Stays`;
+      },
+
+      initCalendar() {
+        flatpickr("#dateRange", { mode: "range", minDate: "today", dateFormat: "Y-m-d", onChange: selectedDates => { if (selectedDates.length === 2) this.checkRoomAvailability(); } });
+        flatpickr("#editCheckin", { minDate: "today", dateFormat: "Y-m-d" });
+        flatpickr("#editCheckout", { minDate: "today", dateFormat: "Y-m-d" });
+      },
+
+      async showCheckoutModal(guestId) {
+        const guest = await this.loadGuestDetails(guestId);
+        const foodTotal = await this.calculateFoodTotal(guest.guestID);
+        document.getElementById('checkoutBalance').value = ((parseFloat(guest.balanceAmount) || 0) + foodTotal).toFixed(2);
+        document.getElementById('checkoutPaymentType').value = '';
+        document.getElementById('checkoutComments').value = '';
+        new bootstrap.Modal(document.getElementById('checkoutModal')).show();
+      },
+
+      async showEditGuestModal(guestId) {
+        const guest = await this.loadGuestDetails(guestId);
+        document.getElementById('editName').value = guest.name || '';
+        document.getElementById('editMobile').value = guest.mobile || '';
+        document.getElementById('editRoom').value = guest.room || '';
+        document.getElementById('editCheckin').value = guest.checkin || '';
+        document.getElementById('editCheckout').value = guest.checkout || '';
+        document.getElementById('editAdvance').value = guest.advanceAmount || '';
+        document.getElementById('editAdvanceMode').value = guest.advanceMode || '';
+        document.getElementById('editBalance').value = guest.balanceAmount || '';
+        document.getElementById('editComments').value = guest.Comments || '';
+        document.getElementById('editGuestId').value = guestId;
+        document.getElementById('editCallMobile').href = `tel:${guest.mobile}`;
+        document.getElementById('editWhatsappMobile').onclick = () => window.open(`https://wa.me/${guest.mobile}`);
+        document.getElementById('editCopyMobile').onclick = () => { navigator.clipboard.writeText(guest.mobile); utils.showToast('Mobile copied!', 'success'); };
+        new bootstrap.Modal(document.getElementById('editGuestModal')).show();
+      },
+
+      async saveGuestChanges() {
+        const guestId = document.getElementById('editGuestId').value;
+        const btn = document.getElementById('saveGuestChanges');
+        btn.disabled = true;
+
+        try {
+          const formData = {
+            name: document.getElementById('editName').value,
+            mobile: document.getElementById('editMobile').value,
+            room: document.getElementById('editRoom').value,
+            checkin: document.getElementById('editCheckin').value,
+            checkout: document.getElementById('editCheckout').value,
+            advanceAmount: parseFloat(document.getElementById('editAdvance').value) || 0,
+            advanceMode: document.getElementById('editAdvanceMode').value || '',
+            balanceAmount: parseFloat(document.getElementById('editBalance').value) || 0,
+            Comments: document.getElementById('editComments').value || ''
+          };
+          if (!formData.name || !formData.mobile || !formData.room || !formData.checkin || !formData.checkout) {
+            throw new Error('Please fill all required fields');
+          }
           await utils.fetchAirtable(`${config.airtable.tables.guests}/${guestId}`, {
             method: 'PATCH',
-            data: { fields: { status: 'Checked Out', ...paymentData } }
+            body: JSON.stringify({ fields: formData })
           });
-          setModal(null);
-          utils.showToast('Guest checked out successfully', 'success');
-          loadGuests();
-          loadPastGuests();
+          utils.showToast('Guest details updated successfully', 'success');
+          bootstrap.Modal.getInstance(document.getElementById('editGuestModal')).hide();
+          await this.loadGuests('current');
+          const guestItem = document.querySelector(`#guestList [data-guest-id="${guestId}"]`);
+          if (guestItem) {
+            guestItem.click();
+          }
         } catch (error) {
-          utils.showToast('Error checking out guest', 'error');
+          utils.showToast('Error updating guest: ' + error.message, 'danger');
+        } finally {
+          btn.disabled = false;
         }
-      };
+      },
 
-      return (
-        <div className={`flex h-screen ${darkMode ? 'dark' : ''}`}>
-          {/* Sidebar */}
-          <div className="w-64 bg-white dark:bg-gray-800 shadow-lg">
-            <div className="p-4">
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">OCB Stays</h1>
-            </div>
-            <nav className="mt-4">
-              <button onClick={() => setActiveTab('active')} className={`w-full text-left p-4 ${activeTab === 'active' ? 'bg-blue-100 dark:bg-blue-900' : ''}`}>
-                <i className="fas fa-users mr-2"></i> Active Guests
-              </button>
-              <button onClick={() => setActiveTab('past')} className={`w-full text-left p-4 ${activeTab === 'past' ? 'bg-blue-100 dark:bg-blue-900' : ''}`}>
-                <i className="fas fa-history mr-2"></i> Past Guests
-              </button>
-            </nav>
-            <div className="absolute bottom-4 p-4">
-              <button onClick={() => setDarkMode(!darkMode)} className="text-gray-600 dark:text-gray-300">
-                <i className={`fas fa-${darkMode ? 'sun' : 'moon'} mr-2`}></i> {darkMode ? 'Light Mode' : 'Dark Mode'}
-              </button>
-            </div>
-          </div>
+      async registerGuest(event) {
+        event.preventDefault();
+        const btn = document.getElementById('registerBtn');
+        utils.toggleSpinner('registerSpinner', true);
+        btn.disabled = true;
 
-          {/* Main Content */}
-          <div className="flex-1 p-6 overflow-auto">
-            {/* Quick Action Toolbar */}
-            <div className="sticky top-0 bg-white dark:bg-gray-800 p-4 shadow mb-4 rounded-lg flex justify-between items-center z-10">
-              <div className="flex gap-2">
-                <button onClick={() => setModal({ type: 'register' })} className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-                  <i className="fas fa-user-plus mr-2"></i> Register Guest
-                </button>
-                {selectedGuests.length > 0 && (
-                  <select onChange={e => handleBulkAction(e.target.value)} className="border rounded px-2 py-1">
-                    <option value="">Bulk Actions</option>
-                    <option value="whatsapp">Send WhatsApp</option>
-                  </select>
-                )}
+        try {
+          const [checkin, checkout] = document.getElementById('dateRange').value.split(' to ');
+          const guestData = {
+            guestID: utils.generateGuestId(),
+            name: document.getElementById('name').value,
+            mobile: document.getElementById('mobile').value,
+            room: document.getElementById('room').value,
+            checkin,
+            checkout,
+            advanceAmount: parseFloat(document.getElementById('advanceAmount').value) || 0,
+            advanceMode: document.getElementById('advanceMode').value || '',
+            balanceAmount: parseFloat(document.getElementById('balanceAmount').value) || 0,
+            Comments: document.getElementById('comments').value || '',
+            homeLink: `${config.urls.guestPortal}?guestID=${utils.generateGuestId()}`,
+            Status: 'Active'
+          };
+
+          if (!guestData.name || !guestData.mobile || !guestData.room || !guestData.checkin || !guestData.checkout) {
+            throw new Error('Please fill all required fields');
+          }
+
+          const data = await utils.fetchAirtable(config.airtable.tables.guests, {
+            method: 'POST',
+            body: JSON.stringify({ fields: guestData })
+          });
+
+          // Clear form
+          document.getElementById('guestForm').reset();
+          document.getElementById('room').innerHTML = '<option value="">Select dates first</option>';
+          document.getElementById('room').disabled = true;
+          document.getElementById('availabilityStatus').innerHTML = '';
+
+          // Show success modal
+          const modal = new bootstrap.Modal(document.getElementById('registrationSuccessModal'));
+          const nights = utils.calculateNights(guestData.checkin, guestData.checkout);
+          utils.updateElement('registrationSuccessDetails', `
+            <div class="mb-3">
+              <p><strong>Name:</strong> ${guestData.name}</p>
+              <p><strong>Room:</strong> ${guestData.room}</p>
+              <p><strong>Check-in:</strong> ${utils.formatDate(guestData.checkin)}</p>
+              <p><strong>Check-out:</strong> ${utils.formatDate(guestData.checkout)}</p>
+              <p><strong>Nights:</strong> ${nights}</p>
+              <p><strong>Advance Paid:</strong> ₹${guestData.advanceAmount.toFixed(2)} ${guestData.advanceMode ? `(${guestData.advanceMode})` : ''}</p>
+              <p><strong>Balance Due:</strong> ₹${guestData.balanceAmount.toFixed(2)}</p>
+            </div>
+          `);
+          document.getElementById('guestLinkInput').value = guestData.homeLink;
+          document.getElementById('copyGuestLinkModal').onclick = () => {
+            navigator.clipboard.writeText(guestData.homeLink);
+            utils.showToast('Link copied!', 'success');
+          };
+          document.getElementById('sendEmailFromModal').onclick = () => window.open(`mailto:?subject=OCB Stays Information&body=${encodeURIComponent(this.generateEmailBody(guestData, guestData.homeLink))}`);
+          document.getElementById('sendWhatsappFromModal').onclick = () => window.open(`https://wa.me/${guestData.mobile}?text=${encodeURIComponent(this.generateWhatsappMessage(guestData, guestData.homeLink))}`);
+          modal.show();
+          utils.showToast('Guest registered successfully', 'success');
+          bootstrap.Modal.getInstance(document.getElementById('registerModal')).hide();
+          await this.loadDashboard();
+          await this.loadGuests('current');
+        } catch (error) {
+          utils.showToast('Error registering guest: ' + error.message, 'danger');
+        } finally {
+          utils.toggleSpinner('registerSpinner', false);
+          btn.disabled = false;
+        }
+      },
+
+      async checkoutGuest() {
+        const guestId = document.getElementById('editGuestId').value || window.selectedGuestId;
+        const btn = document.getElementById('confirmCheckout');
+        utils.toggleSpinner('checkoutSpinner', true);
+        btn.disabled = true;
+
+        try {
+          const balance = parseFloat(document.getElementById('checkoutBalance').value) || 0;
+          const paymentType = document.getElementById('checkoutPaymentType').value;
+          const comments = document.getElementById('checkoutComments').value;
+
+          if (!paymentType && balance > 0) {
+            throw new Error('Please select a payment mode for the balance');
+          }
+
+          await utils.fetchAirtable(`${config.airtable.tables.guests}/${guestId}`, {
+            method: 'PATCH',
+            body: JSON.stringify({
+              fields: {
+                Status: 'Checked Out',
+                PaymentType: paymentType,
+                balanceAmount: 0,
+                Comments: comments ? `${comments}\n${(await this.loadGuestDetails(guestId)).Comments || ''}` : undefined
+              }
+            })
+          });
+
+          utils.showToast('Guest checked out successfully', 'success');
+          bootstrap.Modal.getInstance(document.getElementById('checkoutModal')).hide();
+          document.getElementById('selectedGuestInfo').classList.add('hidden');
+          await this.loadDashboard();
+          await this.loadGuests('current');
+        } catch (error) {
+          utils.showToast('Error checking out guest: ' + error.message, 'danger');
+        } finally {
+          utils.toggleSpinner('checkoutSpinner', false);
+          btn.disabled = false;
+        }
+      },
+
+      async generateBill(guestId, isPast = false) {
+        const billBtn = document.getElementById(isPast ? 'generatePastBill' : 'generateBill');
+        const spinner = document.getElementById(isPast ? 'pastBillSpinner' : 'billSpinner');
+        const output = document.getElementById(isPast ? 'pastBillOutput' : 'billOutput');
+        utils.toggleSpinner(spinner.id, true);
+        billBtn.disabled = true;
+
+        try {
+          const guest = await this.loadGuestDetails(guestId);
+          const orders = await this.getGuestOrders(guest.guestID);
+          const billData = await this.createFoodBill(guest.guestID, guest, orders);
+
+          const billContent = `
+            <div class="p-3 bg-gray-600 rounded-lg mt-3">
+              <h6 class="text-base font-semibold mb-2">Bill for ${guest.name || 'Unnamed Guest'}</h6>
+              <div class="mb-2">
+                <div class="flex justify-between"><span>Room</span><span>${guest.room}</span></div>
+                <div class="flex justify-between"><span>Check-in</span><span>${utils.formatDate(guest.checkin)}</span></div>
+                <div class="flex justify-between"><span>Check-out</span><span>${utils.formatDate(guest.checkout)}</span></div>
+                <div class="flex justify-between"><span>Nights</span><span>${utils.calculateNights(guest.checkin, guest.checkout)}</span></div>
               </div>
-              <div className="relative">
-                <button className="text-gray-600 dark:text-gray-300">
-                  <i className="fas fa-bell"></i>
-                  {notifications.length > 0 && <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full px-1">{notifications.length}</span>}
-                </button>
-                {notifications.length > 0 && (
-                  <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-700 shadow-lg rounded p-2">
-                    {notifications.map(n => (
-                      <div key={n.id} className="p-2 border-b">{n.message}</div>
-                    ))}
-                    <button onClick={() => setNotifications([])} className="text-blue-600 w-full text-left p-2">Clear All</button>
+              <div class="mb-2">
+                <h6 class="text-sm font-semibold">Food & Amenities</h6>
+                ${billData.orders.length ? billData.orders.map(item => `
+                  <div class="flex justify-between py-1">
+                    <span>${item.quantity} × ${item.item}</span>
+                    <span>₹${item.amount.toFixed(2)}</span>
                   </div>
-                )}
+                `).join('') : '<div class="text-gray-400">No orders</div>'}
+              </div>
+              <div class="flex justify-between font-semibold">
+                <span>Total</span>
+                <span>₹${billData.totalAmount.toFixed(2)}</span>
+              </div>
+              <div class="mt-2 flex justify-between gap-2">
+                <button class="btn btn-primary" onclick="app.downloadBill('${billData.billId}')"><i class="fas fa-download"></i> Download</button>
+                <button class="btn btn-success" onclick="app.shareBill('${billData.billId}', '${guest.mobile}')"><i class="fab fa-whatsapp"></i> Share</button>
               </div>
             </div>
+          `;
+          output.innerHTML = billContent;
+          utils.showToast('Bill generated successfully', 'success');
+        } catch (error) {
+          output.innerHTML = '<div class="p-3 bg-red-500/10 text-red-400 rounded-lg">Failed to generate bill</div>';
+          utils.showToast('Error generating bill: ' + error.message, 'danger');
+        } finally {
+          utils.toggleSpinner(spinner.id, false);
+          billBtn.disabled = false;
+        }
+      },
 
-            {/* Guest List */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-              <div className="flex justify-between mb-4">
-                <h2 className="text-xl font-semibold">{activeTab === 'active' ? 'Active Guests' : 'Past Guests'}</h2>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    placeholder="Search by name or ID"
-                    value={searchQuery}
-                    onChange={e => setSearchQuery(e.target.value)}
-                    className="border rounded px-2 py-1"
-                  />
-                  <select value={filterRoom} onChange={e => setFilterRoom(e.target.value)} className="border rounded px-2 py-1">
-                    <option value="">All Rooms</option>
-                    {config.rooms.map(room => <option key={room} value={room}>{room}</option>)}
-                  </select>
-                </div>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="text-left text-gray-600 dark:text-gray-300">
-                      <th className="p-2"><input type="checkbox" onChange={e => setSelectedGuests(e.target.checked ? (activeTab === 'active' ? guests : pastGuests).map(g => g.id) : [])} /></th>
-                      <th className="p-2 cursor-pointer" onClick={() => handleSort('name')}>
-                        Name {sortField === 'name' && (sortOrder === 'asc' ? '↑' : '↓')}
-                      </th>
-                      <th className="p-2 cursor-pointer" onClick={() => handleSort('room')}>
-                        Room {sortField === 'room' && (sortOrder === 'asc' ? '↑' : '↓')}
-                      </th>
-                      <th className="p-2 cursor-pointer" onClick={() => handleSort('checkin')}>
-                        Dates {sortField === 'checkin' && (sortOrder === 'asc' ? '↑' : '↓')}
-                      </th>
-                      <th className="p-2">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filterGuests(activeTab === 'active' ? guests : pastGuests).map(guest => (
-                      <tr
-                        key={guest.id}
-                        className="border-t relative hover:bg-gray-50 dark:hover:bg-gray-700"
-                        onMouseEnter={e => {
-                          const tooltip = document.createElement('div');
-                          tooltip.className = 'tooltip';
-                          tooltip.innerHTML = `Room: ${guest.fields.room}<br>Dates: ${utils.formatDate(guest.fields.checkin)} - ${utils.formatDate(guest.fields.checkout)}`;
-                          tooltip.style.top = `${e.clientY}px`;
-                          tooltip.style.left = `${e.clientX + 20}px`;
-                          document.body.appendChild(tooltip);
-                        }}
-                        onMouseLeave={() => document.querySelector('.tooltip')?.remove()}
-                      >
-                        <td className="p-2">
-                          <input
-                            type="checkbox"
-                            checked={selectedGuests.includes(guest.id)}
-                            onChange={() => toggleGuestSelection(guest.id)}
-                          />
-                        </td>
-                        <td className="p-2 cursor-pointer" onClick={() => setSelectedGuest(guest)}>
-                          {guest.fields.name} ({guest.fields.guestID})
-                        </td>
-                        <td className="p-2">{guest.fields.room}</td>
-                        <td className="p-2">{utils.formatDate(guest.fields.checkin)} - {utils.formatDate(guest.fields.checkout)}</td>
-                        <td className="p-2 flex gap-2">
-                          <a href={`tel:${guest.fields.mobile}`} title="Call" className="text-blue-600"><i className="fas fa-phone"></i></a>
-                          <button onClick={() => window.open(`https://wa.me/${guest.fields.mobile}?text=Hi ${guest.fields.name}, thanks for staying!`)} title="WhatsApp" className="text-green-600"><i className="fab fa-whatsapp"></i></button>
-                          <button onClick={() => navigator.clipboard.writeText(guest.fields.homeLink).then(() => utils.showToast('Link copied!'))} title="Copy Link" className="text-gray-600"><i className="fas fa-copy"></i></button>
-                          <button onClick={() => generateBill(guest.id, activeTab === 'past')} title="Generate Bill" className="text-purple-600"><i className="fas fa-file-invoice"></i></button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* Selected Guest Details */}
-            {selectedGuest && (
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mt-4">
-                <h2 className="text-xl font-semibold mb-4">Guest Details</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <h3 className="font-semibold">Guest Information</h3>
-                    <p><strong>Name:</strong> {selectedGuest.fields.name}</p>
-                    <p><strong>Mobile:</strong> {selectedGuest.fields.mobile}</p>
-                    <p><strong>Room:</strong> {selectedGuest.fields.room}</p>
-                    <p><strong>Check-in:</strong> {utils.formatDate(selectedGuest.fields.checkin)}</p>
-                    <p><strong>Check-out:</strong> {utils.formatDate(selectedGuest.fields.checkout)}</p>
-                    {selectedGuest.fields.Comments && <p><strong>Notes:</strong> {selectedGuest.fields.Comments}</p>}
-                  </div>
-                  <div>
-                    <h3 className="font-semibold">Payment Summary</h3>
-                    <p><strong>Advance:</strong> ₹{selectedGuest.fields.advanceAmount || 0} ({selectedGuest.fields.advanceMode || 'N/A'})</p>
-                    <p><strong>Balance:</strong> ₹{selectedGuest.fields.balanceAmount || 0}</p>
-                  </div>
-                </div>
-                <div className="flex gap-2 mt-4">
-                  <button onClick={() => setModal({ type: 'edit', data: selectedGuest.fields })} className="bg-yellow-500 text-white px-4 py-2 rounded"><i className="fas fa-edit mr-2"></i> Edit</button>
-                  {activeTab === 'active' && (
-                    <>
-                      <button onClick={() => setModal({ type: 'checkout', data: selectedGuest })} className="bg-red-500 text-white px-4 py-2 rounded"><i className="fas fa-sign-out-alt mr-2"></i> Checkout</button>
-                      <button onClick={() => generateBill(selectedGuest.id)} className="bg-purple-500 text-white px-4 py-2 rounded"><i className="fas fa-file-invoice mr-2"></i> Generate Bill</button>
-                    </>
-                  )}
-                  <button onClick={() => setModal({ type: 'reassign', data: selectedGuest })} className="bg-green-500 text-white px-4 py-2 rounded"><i className="fas fa-exchange-alt mr-2"></i> Reassign Room</button>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Modals */}
-          {modal && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 modal-overlay flex items-center justify-center">
-              <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-lg w-full modal-content">
-                {modal.type === 'register' && (
-                  <RegisterModal onSubmit={handleRegister} onClose={() => setModal(null)} availableRooms={availableRooms} />
-                )}
-                {modal.type === 'edit' && (
-                  <EditModal guest={modal.data} onSubmit={data => { /* Handle edit */ }} onClose={() => setModal(null)} />
-                )}
-                {modal.type === 'checkout' && (
-                  <CheckoutModal guest={modal.data} onSubmit={data => handleCheckout(modal.data.id, data)} onClose={() => setModal(null)} />
-                )}
-                {modal.type === 'bill' && (
-                  <BillModal bill={modal.data} onClose={() => setModal(null)} />
-                )}
-                {modal.type === 'reassign' && (
-                  <ReassignRoomModal guest={modal.data} rooms={availableRooms} onSubmit={newRoom => handleRoomDragDrop(modal.data.id, newRoom)} onClose={() => setModal(null)} />
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-      );
-    };
-
-    // Modal Components
-    const RegisterModal = ({ onSubmit, onClose, availableRooms }) => {
-      const [formData, setFormData] = useState({ name: '', mobile: '', room: '', checkin: '', checkout: '', advanceAmount: '', advanceMode: '', balanceAmount: '', comments: '' });
-      useEffect(() => {
-        flatpickr('#dateRange', { mode: 'range', minDate: 'today', dateFormat: 'Y-m-d', onChange: ([start, end]) => setFormData({ ...formData, checkin: start?.toISOString(), checkout: end?.toISOString() }) });
-      }, []);
-
-      const handleSubmit = e => {
-        e.preventDefault();
-        onSubmit(formData);
-      };
-
-      return (
-        <div>
-          <h2 className="text-xl font-semibold mb-4">Register Guest</h2>
-          <form onSubmit={handleSubmit}>
-            <div className="mb-4">
-              <label className="block text-sm font-medium">Dates</label>
-              <input id="dateRange" className="w-full border rounded px-2 py-1" required />
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium">Room</label>
-              <select value={formData.room} onChange={e => setFormData({ ...formData, room: e.target.value })} className="w-full border rounded px-2 py-1" required>
-                <option value="">Select Room</option>
-                {availableRooms.map(room => <option key={room} value={room}>{room}</option>)}
-              </select>
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium">Name</label>
-              <input value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="w-full border rounded px-2 py-1" required />
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium">Mobile</label>
-              <input value={formData.mobile} onChange={e => setFormData({ ...formData, mobile: e.target.value })} className="w-full border rounded px-2 py-1" required />
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium">Advance Payment</label>
-              <div className="flex gap-2">
-                <input value={formData.advanceAmount} onChange={e => setFormData({ ...formData, advanceAmount: e.target.value })} type="number" placeholder="Amount (₹)" className="w-full border rounded px-2 py-1" />
-                <select value={formData.advanceMode} onChange={e => setFormData({ ...formData, advanceMode: e.target.value })} className="w-full border rounded px-2 py-1">
-                  <option value="">Mode</option>
-                  {config.paymentModes.map(mode => <option key={mode} value={mode}>{mode}</option>)}
-                </select>
-              </div>
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium">Balance (₹)</label>
-              <input value={formData.balanceAmount} onChange={e => setFormData({ ...formData, balanceAmount: e.target.value })} type="number" className="w-full border rounded px-2 py-1" />
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium">Notes</label>
-              <textarea value={formData.comments} onChange={e => setFormData({ ...formData, comments: e.target.value })} className="w-full border rounded px-2 py-1" rows="3"></textarea>
-            </div>
-            <div className="flex justify-end gap-2">
-              <button type="button" onClick={onClose} className="bg-gray-500 text-white px-4 py-2 rounded">Cancel</button>
-              <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">Register</button>
-            </div>
-          </form>
-        </div>
-      );
-    };
-
-    const EditModal = ({ guest, onSubmit, onClose }) => {
-      const [formData, setFormData] = useState(guest);
-      useEffect(() => {
-        flatpickr('#editCheckin', { minDate: 'today', dateFormat: 'Y-m-d', defaultDate: guest.checkin });
-        flatpickr('#editCheckout', { minDate: 'today', dateFormat: 'Y-m-d', defaultDate: guest.checkout });
-      }, []);
-
-      return (
-        <div>
-          <h2 className="text-xl font-semibold mb-4">Edit Guest</h2>
-          <form onSubmit={e => { e.preventDefault(); onSubmit(formData); }}>
-            <div className="mb-4">
-              <label className="block text-sm font-medium">Name</label>
-              <input value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="w-full border rounded px-2 py-1" required />
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium">Mobile</label>
-              <input value={formData.mobile} onChange={e => setFormData({ ...formData, mobile: e.target.value })} className="w-full border rounded px-2 py-1" required />
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium">Room</label>
-              <select value={formData.room} onChange={e => setFormData({ ...formData, room: e.target.value })} className="w-full border rounded px-2 py-1" required>
-                {config.rooms.map(room => <option key={room} value={room}>{room}</option>)}
-              </select>
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium">Check-in</label>
-              <input id="editCheckin" className="w-full border rounded px-2 py-1" required />
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium">Check-out</label>
-              <input id="editCheckout" className="w-full border rounded px-2 py-1" required />
-            </div>
-            <div className="flex justify-end gap-2">
-              <button type="button" onClick={onClose} className="bg-gray-500 text-white px-4 py-2 rounded">Cancel</button>
-              <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">Save</button>
-            </div>
-          </form>
-        </div>
-      );
-    };
-
-    const CheckoutModal = ({ guest, onSubmit, onClose }) => {
-      const [formData, setFormData] = useState({ balance: guest.fields.balanceAmount || 0, paymentType: '', comments: '' });
-
-      return (
-        <div>
-          <h2 className="text-xl font-semibold mb-4">Confirm Checkout</h2>
-          <form onSubmit={e => { e.preventDefault(); onSubmit(formData); }}>
-            <div className="mb-4">
-              <label className="block text-sm font-medium">Balance Due (₹)</label>
-              <input value={formData.balance} readOnly className="w-full border rounded px-2 py-1" />
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium">Payment Mode</label>
-              <select value={formData.paymentType} onChange={e => setFormData({ ...formData, paymentType: e.target.value })} className="w-full border rounded px-2 py-1" required>
-                <option value="">Select Mode</option>
-                {config.paymentModes.map(mode => <option key={mode} value={mode}>{mode}</option>)}
-              </select>
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium">Comments</label>
-              <textarea value={formData.comments} onChange={e => setFormData({ ...formData, comments: e.target.value })} className="w-full border rounded px-2 py-1" rows="3"></textarea>
-            </div>
-            <div className="flex justify-end gap-2">
-              <button type="button" onClick={onClose} className="bg-gray-500 text-white px-4 py-2 rounded">Cancel</button>
-              <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">Checkout</button>
-            </div>
-          </form>
-        </div>
-      );
-    };
-
-    const BillModal = ({ bill, onClose }) => {
-      const { guest, bill: billData } = bill;
-      const items = JSON.parse(billData.orderDetails || '[]');
-
-      const downloadBill = () => {
-        html2canvas(document.querySelector('#billContent')).then(canvas => {
+      async downloadBill(billId) {
+        try {
+          const billElement = document.getElementById('billOutput').firstElementChild || document.getElementById('pastBillOutput').firstElementChild;
+          const canvas = await html2canvas(billElement);
           const link = document.createElement('a');
-          link.download = 'bill.png';
-          link.href = canvas.toDataURL();
+          link.href = canvas.toDataURL('image/png');
+          link.download = `OCB_Bill_${billId}.png`;
           link.click();
+          utils.showToast('Bill downloaded successfully', 'success');
+        } catch (error) {
+          utils.showToast('Error downloading bill: ' + error.message, 'danger');
+        }
+      },
+
+      async shareBill(billId, mobile) {
+        try {
+          const billElement = document.getElementById('billOutput').firstElementChild || document.getElementById('pastBillOutput').firstElementChild;
+          const canvas = await html2canvas(billElement);
+          const blob = await new Promise(resolve => canvas.toBlob(resolve));
+          const file = new File([blob], `OCB_Bill_${billId}.png`, { type: 'image/png' });
+          if (navigator.share) {
+            await navigator.share({
+              files: [file],
+              text: 'Your OCB Stays bill',
+              url: `${config.urls.guestPortal}?billID=${billId}`
+            });
+            utils.showToast('Bill shared successfully', 'success');
+          } else {
+            window.open(`https://wa.me/${mobile}?text=${encodeURIComponent('Your OCB Stays bill: ' + `${config.urls.guestPortal}?billID=${billId}`)}`);
+          }
+        } catch (error) {
+          utils.showToast('Error sharing bill: ' + error.message, 'danger');
+        }
+      },
+
+      updateClock() {
+        const now = new Date();
+        document.getElementById('currentTime').textContent = now.toLocaleString('en-US', {
+          hour: 'numeric',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: true,
+          timeZone: 'Asia/Kolkata'
         });
+      }
+    };
+
+    // Event Listeners
+    document.addEventListener('DOMContentLoaded', async () => {
+      app.initCalendar();
+      app.updateClock();
+      setInterval(app.updateClock, 1000);
+      await app.loadDashboard();
+      await app.loadGuests('current');
+
+      // Theme toggle
+      const themeToggle = document.getElementById('themeToggle');
+      themeToggle.onclick = () => {
+        const isDark = document.documentElement.classList.toggle('dark');
+        themeToggle.classList.toggle('fa-sun', !isDark);
+        themeToggle.classList.toggle('fa-moon', isDark);
       };
 
-      return (
-        <div>
-          <h2 className="text-xl font-semibold mb-4">Food Bill</h2>
-          <div id="billContent" className="bg-white dark:bg-gray-800 p-4 rounded">
-            <h3 className="text-lg font-semibold">OCB Stays</h3>
-            <p>Guest: {guest.name}</p>
-            <p>Room: {guest.room}</p>
-            <p>Bill ID: {billData.billID}</p>
-            <table className="w-full mt-4">
-              <thead><tr><th className="text-left">Item</th><th>Qty</th><th>Price</th><th>Amount</th></tr></thead>
-              <tbody>
-                {items.map((item, i) => (
-                  <tr key={i}><td>{item.item}</td><td>{item.quantity}</td><td>₹{item.price}</td><td>₹{item.amount}</td></tr>
-                ))}
-              </tbody>
-            </table>
-            <p className="text-right font-semibold mt-4">Total: ₹{billData.totalAmount}</p>
-          </div>
-          <div className="flex justify-end gap-2 mt-4">
-            <button onClick={downloadBill} className="bg-blue-600 text-white px-4 py-2 rounded"><i className="fas fa-download mr-2"></i> Download</button>
-            <button onClick={onClose} className="bg-gray-500 text-white px-4 py-2 rounded">Close</button>
-          </div>
-        </div>
-      );
-    };
+      // Guest selection
+      document.getElementById('guestList').onclick = async e => {
+        const item = e.target.closest('.guest-list-item');
+        if (!item) return;
+        document.querySelectorAll('#guestList .guest-list-item').forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
+        window.selectedGuestId = item.dataset.guestId;
+        document.getElementById('selectedGuestInfo').classList.remove('hidden');
+        await app.loadGuestDetailsForDisplay(item.dataset.guestId, JSON.parse(item.dataset.guest));
+      };
 
-    const ReassignRoomModal = ({ guest, rooms, onSubmit, onClose }) => {
-      useEffect(() => {
-        new Sortable(document.getElementById('roomList'), {
-          animation: 150,
-          onEnd: evt => onSubmit(rooms[evt.newIndex])
-        });
-      }, []);
+      document.getElementById('pastGuestList').onclick = async e => {
+        const item = e.target.closest('.guest-list-item');
+        if (!item) return;
+        document.querySelectorAll('#pastGuestList .guest-list-item').forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
+        window.selectedPastGuestId = item.dataset.guestId;
+        document.getElementById('selectedPastGuestInfo').classList.remove('hidden');
+        await app.loadPastGuestDetails(item.dataset.guestId);
+      };
 
-      return (
-        <div>
-          <h2 className="text-xl font-semibold mb-4">Reassign Room for {guest.fields.name}</h2>
-          <div id="roomList" className="space-y-2">
-            {rooms.map(room => (
-              <div key={room} className="p-4 bg-gray-50 dark:bg-gray-700 rounded cursor-move">{room}</div>
-            ))}
-          </div>
-          <div className="flex justify-end gap-2 mt-4">
-            <button onClick={onClose} className="bg-gray-500 text-white px-4 py-2 rounded">Cancel</button>
-          </div>
-        </div>
-      );
-    };
-
-    // Render
-    ReactDOM.render(<App />, document.getElementById('root'));
+      // Form submissions
+      document.getElementById('guestForm').onsubmit = e => app.registerGuest(e);
+      document.getElementById('saveGuestChanges').onclick = () => app.saveGuestChanges();
+      document.getElementById('confirmCheckout').onclick = () => app.checkoutGuest();
+      document.getElementById('generateBill').onclick = () => app.generateBill(window.selectedGuestId);
+      document.getElementById('generatePastBill').onclick = () => app.generateBill(window.selectedPastGuestId, true);
+    });
   </script>
 </body>
 </html>
