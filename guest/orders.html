@@ -170,25 +170,35 @@
       }
     }
 
-    async function getGuestName(guestID) {
-      try {
-        const response = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${GUESTS_TABLE}?filterByFormula={guestID}='${guestID}'`, {
-          headers: {
-            Authorization: `Bearer ${AIRTABLE_TOKEN}`,
-          },
-        });
+async function getGuestName(guestId) {
+  try {
+    // Search Guests table where guestID = orderData.Guest
+    const response = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${GUESTS_TABLE}?filterByFormula={guestID}='${guestId}'`, {
+      headers: {
+        Authorization: `Bearer ${AIRTABLE_TOKEN}`,
+      },
+    });
 
-        if (!response.ok) {
-          return "Guest";
-        }
-
-        const data = await response.json();
-        return data.records[0]?.fields?.name || "Guest";
-      } catch (error) {
-        console.error('Error fetching guest:', error);
-        return "Guest";
-      }
+    if (!response.ok) {
+      console.error("Failed to fetch guest:", response.status);
+      return "Guest";
     }
+
+    const data = await response.json();
+    
+    // If no records found, return "Guest"
+    if (!data.records || data.records.length === 0) {
+      console.log("No guest found with ID:", guestId);
+      return "Guest";
+    }
+
+    // Return the guest's name (assuming the field is 'name')
+    return data.records[0].fields.name || "Guest";
+  } catch (error) {
+    console.error('Error fetching guest:', error);
+    return "Guest";
+  }
+}
 
     async function updateOrderStatus(orderId, status) {
       try {
