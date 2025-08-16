@@ -170,9 +170,9 @@
       }
     }
 
-    async function getGuestName(guestId) {
+    async function getGuestName(guestID) {
       try {
-        const response = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${GUESTS_TABLE}?filterByFormula={guestID}='${guestId}'`, {
+        const response = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${GUESTS_TABLE}?filterByFormula={guestID}='${guestID}'`, {
           headers: {
             Authorization: `Bearer ${AIRTABLE_TOKEN}`,
           },
