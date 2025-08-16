@@ -146,7 +146,7 @@
     async function fetchCurrentOrders() {
       try {
         // Fetch only Pending and Preparing orders, sorted by oldest first
-        const response = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${ORDERS_TABLE}?filterByFormula=OR({Status}='Pending',{Status}='Preparing')&sort[0][field]=OrderDate&sort[0][direction]=asc`, {
+        const response = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${ORDERS_TABLE}?filterByFormula=OR({Status}='Pending',{Status}='Preparing')&sort[0][field]=OrderDate&sort[0][direction]=desc&sort[1][field]=OrderDate&sort[1][direction]=desc`, {
           headers: {
             Authorization: `Bearer ${AIRTABLE_TOKEN}`,
           },
