@@ -170,10 +170,12 @@
       }
     }
 
-async function getGuestName(guestId) {
+async function getGuestName(guestRecordId) {
+  if (!guestRecordId) return "Guest"; // Skip if no record ID
+  
   try {
-    // Search Guests table where guestID = orderData.Guest
-    const response = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${GUESTS_TABLE}?filterByFormula={guestID}='${guestId}'`, {
+    // Fetch guest directly by Airtable record ID
+    const response = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${GUESTS_TABLE}/${guestRecordId}`, {
       headers: {
         Authorization: `Bearer ${AIRTABLE_TOKEN}`,
       },
@@ -184,16 +186,8 @@ async function getGuestName(guestId) {
       return "Guest";
     }
 
-    const data = await response.json();
-    
-    // If no records found, return "Guest"
-    if (!data.records || data.records.length === 0) {
-      console.log("No guest found with ID:", guestId);
-      return "Guest";
-    }
-
-    // Return the guest's name (assuming the field is 'name')
-    return data.records[0].fields.name || "Guest";
+    const guestData = await response.json();
+    return guestData.fields?.name || "Guest"; // Return name or fallback
   } catch (error) {
     console.error('Error fetching guest:', error);
     return "Guest";
