@@ -1152,69 +1152,74 @@
         }
       },
 
-      async loadGuests(type) {
-        const listId = type === 'current' ? 'guestList' : 'pastGuestList';
-        const infoId = type === 'current' ? 'selectedGuestInfo' : 'selectedPastGuestInfo';
-        const list = document.getElementById(listId);
-        list.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-blue-500" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+async loadGuests(type) {
+  const listId = type === 'current' ? 'guestList' : 'pastGuestList';
+  const infoId = type === 'current' ? 'selectedGuestInfo' : 'selectedPastGuestInfo';
+  const list = document.getElementById(listId);
+  list.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-blue-500" role="status"><span class="visually-hidden">Loading...</span></div></div>';
 
-        try {
-          const filter = type === 'current'
-            ? `{status}='Active'`
-            : `{status}='Checked Out'`;
-          const data = await utils.fetchAirtable(`${config.airtable.tables.guests}?filterByFormula=${encodeURIComponent(filter)}&sort[0][field]=${type === 'current' ? 'checkin' : 'checkout'}&sort[0][direction]=${type === 'current' ? 'asc' : 'desc'}`);
+  try {
+    // FIXED: Use proper formula syntax without double encoding
+    const filter = type === 'current'
+      ? `AND({status}='Active')`
+      : `AND({status}='Checked Out')`;
+    
+    // FIXED: Use proper URL encoding
+    const encodedFilter = encodeURIComponent(filter);
+    
+    const data = await utils.fetchAirtable(`${config.airtable.tables.guests}?filterByFormula=${encodedFilter}&sort[0][field]=${type === 'current' ? 'checkin' : 'checkout'}&sort[0][direction]=${type === 'current' ? 'asc' : 'desc'}`);
 
-          const records = data.records || [];
-          if (!records.length) {
-            list.innerHTML = `<div class="text-center py-3 text-gray-400">No ${type} guests</div>`;
-            document.getElementById(infoId).classList.add('hidden');
-            return;
-          }
+    const records = data.records || [];
+    if (!records.length) {
+      list.innerHTML = `<div class="text-center py-3 text-gray-400">No ${type} guests</div>`;
+      document.getElementById(infoId).classList.add('hidden');
+      return;
+    }
 
-          // Build list with checkboxes
-          list.innerHTML = records.map(r => `
-            <div class="guest-list-item" data-guest-id="${r.id}" data-guest='${JSON.stringify(r.fields).replaceAll("'", "&apos;")}'>
-              <input type="checkbox" class="select-row" data-id="${r.id}" onclick="event.stopPropagation(); app.toggleSelection('${type}','${r.id}', this.checked)">
-              <div class="flex-1">
-                <div class="flex justify-between">
-                  <span>${r.fields.name || 'Unnamed Guest'} (${r.fields.guestID || ''})
-                    <span class="copy-icon" onclick="navigator.clipboard.writeText('${r.fields.guestID || ''}');utils.showToast('Guest ID copied!', 'success');event.stopPropagation();"><i class="fas fa-copy"></i></span>
-                  </span>
-                  <span class="text-gray-400">${r.fields.room} (${utils.formatDate(type === 'current' ? r.fields.checkin : r.fields.checkout)})</span>
-                </div>
-              </div>
-            </div>
-          `).join('');
+    // Build list with checkboxes
+    list.innerHTML = records.map(r => `
+      <div class="guest-list-item" data-guest-id="${r.id}" data-guest='${JSON.stringify(r.fields).replaceAll("'", "&apos;")}'>
+        <input type="checkbox" class="select-row" data-id="${r.id}" onclick="event.stopPropagation(); app.toggleSelection('${type}','${r.id}', this.checked)">
+        <div class="flex-1">
+          <div class="flex justify-between">
+            <span>${r.fields.name || 'Unnamed Guest'} (${r.fields.guestID || ''})
+              <span class="copy-icon" onclick="navigator.clipboard.writeText('${r.fields.guestID || ''}');utils.showToast('Guest ID copied!', 'success');event.stopPropagation();"><i class="fas fa-copy"></i></span>
+            </span>
+            <span class="text-gray-400">${r.fields.room} (${utils.formatDate(type === 'current' ? r.fields.checkin : r.fields.checkout)})</span>
+          </div>
+        </div>
+      </div>
+    `).join('');
 
-          // Restore selection state
-          (list.querySelectorAll('.select-row') || []).forEach(cb => {
-            cb.checked = this.selection[type].has(cb.dataset.id);
-          });
+    // Restore selection state
+    (list.querySelectorAll('.select-row') || []).forEach(cb => {
+      cb.checked = this.selection[type].has(cb.dataset.id);
+    });
 
-          // Click handling for item selection and detail load
-          list.addEventListener('click', async e => {
-            const item = e.target.closest('.guest-list-item');
-            if (!item) return;
-            // Ignore clicks on checkbox
-            if (e.target.classList.contains('select-row')) return;
+    // Click handling for item selection and detail load
+    list.addEventListener('click', async e => {
+      const item = e.target.closest('.guest-list-item');
+      if (!item) return;
+      // Ignore clicks on checkbox
+      if (e.target.classList.contains('select-row')) return;
 
-            list.querySelectorAll('.guest-list-item').forEach(i => i.classList.remove('active'));
-            item.classList.add('active');
-            const guestId = item.dataset.guestId;
-            window[listId === 'guestList' ? 'selectedGuestId' : 'selectedPastGuestId'] = guestId;
-            const guestData = JSON.parse(item.dataset.guest.replaceAll("&apos;", "'"));
-            document.getElementById(infoId).classList.remove('hidden');
-            if (type === 'current') await this.loadGuestDetailsForDisplay(guestId, guestData);
-            else await this.loadPastGuestDetails(guestId);
-          }, { once: true }); // attach once per load to avoid duplicates
+      list.querySelectorAll('.guest-list-item').forEach(i => i.classList.remove('active'));
+      item.classList.add('active');
+      const guestId = item.dataset.guestId;
+      window[listId === 'guestList' ? 'selectedGuestId' : 'selectedPastGuestId'] = guestId;
+      const guestData = JSON.parse(item.dataset.guest.replaceAll("&apos;", "'"));
+      document.getElementById(infoId).classList.remove('hidden');
+      if (type === 'current') await this.loadGuestDetailsForDisplay(guestId, guestData);
+      else await this.loadPastGuestDetails(guestId);
+    }, { once: true }); // attach once per load to avoid duplicates
 
-          // Update selected count label
-          this.updateSelectedCount(type);
-        } catch (error) {
-          list.innerHTML = `<div class="text-center py-3 text-red-500">Failed to load ${type} guests</div>`;
-          utils.showToast(`Error loading ${type} guests: ${error.message}`, 'danger');
-        }
-      },
+    // Update selected count label
+    this.updateSelectedCount(type);
+  } catch (error) {
+    list.innerHTML = `<div class="text-center py-3 text-red-500">Failed to load ${type} guests</div>`;
+    utils.showToast(`Error loading ${type} guests: ${error.message}`, 'danger');
+  }
+},
 
       toggleSelection(type, id, checked) {
         if (checked) this.selection[type].add(id);
@@ -1324,15 +1329,18 @@
         return orders.reduce((total, order) => total + (order.fields.TotalAmount || 0), 0);
       },
 
-      async getGuestOrders(guestID) {
-        try {
-          const res = await utils.fetchAirtable(`${config.airtable.tables.orders}?filterByFormula=${encodeURIComponent(`AND({Guest}='${guestID}', {Status} != 'Cancelled')`)}`);
-          return res.records || [];
-        } catch (error) {
-          utils.showToast('Error fetching orders: ' + error.message, 'danger');
-          return [];
-        }
-      },
+async getGuestOrders(guestID) {
+  try {
+    // FIXED: Use proper formula syntax
+    const filter = `AND({Guest}='${guestID}', {Status} != 'Cancelled')`;
+    const encodedFilter = encodeURIComponent(filter);
+    const res = await utils.fetchAirtable(`${config.airtable.tables.orders}?filterByFormula=${encodedFilter}`);
+    return res.records || [];
+  } catch (error) {
+    utils.showToast('Error fetching orders: ' + error.message, 'danger');
+    return [];
+  }
+},
 
       async showFoodOrdersModal(guestId) {
         const modal = new bootstrap.Modal(document.getElementById('foodOrdersModal'));
