@@ -308,6 +308,21 @@
     .danger-text {
       color: #f87171;
     }
+    .hidden {
+      display: none !important;
+    }
+    .loading-spinner {
+      display: inline-block;
+      width: 1rem;
+      height: 1rem;
+      border: 2px solid currentColor;
+      border-radius: 50%;
+      border-top-color: transparent;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
@@ -810,6 +825,88 @@
       calendarInstance: null,
       selection: { current: new Set(), past: new Set() },
       deletionCache: null,
+      selectedGuestId: null,
+      selectedPastGuestId: null,
+
+      init() {
+        this.initClock();
+        this.initEventListeners();
+        this.initCalendar();
+        this.loadDashboard();
+        this.loadGuests('current');
+        this.loadGuests('past');
+      },
+
+      initClock() {
+        const updateTime = () => {
+          const now = new Date();
+          document.getElementById('currentTime').textContent = now.toLocaleString('en-US', {
+            weekday: 'short',
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true
+          });
+        };
+        updateTime();
+        setInterval(updateTime, 1000);
+      },
+
+      initEventListeners() {
+        // Theme toggle
+        document.getElementById('themeToggle').addEventListener('click', () => {
+          const currentTheme = document.documentElement.getAttribute('data-theme');
+          const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+          document.documentElement.setAttribute('data-theme', newTheme);
+          document.getElementById('themeToggle').className = newTheme === 'dark' ? 'fas fa-sun theme-toggle' : 'fas fa-moon theme-toggle';
+          localStorage.setItem('theme', newTheme);
+        });
+
+        // Apply saved theme
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        document.getElementById('themeToggle').className = savedTheme === 'dark' ? 'fas fa-sun theme-toggle' : 'fas fa-moon theme-toggle';
+
+        // Form submissions
+        document.getElementById('guestForm').addEventListener('submit', (e) => this.registerGuest(e));
+        document.getElementById('saveGuestChanges').addEventListener('click', () => this.saveGuestChanges());
+        document.getElementById('confirmCheckout').addEventListener('click', () => this.completeCheckout());
+        document.getElementById('generateBill').addEventListener('click', () => this.generateBill(this.selectedGuestId));
+        document.getElementById('generatePastBill').addEventListener('click', () => this.generateBill(this.selectedPastGuestId, 'pastBillOutput', 'pastBillSpinner'));
+        document.getElementById('checkoutGuest').addEventListener('click', () => this.showCheckoutModal(this.selectedGuestId));
+
+        // Select all checkboxes
+        document.getElementById('selectAllCurrent').addEventListener('change', (e) => this.toggleSelectAll('current', e.target.checked));
+        document.getElementById('selectAllPast').addEventListener('change', (e) => this.toggleSelectAll('past', e.target.checked));
+
+        // Delete selected
+        document.getElementById('deleteSelectedCurrent').addEventListener('click', () => this.showDeletionPreview('current'));
+        document.getElementById('deleteSelectedPast').addEventListener('click', () => this.showDeletionPreview('past'));
+        document.getElementById('confirmDeletionBtn').addEventListener('click', () => this.confirmDeletion());
+
+        // Tab change events
+        document.querySelectorAll('[data-bs-toggle="tab"]').forEach(tab => {
+          tab.addEventListener('shown.bs.tab', (e) => {
+            const target = e.target.getAttribute('data-bs-target');
+            if (target === '#active-guests') {
+              this.loadGuests('current');
+            } else if (target === '#past-guests') {
+              this.loadGuests('past');
+            }
+          });
+        });
+      },
+
+      initCalendar() {
+        flatpickr("#dateRange", { mode: "range", minDate: "today", dateFormat: "Y-m-d", onChange: (selectedDates) => { 
+          if (selectedDates.length === 2) this.checkRoomAvailability(); 
+        }});
+        flatpickr("#editCheckin", { minDate: "today", dateFormat: "Y-m-d" });
+        flatpickr("#editCheckout", { minDate: "today", dateFormat: "Y-m-d" });
+      },
 
       async loadDashboard() {
         try {
@@ -971,6 +1068,7 @@
         document.getElementById('nextMonth').onclick = () => this.calendarInstance.changeMonth(1);
         document.getElementById('calendarRoomFilter').onchange = () => this.updateOccupancyCalendar(document.getElementById('calendarRoomFilter').value);
       },
+      
       updateOccupancyCalendar(roomFilter) {
         if (this.calendarInstance) this.calendarInstance.redraw();
       },
@@ -1122,6 +1220,15 @@
         if (checked) this.selection[type].add(id);
         else this.selection[type].delete(id);
         this.updateSelectedCount(type);
+      },
+
+      toggleSelectAll(type, checked) {
+        const listId = type === 'current' ? 'guestList' : 'pastGuestList';
+        const checkboxes = document.querySelectorAll(`#${listId} .select-row`);
+        checkboxes.forEach(cb => {
+          cb.checked = checked;
+          this.toggleSelection(type, cb.dataset.id, checked);
+        });
       },
 
       updateSelectedCount(type) {
@@ -1342,12 +1449,6 @@ Cheers,
 Team OCB Stays`;
       },
 
-      initCalendar() {
-        flatpickr("#dateRange", { mode: "range", minDate: "today", dateFormat: "Y-m-d", onChange: selected => { if (selected.length === 2) this.checkRoomAvailability(); } });
-        flatpickr("#editCheckin", { minDate: "today", dateFormat: "Y-m-d" });
-        flatpickr("#editCheckout", { minDate: "today", dateFormat: "Y-m-d" });
-      },
-
       async showCheckoutModal(guestId) {
         const guest = await this.loadGuestDetails(guestId);
         const foodTotal = await this.calculateFoodTotal(guest.guestID);
@@ -1529,7 +1630,7 @@ Team OCB Stays`;
       },
 
       async completeCheckout() {
-        const guestId = document.getElementById('editGuestId').value || window.selectedGuestId;
+        const guestId = this.selectedGuestId;
         const btn = document.getElementById('confirmCheckout');
         btn.disabled = true;
 
@@ -1622,4 +1723,107 @@ Team OCB Stays`;
 
         const ordersHtml = orders.length ? `
           <div class="mb-4">
-            <h6 class="mb-2">Orders (${
+            <h6 class="mb-2">Orders (${orders.length})</h6>
+            <div class="table-responsive">
+              <table class="table table-sm table-dark align-middle">
+                <thead><tr><th>Order ID</th><th>Guest</th><th>Date</th><th>Amount</th><th>Status</th></tr></thead>
+                <tbody>
+                  ${orders.map(o => `
+                    <tr>
+                      <td>${o.fields.OrderID || o.id}</td>
+                      <td>${o.fields.Guest || ''}</td>
+                      <td>${utils.formatDate(o.fields.OrderDate)}</td>
+                      <td>₹${(o.fields.TotalAmount || 0).toFixed(2)}</td>
+                      <td>${o.fields.Status || ''}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ` : '<div class="mb-4">No order records found.</div>';
+
+        const billsHtml = bills.length ? `
+          <div class="mb-4">
+            <h6 class="mb-2">Bills (${bills.length})</h6>
+            <div class="table-responsive">
+              <table class="table table-sm table-dark align-middle">
+                <thead><tr><th>Bill ID</th><th>GuestID</th><th>Amount</th><th>Status</th></tr></thead>
+                <tbody>
+                  ${bills.map(b => `
+                    <tr>
+                      <td>${b.fields.billID || b.id}</td>
+                      <td>${b.fields.guestID || ''}</td>
+                      <td>₹${(b.fields.totalAmount || 0).toFixed(2)}</td>
+                      <td>${b.fields.status || ''}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ` : '<div class="mb-4">No bill records found.</div>';
+
+        body.innerHTML = guestHtml + ordersHtml + billsHtml;
+        new bootstrap.Modal(document.getElementById('deletionPreviewModal')).show();
+      },
+
+      async confirmDeletion() {
+        if (!this.deletionCache) return;
+        
+        const { type, guests, orders, bills } = this.deletionCache;
+        const btn = document.getElementById('confirmDeletionBtn');
+        btn.disabled = true;
+        
+        try {
+          // Delete bills first
+          for (const bill of bills) {
+            await utils.fetchAirtable(`${config.airtable.tables.bills}/${bill.id}`, {
+              method: 'DELETE'
+            });
+          }
+          
+          // Delete orders
+          for (const order of orders) {
+            await utils.fetchAirtable(`${config.airtable.tables.orders}/${order.id}`, {
+              method: 'DELETE'
+            });
+          }
+          
+          // Delete guests last
+          for (const guest of guests) {
+            await utils.fetchAirtable(`${config.airtable.tables.guests}/${guest.id}`, {
+              method: 'DELETE'
+            });
+          }
+          
+          utils.showToast(`Successfully deleted ${guests.length} guest(s) and related records`, 'success');
+          bootstrap.Modal.getInstance(document.getElementById('deletionPreviewModal')).hide();
+          
+          // Clear selection and reload data
+          this.selection[type].clear();
+          this.updateSelectedCount(type);
+          
+          if (type === 'current') {
+            await this.loadGuests('current');
+          } else {
+            await this.loadGuests('past');
+          }
+          
+          await this.loadDashboard();
+          
+        } catch (error) {
+          utils.showToast('Error deleting records: ' + error.message, 'danger');
+        } finally {
+          btn.disabled = false;
+        }
+      }
+    };
+
+    // Initialize the application
+    document.addEventListener('DOMContentLoaded', () => {
+      app.init();
+    });
+  </script>
+</body>
+</html>
