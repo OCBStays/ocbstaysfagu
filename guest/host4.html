@@ -959,41 +959,31 @@ async loadGuests(type) {
   list.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-blue-500" role="status"><span class="visually-hidden">Loading...</span></div></div>';
 
   try {
-    // Fetch all guests and filter locally (more reliable approach)
+    // Use status-based filtering if available
+    let filter;
+    if (type === 'current') {
+      // Current guests: status is not "Checked Out" or status is empty
+      filter = "OR({Status} != 'Checked Out', {Status} = '')";
+    } else {
+      // Past guests: status is "Checked Out"
+      filter = "{Status} = 'Checked Out'";
+    }
+    
     const data = await utils.fetchAirtable(
-      `${config.airtable.tables.guests}?sort[0][field]=${type === 'current' ? 'checkin' : 'checkout'}&sort[0][direction]=${type === 'current' ? 'asc' : 'desc'}`
+      `${config.airtable.tables.guests}?filterByFormula=${encodeURIComponent(filter)}&sort[0][field]=${type === 'current' ? 'checkin' : 'checkout'}&sort[0][direction]=${type === 'current' ? 'asc' : 'desc'}`
     );
     
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // Reset time part for accurate date comparison
-    
-    // Filter records based on the type
-    const filteredRecords = data.records.filter(r => {
-      if (!r.fields.checkout) return false;
-      
-      const checkoutDate = new Date(r.fields.checkout);
-      checkoutDate.setHours(0, 0, 0, 0); // Reset time part
-      
-      if (type === 'current') {
-        // Current guests: checkout date is today or in the future
-        return checkoutDate >= today;
-      } else {
-        // Past guests: checkout date is before today
-        return checkoutDate < today;
-      }
-    });
-    
-    if (!filteredRecords.length) {
+    if (!data.records.length) {
       list.innerHTML = `<div class="text-center py-3 text-gray-400">No ${type} guests</div>`;
       document.getElementById(infoId).classList.add('hidden');
       return;
     }
 
-    list.innerHTML = filteredRecords.map(r => `
+    list.innerHTML = data.records.map(r => `
       <div class="guest-list-item" data-guest-id="${r.id}" data-guest='${JSON.stringify(r.fields)}'>
         <div class="flex justify-between">
           <span>${r.fields.name || 'Unnamed Guest'} (${r.fields.guestID}) <span class="copy-icon" onclick="navigator.clipboard.writeText('${r.fields.guestID}');utils.showToast('Guest ID copied!', 'success');event.stopPropagation();"><i class="fas fa-copy"></i></span></span>
-          <span class="text-gray-400">${r.fields.room} (${utils.formatDate(r.fields.checkout)})</span>
+          <span class="text-gray-400">${r.fields.room} (${utils.formatDate(type === 'current' ? r.fields.checkin : r.fields.checkout)})</span>
         </div>
       </div>
     `).join('');
@@ -1012,7 +1002,6 @@ async loadGuests(type) {
     utils.showToast(`Error loading ${type} guests: ${error.message}`, 'danger');
   }
 },
-
       async loadGuestDetails(guestId) {
         const response = await utils.fetchAirtable(`${config.airtable.tables.guests}/${guestId}`);
         return response.fields;
