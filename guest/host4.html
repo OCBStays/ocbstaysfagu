@@ -271,6 +271,19 @@
       background: var(--primary-hover);
       border-color: var(--primary-hover);
     }
+
+    /* Revenue item alignment fix */
+    .revenue-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid var(--border-color);
+    }
+    
+    .revenue-item:last-child {
+      border-bottom: none;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
@@ -718,8 +731,16 @@
         try {
           const today = utils.today();
           const nextWeek = utils.nextWeek();
+          
+          // Fetch guests and orders
           this.cachedGuests = await utils.fetchAirtable(`${config.airtable.tables.guests}?sort[0][field]=checkin`);
-          this.cachedOrders = await utils.fetchAirtable(`${config.airtable.tables.orders}?sort[0][field]=OrderDate&sort[0][direction]=desc&maxRecords=3`);
+          this.cachedOrders = await utils.fetchAirtable(`${config.airtable.tables.orders}?sort[0][field]=OrderDate&sort[0][direction]=desc&maxRecords=10`);
+
+          // Create a map of guests by guestID for faster lookup
+          const guestMap = {};
+          this.cachedGuests.records.forEach(guest => {
+            guestMap[guest.fields.guestID] = guest;
+          });
 
           // Current Guests
           const currentGuests = this.cachedGuests.records.filter(r => {
@@ -755,20 +776,33 @@
             <div class="p-2 border-b border-gray-600 cursor-pointer hover:bg-blue-500/10" onclick="app.showCalendarModal('${room}')">
               <div class="flex justify-between">
                 <span>${room}</span>
-                <span class="text-${occupiedRooms.has(room) ? 'red' : 'green'}-500">${occupiedRooms.has(room) ? 'Occupied' : 'Available'}</span>
+                <span class="${occupiedRooms.has(room) ? 'text-red-500' : 'text-green-500'}">${occupiedRooms.has(room) ? 'Occupied' : 'Available'}</span>
               </div>
             </div>
           `).join(''));
 
-          // Revenue Snapshot
+          // Revenue Snapshot (Fixed alignment)
           const advanceTotal = this.cachedGuests.records.reduce((sum, r) => sum + (parseFloat(r.fields.advanceAmount) || 0), 0);
           const balanceTotal = this.cachedGuests.records.reduce((sum, r) => sum + (parseFloat(r.fields.balanceAmount) || 0), 0);
           const foodTotal = this.cachedOrders.records.reduce((sum, r) => sum + (parseFloat(r.fields.TotalAmount) || 0), 0);
+          
           utils.updateElement('revenueSummary', `
-            <div class="p-2 border-b border-gray-600 cursor-pointer hover:bg-blue-500/10" onclick="app.showRevenueBreakdown('advance')"><span>Advance Payments</span><span>₹${advanceTotal.toFixed(2)}</span></div>
-            <div class="p-2 border-b border-gray-600 cursor-pointer hover:bg-blue-500/10" onclick="app.showRevenueBreakdown('balance')"><span>Balance Payments</span><span>₹${balanceTotal.toFixed(2)}</span></div>
-            <div class="p-2 border-b border-gray-600 cursor-pointer hover:bg-blue-500/10" onclick="app.showRevenueBreakdown('food')"><span>Food Orders</span><span>₹${foodTotal.toFixed(2)}</span></div>
-            <div class="p-2"><span class="font-semibold">Total Revenue</span><span class="font-semibold">₹${(advanceTotal + balanceTotal + foodTotal).toFixed(2)}</span></div>
+            <div class="revenue-item cursor-pointer hover:bg-blue-500/10" onclick="app.showRevenueBreakdown('advance')">
+              <span>Advance Payments</span>
+              <span>₹${advanceTotal.toFixed(2)}</span>
+            </div>
+            <div class="revenue-item cursor-pointer hover:bg-blue-500/10" onclick="app.showRevenueBreakdown('balance')">
+              <span>Balance Payments</span>
+              <span>₹${balanceTotal.toFixed(2)}</span>
+            </div>
+            <div class="revenue-item cursor-pointer hover:bg-blue-500/10" onclick="app.showRevenueBreakdown('food')">
+              <span>Food Orders</span>
+              <span>₹${foodTotal.toFixed(2)}</span>
+            </div>
+            <div class="revenue-item">
+              <span class="font-semibold">Total Revenue</span>
+              <span class="font-semibold">₹${(advanceTotal + balanceTotal + foodTotal).toFixed(2)}</span>
+            </div>
           `);
 
           // Pending Balances
@@ -782,17 +816,24 @@
             </div>
           `).join('') : '<div class="text-gray-400 p-2">No pending balances</div>');
 
-          // Recent Food Orders
+          // Recent Food Orders (Fixed guest lookup and shows all orders)
           utils.updateElement('recentOrders', this.cachedOrders.records.length ? this.cachedOrders.records.map(r => {
-            const guest = this.cachedGuests.records.find(g => g.fields.guestID === r.fields.Guest);
+            const guest = guestMap[r.fields.Guest] || null;
             const items = JSON.parse(r.fields.Items || '[]');
             const totalAmount = r.fields.TotalAmount || items.reduce((sum, item) => sum + (item.price || 0) * (item.quantity || 1), 0);
+            const orderDate = r.fields.OrderDate || new Date();
+            
             return `
-              <div class="p-2 border-b border-gray-600 cursor-pointer hover:bg-blue-500/10" data-guest-id="${guest?.id}" onclick="app.selectGuestFromDashboard('${guest?.id}', 'order')">
+              <div class="p-2 border-b border-gray-600 cursor-pointer hover:bg-blue-500/10" ${guest ? `data-guest-id="${guest.id}" onclick="app.selectGuestFromDashboard('${guest.id}', 'order')"` : ''}>
                 <div class="flex justify-between">
-                  <span>${guest?.fields.name || 'Unknown Guest'} (#${r.fields.OrderID || r.id}) <span class="copy-icon" onclick="navigator.clipboard.writeText('${r.fields.OrderID || r.id}');utils.showToast('Order ID copied!', 'success');event.stopPropagation();"><i class="fas fa-copy"></i></span></span>
-                  <span class="text-gray-400">₹${totalAmount.toFixed(2)} (${utils.formatDate(r.fields.OrderDate)})</span>
+                  <span>${guest ? guest.fields.name : 'Unknown Guest'} (#${r.fields.OrderID || r.id}) 
+                    <span class="copy-icon" onclick="navigator.clipboard.writeText('${r.fields.OrderID || r.id}');utils.showToast('Order ID copied!', 'success');event.stopPropagation();">
+                      <i class="fas fa-copy"></i>
+                    </span>
+                  </span>
+                  <span class="text-gray-400">₹${totalAmount.toFixed(2)} (${utils.formatDate(orderDate)})</span>
                 </div>
+                ${!guest ? `<div class="text-xs text-gray-400 mt-1">Guest ID: ${r.fields.Guest || 'Not linked'}</div>` : ''}
               </div>
             `;
           }).join('') : '<div class="text-gray-400 p-2">No recent orders</div>');
@@ -951,57 +992,58 @@
         }
       },
 
-async loadGuests(type) {
-  const listId = type === 'current' ? 'guestList' : 'pastGuestList';
-  const infoId = type === 'current' ? 'selectedGuestInfo' : 'selectedPastGuestInfo';
-  const contentId = type === 'current' ? 'guestDetailsContent' : 'pastGuestDetailsContent';
-  const list = document.getElementById(listId);
-  list.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-blue-500" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+      async loadGuests(type) {
+        const listId = type === 'current' ? 'guestList' : 'pastGuestList';
+        const infoId = type === 'current' ? 'selectedGuestInfo' : 'selectedPastGuestInfo';
+        const contentId = type === 'current' ? 'guestDetailsContent' : 'pastGuestDetailsContent';
+        const list = document.getElementById(listId);
+        list.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-blue-500" role="status"><span class="visually-hidden">Loading...</span></div></div>';
 
-  try {
-    // Use status-based filtering if available
-    let filter;
-    if (type === 'current') {
-      // Current guests: status is not "Checked Out" or status is empty
-      filter = "OR({Status} != 'Checked Out', {Status} = '')";
-    } else {
-      // Past guests: status is "Checked Out"
-      filter = "{Status} = 'Checked Out'";
-    }
-    
-    const data = await utils.fetchAirtable(
-      `${config.airtable.tables.guests}?filterByFormula=${encodeURIComponent(filter)}&sort[0][field]=${type === 'current' ? 'checkin' : 'checkout'}&sort[0][direction]=${type === 'current' ? 'asc' : 'desc'}`
-    );
-    
-    if (!data.records.length) {
-      list.innerHTML = `<div class="text-center py-3 text-gray-400">No ${type} guests</div>`;
-      document.getElementById(infoId).classList.add('hidden');
-      return;
-    }
+        try {
+          // Use status-based filtering if available
+          let filter;
+          if (type === 'current') {
+            // Current guests: status is not "Checked Out" or status is empty
+            filter = "OR({Status} != 'Checked Out', {Status} = '')";
+          } else {
+            // Past guests: status is "Checked Out"
+            filter = "{Status} = 'Checked Out'";
+          }
+          
+          const data = await utils.fetchAirtable(
+            `${config.airtable.tables.guests}?filterByFormula=${encodeURIComponent(filter)}&sort[0][field]=${type === 'current' ? 'checkin' : 'checkout'}&sort[0][direction]=${type === 'current' ? 'asc' : 'desc'}`
+          );
+          
+          if (!data.records.length) {
+            list.innerHTML = `<div class="text-center py-3 text-gray-400">No ${type} guests</div>`;
+            document.getElementById(infoId).classList.add('hidden');
+            return;
+          }
 
-    list.innerHTML = data.records.map(r => `
-      <div class="guest-list-item" data-guest-id="${r.id}" data-guest='${JSON.stringify(r.fields)}'>
-        <div class="flex justify-between">
-          <span>${r.fields.name || 'Unnamed Guest'} (${r.fields.guestID}) <span class="copy-icon" onclick="navigator.clipboard.writeText('${r.fields.guestID}');utils.showToast('Guest ID copied!', 'success');event.stopPropagation();"><i class="fas fa-copy"></i></span></span>
-          <span class="text-gray-400">${r.fields.room} (${utils.formatDate(type === 'current' ? r.fields.checkin : r.fields.checkout)})</span>
-        </div>
-      </div>
-    `).join('');
+          list.innerHTML = data.records.map(r => `
+            <div class="guest-list-item" data-guest-id="${r.id}" data-guest='${JSON.stringify(r.fields)}'>
+              <div class="flex justify-between">
+                <span>${r.fields.name || 'Unnamed Guest'} (${r.fields.guestID}) <span class="copy-icon" onclick="navigator.clipboard.writeText('${r.fields.guestID}');utils.showToast('Guest ID copied!', 'success');event.stopPropagation();"><i class="fas fa-copy"></i></span></span>
+                <span class="text-gray-400">${r.fields.room} (${utils.formatDate(type === 'current' ? r.fields.checkin : r.fields.checkout)})</span>
+              </div>
+            </div>
+          `).join('');
 
-    const selectedId = type === 'current' ? window.selectedGuestId : window.selectedPastGuestId;
-    if (selectedId) {
-      const selectedItem = list.querySelector(`[data-guest-id="${selectedId}"]`);
-      if (selectedItem) {
-        selectedItem.classList.add('active');
-        document.getElementById(infoId).classList.remove('hidden');
-        type === 'current' ? this.loadGuestDetailsForDisplay(selectedId, JSON.parse(selectedItem.dataset.guest)) : this.loadPastGuestDetails(selectedId);
-      }
-    }
-  } catch (error) {
-    list.innerHTML = `<div class="text-center py-3 text-red-500">Failed to load ${type} guests</div>`;
-    utils.showToast(`Error loading ${type} guests: ${error.message}`, 'danger');
-  }
-},
+          const selectedId = type === 'current' ? window.selectedGuestId : window.selectedPastGuestId;
+          if (selectedId) {
+            const selectedItem = list.querySelector(`[data-guest-id="${selectedId}"]`);
+            if (selectedItem) {
+              selectedItem.classList.add('active');
+              document.getElementById(infoId).classList.remove('hidden');
+              type === 'current' ? this.loadGuestDetailsForDisplay(selectedId, JSON.parse(selectedItem.dataset.guest)) : this.loadPastGuestDetails(selectedId);
+            }
+          }
+        } catch (error) {
+          list.innerHTML = `<div class="text-center py-3 text-red-500">Failed to load ${type} guests</div>`;
+          utils.showToast(`Error loading ${type} guests: ${error.message}`, 'danger');
+        }
+      },
+
       async loadGuestDetails(guestId) {
         const response = await utils.fetchAirtable(`${config.airtable.tables.guests}/${guestId}`);
         return response.fields;
