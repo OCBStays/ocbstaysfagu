@@ -8,7 +8,6 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <style>
-    /* All the CSS styles remain exactly the same as before */
     body {
       font-family: 'Segoe UI', sans-serif;
       background-color: #f9f9f9;
@@ -59,7 +58,517 @@
     .action-buttons { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem; }
     .mobile-input-group { display: flex; align-items: center; }
     .mobile-input-group input { flex: 1; }
-    /* ... (all other CSS styles remain exactly the same) ... */
+    .flatpickr-input {
+      background-color: white;
+    }
+    .availability-status {
+      margin-top: 1rem;
+      font-weight: bold;
+    }
+    .available {
+      color: #28a745;
+    }
+    .unavailable {
+      color: #dc3545;
+    }
+    .footer-tabs {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+      z-index: 1000;
+      padding: 0.5rem 1rem;
+    }
+    .footer-tabs .nav-link {
+      padding: 0.5rem;
+      font-size: 0.9rem;
+    }
+    .footer-tabs .nav-link i {
+      margin-right: 0.3rem;
+    }
+    .guest-card {
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      background: white;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .guest-card:hover {
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .guest-card h5 {
+      margin-bottom: 0.5rem;
+    }
+    .guest-meta {
+      font-size: 0.9rem;
+      color: #6c757d;
+      margin-bottom: 0.5rem;
+    }
+    .date-fields-row {
+      display: flex;
+      gap: 0.5rem;
+      align-items: flex-end;
+    }
+    .date-fields-row .form-group {
+      flex: 1;
+      margin-bottom: 0;
+    }
+    .contact-button-wrapper {
+      display: flex;
+      align-items: center;
+    }
+    .contact-button-wrapper input {
+      flex: 1;
+    }
+    .contact-button-wrapper .contact-icon {
+      margin-left: 0.5rem;
+      cursor: pointer;
+      padding: 0.5rem;
+      background: #f0f0f0;
+      border-radius: 50%;
+    }
+    .month-calendar {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+    .month-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    .month-title {
+      font-weight: bold;
+      font-size: 1.2rem;
+    }
+    .weekdays {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      text-align: center;
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+      font-size: 0.85rem;
+      color: #6c757d;
+    }
+    .days-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 0.2rem;
+    }
+    .calendar-day {
+      aspect-ratio: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 0.25rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+      font-size: 0.9rem;
+      border: 1px solid #f0f0f0;
+    }
+    .calendar-day:hover {
+      background-color: #f0f0f0;
+    }
+    .day-number {
+      font-weight: bold;
+      margin-bottom: 0.1rem;
+    }
+    .day-events {
+      font-size: 0.5rem;
+      text-align: center;
+      width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .day-event-dot {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      margin: 0 1px;
+    }
+    .past-day {
+      background-color: #f8f9fa;
+      color: #adb5bd;
+    }
+    .today {
+      background-color: #e3f2fd;
+      color: #1976d2;
+      font-weight: bold;
+      border: 2px solid #1976d2;
+    }
+    .booked-day {
+      background-color: #e8f5e9;
+      color: #2e7d32;
+      border: 1px solid #c8e6c9;
+    }
+    .available-day {
+      background-color: #ffffff;
+      color: #495057;
+    }
+    .selected-day {
+      background-color: #bbdefb;
+      color: #0d47a1;
+      font-weight: bold;
+    }
+    .modal-day-header {
+      font-weight: bold;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid #eee;
+    }
+    .modal-event {
+      padding: 0.5rem;
+      margin-bottom: 0.5rem;
+      border-radius: 4px;
+      background-color: #f5f5f5;
+      transition: all 0.2s;
+      border: 1px solid #e0e0e0;
+    }
+    .modal-event:hover {
+      background-color: #e0f7fa;
+      cursor: pointer;
+      transform: translateY(-2px);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .dashboard-scrollable {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    .dashboard-section {
+      background: white;
+      border-radius: 10px;
+      padding: 1rem;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+    .dashboard-section h2 {
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .compact-action-btn {
+      padding: 0.25rem 0.5rem;
+      font-size: 0.8rem;
+      margin-top: 0.5rem;
+    }
+    .guest-summary {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .guest-actions {
+      display: flex;
+      gap: 0.25rem;
+    }
+    .manage-guest-btn {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .guest-details-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+    .detail-item {
+      padding: 0.5rem;
+      background-color: #f8f9fa;
+      border-radius: 5px;
+      font-size: 0.9rem;
+    }
+    .detail-label {
+      font-weight: bold;
+      font-size: 0.8rem;
+      color: #6c757d;
+    }
+    .detail-value {
+      margin-top: 0.25rem;
+    }
+    .edit-icon-btn {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      cursor: pointer;
+      color: #6c757d;
+      transition: color 0.2s;
+    }
+    .edit-icon-btn:hover {
+      color: #0d6efd;
+    }
+    .compact-guest-card {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem;
+    }
+    .compact-meta {
+      font-size: 0.8rem;
+      color: #6c757d;
+    }
+    .payment-mode-group {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .payment-mode-group .form-control:first-child {
+      flex: 2;
+    }
+    .payment-mode-group .form-select {
+      flex: 1;
+      min-width: 120px;
+    }
+    .guest-details-section {
+      margin-bottom: 1.5rem;
+    }
+    .guest-details-section h6 {
+      border-bottom: 1px solid #eee;
+      padding-bottom: 0.5rem;
+      margin-bottom: 1rem;
+      color: #495057;
+    }
+    .payment-summary {
+      background-color: #f8f9fa;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-top: 1rem;
+    }
+    .payment-summary-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+    }
+    .payment-summary-item.total {
+      font-weight: bold;
+      border-top: 1px solid #dee2e6;
+      padding-top: 0.5rem;
+      margin-top: 0.5rem;
+    }
+    .payment-mode {
+      font-size: 0.8rem;
+      color: #6c757d;
+      margin-left: 0.5rem;
+    }
+    .guest-list-container {
+      max-height: 300px;
+      overflow-y: auto;
+      margin-top: 1rem;
+    }
+    .guest-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1rem;
+    }
+    .manage-tabs .nav-link {
+      padding: 0.5rem 1rem;
+    }
+    .modal-event-details {
+      padding: 0.5rem;
+    }
+    .modal-event-actions {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 1rem;
+    }
+    .notes-section {
+      margin-top: 1rem;
+    }
+    .notes-content {
+      background-color: #f8f9fa;
+      border-radius: 5px;
+      padding: 0.75rem;
+      margin-top: 0.5rem;
+    }
+    .bill-container {
+      background: white;
+      border-radius: 8px;
+      padding: 1.5rem;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      max-width: 500px;
+      margin: 0 auto;
+    }
+    .bill-header {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 1rem;
+    }
+    .bill-title {
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+    }
+    .bill-subtitle {
+      color: #6c757d;
+      margin-bottom: 0.5rem;
+    }
+    .bill-meta {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+      font-size: 0.9rem;
+    }
+    .bill-items {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 1.5rem;
+    }
+    .bill-items th {
+      text-align: left;
+      padding: 0.5rem;
+      border-bottom: 1px solid #dee2e6;
+    }
+    .bill-items td {
+      padding: 0.5rem;
+      border-bottom: 1px solid #eee;
+    }
+    .bill-items .text-right {
+      text-align: right;
+    }
+    .bill-items .text-center {
+      text-align: center;
+    }
+    .bill-total {
+      font-weight: bold;
+      text-align: right;
+      font-size: 1.1rem;
+      margin-top: 1rem;
+    }
+    .log-entry {
+      padding: 0.75rem;
+      border-bottom: 1px solid #eee;
+      font-family: monospace;
+      font-size: 0.85rem;
+    }
+    .log-timestamp {
+      color: #6c757d;
+      margin-right: 0.5rem;
+    }
+    .log-error {
+      color: #dc3545;
+    }
+    .log-success {
+      color: #28a745;
+    }
+    .log-warning {
+      color: #ffc107;
+    }
+    .log-info {
+      color: #17a2b8;
+    }
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1100;
+    }
+    .guest-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      max-height: 300px;
+      overflow-y: auto;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+    }
+    .guest-list-item {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid #eee;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .guest-list-item:last-child {
+      border-bottom: none;
+    }
+    .guest-list-item:hover {
+      background-color: #f8f9fa;
+    }
+    .guest-list-item.active {
+      background-color: #e7f5ff;
+    }
+    .guest-list-name {
+      font-weight: 500;
+      flex: 1;
+    }
+    .guest-list-room {
+      color: #6c757d;
+      font-size: 0.9rem;
+      width: 150px;
+      text-align: center;
+    }
+    .guest-list-dates {
+      color: #6c757d;
+      font-size: 0.85rem;
+      width: 200px;
+      text-align: right;
+    }
+    .food-orders-card {
+      background-color: #f8f9fa;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-top: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .food-orders-card:hover {
+      background-color: #e9ecef;
+    }
+    .food-orders-card h6 {
+      margin-bottom: 0.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .order-item {
+      padding: 0.5rem;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+    }
+    .order-item:last-child {
+      border-bottom: none;
+    }
+    .order-item-details {
+      flex: 1;
+    }
+    .order-item-price {
+      font-weight: bold;
+      width: 80px;
+      text-align: right;
+    }
+    .registration-success-modal .modal-body {
+      padding: 1.5rem;
+    }
+    .registration-success-details {
+      margin-bottom: 1.5rem;
+    }
+    .registration-success-actions {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
   </style>
 </head>
 <body>
@@ -303,7 +812,6 @@
     </div>
   </div>
 
-  <!-- All modals remain exactly the same -->
   <!-- Calendar Day Modal -->
   <div class="modal fade" id="dayModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -514,13 +1022,12 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-  <!-- Removed Supabase JS CDN - will be handled by API -->
   
   <script>
-    // Configuration - No Supabase keys here
+    // Configuration
     const config = {
       api: {
-        baseUrl: '/api' // Your API endpoint
+        baseUrl: '/api'
       },
       urls: {
         guestPortal: 'https://ocbstays.github.io/ocbstaysfagu/guest/index.html',
@@ -530,7 +1037,7 @@
       paymentModes: ["UPI", "Cash", "Card", "NetBanking"]
     };
 
-    // API Service - All database operations go through this
+    // API Service
     const apiService = {
       async request(endpoint, options = {}) {
         const url = `${config.api.baseUrl}${endpoint}`;
@@ -560,7 +1067,6 @@
         }
       },
 
-      // Guest operations
       async getGuests(status = null) {
         const endpoint = status ? `/guests?status=${status}` : '/guests';
         return this.request(endpoint);
@@ -591,12 +1097,10 @@
         });
       },
 
-      // Order operations
       async getGuestOrders(guestID) {
         return this.request(`/orders?guest=${guestID}`);
       },
 
-      // Bill operations
       async createBill(billData) {
         return this.request('/bills', {
           method: 'POST',
@@ -608,13 +1112,19 @@
         return this.request(`/bills?guest=${guestID}`);
       },
 
-      // Analytics
+      async updateBill(id, billData) {
+        return this.request(`/bills/${id}`, {
+          method: 'PUT',
+          body: JSON.stringify(billData)
+        });
+      },
+
       async getAnalytics() {
         return this.request('/analytics');
       }
     };
 
-    // Logging system (unchanged)
+    // Logging system
     const logger = {
       logs: [],
       log: function(message, type = 'info') {
@@ -639,7 +1149,7 @@
       }
     };
 
-    // Helper functions (unchanged)
+    // Helper functions
     const helpers = {
       generateGuestId: () => 'GST' + Array.from({length: 5}, () => 
         'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'[Math.floor(Math.random() * 62)]).join(''),
@@ -675,7 +1185,6 @@
         
         toastContainer.appendChild(toast);
         
-        // Auto remove after 5 seconds
         setTimeout(() => {
           toast.classList.remove('show');
           setTimeout(() => toast.remove(), 300);
@@ -742,7 +1251,7 @@
       }
     };
 
-    // Core functions - Updated to use API service
+    // Core functions
     const app = {
       async loadAvailableRooms() {
         const roomSelect = document.getElementById('room');
@@ -837,7 +1346,6 @@
             return;
           }
           
-          // Sort by check-in date
           data.sort((a, b) => new Date(a.checkin) - new Date(b.checkin));
           
           guestList.innerHTML = '';
@@ -854,7 +1362,6 @@
             guestList.appendChild(item);
           });
           
-          // Restore selected guest if any
           const selectedGuestId = window.selectedGuestId;
           if (selectedGuestId) {
             const selectedItem = guestList.querySelector(`[data-guest-id="${selectedGuestId}"]`);
@@ -884,7 +1391,6 @@
             return;
           }
           
-          // Sort by checkout date descending
           data.sort((a, b) => new Date(b.checkout) - new Date(a.checkout));
           
           pastGuestList.innerHTML = '';
@@ -901,7 +1407,6 @@
             pastGuestList.appendChild(item);
           });
           
-          // Restore selected past guest if any
           const selectedPastGuestId = window.selectedPastGuestId;
           if (selectedPastGuestId) {
             const selectedItem = pastGuestList.querySelector(`[data-guest-id="${selectedPastGuestId}"]`);
@@ -962,7 +1467,6 @@
           container.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>';
           const data = await apiService.getGuests('Active');
           
-          // Filter guests staying today
           const todaysGuests = data.filter(guest => {
             return helpers.datesOverlap(
               guest.checkin, 
@@ -1001,7 +1505,6 @@
             container.appendChild(card);
           });
           
-          // Add click handlers to guest cards
           document.querySelectorAll('#today-guests-list .guest-card').forEach(card => {
             card.addEventListener('click', () => {
               document.querySelector('#manage-footer-tab').click();
@@ -1033,7 +1536,6 @@
           container.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>';
           const data = await apiService.getGuests('Active');
           
-          // Filter upcoming guests
           const upcomingGuests = data.filter(guest => new Date(guest.checkin) > new Date(todayStr));
           
           if (upcomingGuests.length === 0) {
@@ -1041,7 +1543,6 @@
             return;
           }
           
-          // Sort by check-in date
           upcomingGuests.sort((a, b) => new Date(a.checkin) - new Date(b.checkin));
           
           container.innerHTML = '';
@@ -1066,7 +1567,6 @@
             container.appendChild(card);
           });
           
-          // Add click handlers to guest cards
           document.querySelectorAll('#upcoming-guests-list .guest-card').forEach(card => {
             card.addEventListener('click', () => {
               document.querySelector('#manage-footer-tab').click();
@@ -1095,17 +1595,14 @@
           container.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>';
           const data = await apiService.getGuests('Active');
           
-          // Filter by property if needed
           const bookings = propertyFilter === 'all' 
             ? data 
             : data.filter(r => r.room === propertyFilter);
           
-          // Generate calendar for current month
           const today = new Date();
           const currentMonth = today.getMonth();
           const currentYear = today.getFullYear();
           
-          // Create month calendar
           const monthName = today.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
           const daysInMonth = helpers.getDaysInMonth(currentYear, currentMonth);
           const firstDayOfMonth = helpers.getFirstDayOfMonth(currentYear, currentMonth);
@@ -1119,18 +1616,15 @@
             </div>
             <div class="days-grid">`;
           
-          // Add empty cells for days before the first day of the month
           for (let i = 0; i < firstDayOfMonth; i++) {
             html += `<div class="calendar-day"></div>`;
           }
           
-          // Add days of the month
           for (let day = 1; day <= daysInMonth; day++) {
             const date = new Date(currentYear, currentMonth, day);
             const dateStr = date.toISOString().split('T')[0];
             const isToday = helpers.isSameDay(dateStr, today);
             
-            // Find bookings for this day
             const dayBookings = bookings.filter(b => {
               return helpers.datesOverlap(
                 b.checkin, 
@@ -1165,7 +1659,6 @@
           html += `</div></div>`;
           container.innerHTML = html;
           
-          // Add click handlers to days
           document.querySelectorAll('.calendar-day').forEach(day => {
             day.addEventListener('click', () => {
               const date = day.dataset.date;
@@ -1180,9 +1673,84 @@
         }
       },
       
-      // All other methods remain similar but use apiService instead of direct Supabase calls
-      // ... (rest of the methods follow the same pattern)
-
+      async showDayDetails(date, allBookings) {
+        const modalTitle = document.getElementById('dayModalTitle');
+        const modalBody = document.getElementById('dayModalBody');
+        const modal = new bootstrap.Modal(document.getElementById('dayModal'));
+        
+        modalTitle.textContent = new Date(date).toLocaleDateString('en-US', { 
+          weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+        });
+        
+        const dayBookings = allBookings.filter(b => {
+          return helpers.datesOverlap(
+            b.checkin, 
+            b.checkout, 
+            date, 
+            date
+          );
+        });
+        
+        if (dayBookings.length === 0) {
+          modalBody.innerHTML = `
+            <div class="alert alert-info">No bookings for this day</div>
+            <div class="modal-event-actions">
+              <button class="btn btn-sm btn-primary" id="bookThisDateBtn">Book This Date</button>
+            </div>
+          `;
+        } else {
+          modalBody.innerHTML = dayBookings.map(booking => {
+            const guest = booking;
+            const isCheckingIn = helpers.isSameDay(guest.checkin, date);
+            const isCheckingOut = helpers.isSameDay(guest.checkout, date);
+            
+            let statusBadge = '';
+            if (isCheckingIn && isCheckingOut) {
+              statusBadge = '<span class="badge bg-warning">Same Day</span>';
+            } else if (isCheckingIn) {
+              statusBadge = '<span class="badge bg-primary">Check-in</span>';
+            } else if (isCheckingOut) {
+              statusBadge = '<span class="badge bg-danger">Check-out</span>';
+            } else {
+              statusBadge = '<span class="badge bg-success">Staying</span>';
+            }
+            
+            return `
+              <div class="modal-event" data-guest-id="${booking.id}">
+                <div><strong>${guest.name || 'Unnamed Guest'}</strong> ${statusBadge}</div>
+                <div>Room: ${guest.room}</div>
+                <div>Dates: ${helpers.formatDate(guest.checkin)} to ${helpers.formatDate(guest.checkout)}</div>
+                <div>Mobile: ${guest.mobile || 'Not provided'}</div>
+              </div>
+            `;
+          }).join('');
+        }
+        
+        modal.show();
+        
+        document.querySelectorAll('#dayModalBody .modal-event').forEach(detail => {
+          detail.addEventListener('click', () => {
+            modal.hide();
+            document.querySelector('#manage-footer-tab').click();
+            setTimeout(() => {
+              document.querySelector('#active-tab').click();
+              const guestId = detail.dataset.guestId;
+              const guestList = document.getElementById('guestList');
+              const guestItem = guestList.querySelector(`[data-guest-id="${guestId}"]`);
+              if (guestItem) {
+                guestItem.click();
+              }
+            }, 100);
+          });
+        });
+        
+        document.getElementById('bookThisDate')?.addEventListener('click', () => {
+          modal.hide();
+          document.querySelector('#register-footer-tab').click();
+          document.getElementById('dateRange')._flatpickr.setDate([date, date]);
+        });
+      },
+      
       async getGuestOrders(guestID) {
         try {
           const data = await apiService.getGuestOrders(guestID);
@@ -1190,6 +1758,79 @@
         } catch (error) {
           console.error('Error fetching orders:', error);
           throw error;
+        }
+      },
+      
+      async showFoodOrdersModal(guestId) {
+        try {
+          const guest = await this.loadGuestDetails(guestId);
+          const orders = await this.getGuestOrders(guest.guestID);
+          
+          const modalBody = document.getElementById('foodOrdersModalBody');
+          modalBody.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>';
+          
+          const modal = new bootstrap.Modal(document.getElementById('foodOrdersModal'));
+          modal.show();
+          
+          if (orders.length === 0) {
+            modalBody.innerHTML = '<div class="alert alert-info">No food orders found for this guest</div>';
+            return;
+          }
+          
+          let html = '';
+          
+          orders.forEach(order => {
+            const orderDate = new Date(order.createdAt || order.created_at).toLocaleString();
+            const items = JSON.parse(order.Items || '[]');
+            const totalAmount = order.TotalAmount || 
+              items.reduce((sum, item) => sum + (item.price || 0) * (item.quantity || 1), 0);
+            
+            html += `
+              <div class="card mb-3">
+                <div class="card-header">
+                  <div class="d-flex justify-content-between">
+                    <div>Order #${order.OrderID || order.id}</div>
+                    <div>${orderDate}</div>
+                  </div>
+                  <div class="d-flex justify-content-between mt-1">
+                    <div>Status: <span class="badge bg-${order.Status === 'Delivered' ? 'success' : 'warning'}">${order.Status}</span></div>
+                    <div>Total: ₹${totalAmount.toFixed(2)}</div>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <h6 class="card-subtitle mb-2 text-muted">Items</h6>
+                  <div class="order-items">
+            `;
+            
+            items.forEach(item => {
+              html += `
+                <div class="order-item">
+                  <div class="order-item-details">
+                    ${item.quantity} × ${item.name}
+                    ${item.specialInstructions ? `<div class="text-muted small">${item.specialInstructions}</div>` : ''}
+                  </div>
+                  <div class="order-item-price">₹${(item.price * item.quantity).toFixed(2)}</div>
+                </div>
+              `;
+            });
+            
+            html += `
+                  </div>
+                  ${order.SpecialInstructions ? `
+                  <div class="mt-2">
+                    <strong>Special Instructions:</strong>
+                    <div>${order.SpecialInstructions}</div>
+                  </div>
+                  ` : ''}
+                </div>
+              </div>
+            `;
+          });
+          
+          modalBody.innerHTML = html;
+        } catch (error) {
+          console.error('Error loading food orders:', error);
+          modalBody.innerHTML = '<div class="alert alert-danger">Failed to load food orders</div>';
         }
       },
       
@@ -1228,13 +1869,11 @@
 
           const allOrderItems = Array.from(itemMap.values());
 
-          // Check if bill already exists
           const existingBill = await apiService.getGuestBill(guestRecordId);
           
           let billId;
           if (existingBill && existingBill.length > 0) {
             billId = existingBill[0].id;
-            // Update existing bill via API
             await apiService.updateBill(billId, {
               totalAmount: totalAmount,
               orderDetails: JSON.stringify(allOrderItems),
@@ -1262,6 +1901,47 @@
         }
       },
       
+      downloadBillAsImage() {
+        const billDetails = document.querySelector('.bill-container');
+        if (!billDetails) return helpers.showToast('No bill generated to download', 'warning');
+        html2canvas(billDetails).then(canvas => {
+          const link = document.createElement('a');
+          link.download = 'food-bill.png';
+          link.href = canvas.toDataURL();
+          link.click();
+        });
+      },
+      
+      generateEmailBody(guest, link) {
+        return `Hi ${guest.name},
+Thank you for choosing OCB Stays for your upcoming trip to Fagu. 
+
+Your booking for ${guest.room} for ${helpers.formatDate(guest.checkin)} is confirmed with advance payment of ₹${guest.advanceAmount || 0} (non-refundable), balance ₹${guest.balanceAmount || 0} to be transferred on arrival.
+
+Check-in : ${helpers.formatDate(guest.checkin)} 1pm || Check Out: ${helpers.formatDate(guest.checkout)} 11am
+
+Please follow the below link for CheckIn instructions and other important info:
+${link}
+
+Please share your Id's for the record purpose & feel free to get in touch anytime in case you have any queries or need any assistance. 
+
+Hope you have a great time !! 
+
+Thanks, 
+Prateek & Ishika 
+OCB Stays, Curated with Love..`;
+      },
+      
+      generateWhatsappMessage(guest, link) {
+        return `Hi ${guest.name},
+Thank you for choosing OCB Stays for your upcoming trip to Fagu.
+Please follow the below link:
+${link}
+
+Cheers,
+Team OCB Stays`;
+      },
+      
       async loadGuestDetails(guestId) {
         try {
           const response = await apiService.getGuest(guestId);
@@ -1271,11 +1951,296 @@
           throw error;
         }
       },
-
-      // ... continue with other methods using apiService
+      
+      async loadGuestDetailsForDisplay(guestId, guestData) {
+        try {
+          const guest = guestData || await this.loadGuestDetails(guestId);
+          const foodTotal = await this.calculateFoodTotal(guest.guestID);
+          
+          const nights = helpers.calculateNights(guest.checkin, guest.checkout);
+          const totalDue = (parseFloat(guest.balanceAmount) || 0) + foodTotal;
+          
+          document.getElementById('guestDetailsContent').innerHTML = `
+            <div class="guest-details-section">
+              <h6>Guest Information</h6>
+              <div class="guest-details-grid">
+                <div class="detail-item">
+                  <div class="detail-label">Name</div>
+                  <div class="detail-value">${guest.name || 'Unnamed Guest'}</div>
+                </div>
+                <div class="detail-item">
+                  <div class="detail-label">Mobile</div>
+                  <div class="detail-value">${guest.mobile || 'Not provided'}</div>
+                </div>
+                <div class="detail-item">
+                  <div class="detail-label">Room</div>
+                  <div class="detail-value">${guest.room}</div>
+                </div>
+                <div class="detail-item">
+                  <div class="detail-label">Nights</div>
+                  <div class="detail-value">${nights}</div>
+                </div>
+                <div class="detail-item">
+                  <div class="detail-label">Check-in</div>
+                  <div class="detail-value">${helpers.formatDate(guest.checkin)}</div>
+                </div>
+                <div class="detail-item">
+                  <div class="detail-label">Check-out</div>
+                  <div class="detail-value">${helpers.formatDate(guest.checkout)}</div>
+                </div>
+              </div>
+              
+              ${guest.Comments ? `
+              <div class="notes-section">
+                <div class="detail-label">Notes</div>
+                <div class="notes-content">${guest.Comments}</div>
+              </div>
+              ` : ''}
+              
+              <div class="food-orders-card" id="viewFoodOrders">
+                <h6>
+                  <span>Food & Amenities</span>
+                  <span class="badge bg-primary">₹${foodTotal.toFixed(2)}</span>
+                </h6>
+              </div>
+            </div>
+            
+            <div class="guest-details-section">
+              <h6>Payment Summary</h6>
+              <div class="payment-summary">
+                <div class="payment-summary-item">
+                  <span>Advance Paid:</span>
+                  <span>₹${guest.advanceAmount || 0} 
+                    <span class="payment-mode">${guest.advanceMode ? `(${guest.advanceMode})` : ''}</span>
+                  </span>
+                </div>
+                <div class="payment-summary-item">
+                  <span>Food Orders:</span>
+                  <span>₹${foodTotal.toFixed(2)}</span>
+                </div>
+                <div class="payment-summary-item">
+                  <span>Balance Due:</span>
+                  <span>₹${guest.balanceAmount || 0}</span>
+                </div>
+                <div class="payment-summary-item total">
+                  <span>Total Due:</span>
+                  <span>₹${totalDue.toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+          `;
+          
+          const homeLink = guest.homeLink;
+          document.getElementById('copyGuestLink').onclick = () => {
+            navigator.clipboard.writeText(homeLink);
+            helpers.showToast('Link copied to clipboard!', 'success');
+          };
+          
+          document.getElementById('sendEmailToGuest').onclick = () => window.open(
+            `mailto:?subject=OCB Stays Information&body=${encodeURIComponent(this.generateEmailBody(guest, homeLink))}`
+          );
+          
+          document.getElementById('sendWhatsappToGuest').onclick = () => window.open(
+            `https://wa.me/${guest.mobile}?text=${encodeURIComponent(this.generateWhatsappMessage(guest, homeLink))}`
+          );
+          
+          document.getElementById('callGuest').href = `tel:${guest.mobile}`;
+          
+          document.getElementById('viewFoodOrders').addEventListener('click', () => {
+            this.showFoodOrdersModal(guestId);
+          });
+          
+          return guest;
+        } catch (error) {
+          console.error('Error loading guest details:', error);
+          document.getElementById('guestDetailsContent').innerHTML = `
+            <div class="alert alert-danger">Failed to load guest details</div>
+          `;
+          throw error;
+        }
+      },
+      
+      async calculateFoodTotal(guestId) {
+        try {
+          const orders = await this.getGuestOrders(guestId);
+          if (!orders.length) return 0;
+          
+          return orders.reduce((total, order) => {
+            return total + (order.TotalAmount || 0);
+          }, 0);
+        } catch (error) {
+          console.error('Error calculating food total:', error);
+          return 0;
+        }
+      },
+      
+      initCalendar() {
+        flatpickr("#dateRange", {
+          mode: "range",
+          minDate: "today",
+          dateFormat: "Y-m-d",
+          onChange: function(selectedDates) {
+            if (selectedDates.length === 2) {
+              app.checkRoomAvailability();
+            }
+          }
+        });
+        
+        flatpickr("#editCheckin", {
+          minDate: "today",
+          dateFormat: "Y-m-d",
+          defaultDate: null
+        });
+        
+        flatpickr("#editCheckout", {
+          minDate: "today",
+          dateFormat: "Y-m-d",
+          defaultDate: null
+        });
+      },
+      
+      async showCheckoutModal(guestId) {
+        try {
+          const guest = await this.loadGuestDetails(guestId);
+          const foodTotal = await this.calculateFoodTotal(guest.guestID);
+          const totalDue = (parseFloat(guest.balanceAmount) || 0) + foodTotal;
+          
+          document.getElementById('checkoutBalance').value = totalDue.toFixed(2);
+          document.getElementById('checkoutPaymentType').value = '';
+          document.getElementById('checkoutComments').value = '';
+          
+          const modal = new bootstrap.Modal(document.getElementById('checkoutModal'));
+          modal.show();
+        } catch (error) {
+          console.error('Error preparing checkout:', error);
+          helpers.showToast(`Error: ${error.message}`, 'danger');
+        }
+      },
+      
+      async loadPastGuestDetails(guestId) {
+        try {
+          const guest = await this.loadGuestDetails(guestId);
+          const foodTotal = await this.calculateFoodTotal(guest.guestID);
+          const nights = helpers.calculateNights(guest.checkin, guest.checkout);
+          
+          document.getElementById('pastGuestDetailsContent').innerHTML = `
+            <div class="guest-details-section">
+              <h6>Guest Information</h6>
+              <div class="guest-details-grid">
+                <div class="detail-item">
+                  <div class="detail-label">Name</div>
+                  <div class="detail-value">${guest.name || 'Unnamed Guest'}</div>
+                </div>
+                <div class="detail-item">
+                  <div class="detail-label">Mobile</div>
+                  <div class="detail-value">${guest.mobile || 'Not provided'}</div>
+                </div>
+                <div class="detail-item">
+                  <div class="detail-label">Room</div>
+                  <div class="detail-value">${guest.room}</div>
+                </div>
+                <div class="detail-item">
+                  <div class="detail-label">Nights</div>
+                  <div class="detail-value">${nights}</div>
+                </div>
+                <div class="detail-item">
+                  <div class="detail-label">Check-in</div>
+                  <div class="detail-value">${helpers.formatDate(guest.checkin)}</div>
+                </div>
+                <div class="detail-item">
+                  <div class="detail-label">Check-out</div>
+                  <div class="detail-value">${helpers.formatDate(guest.checkout)}</div>
+                </div>
+              </div>
+              
+              ${guest.Comments ? `
+              <div class="notes-section">
+                <div class="detail-label">Notes</div>
+                <div class="notes-content">${guest.Comments}</div>
+              </div>
+              ` : ''}
+              
+              <div class="food-orders-card" id="viewPastFoodOrders">
+                <h6>
+                  <span>Food & Amenities</span>
+                  <span class="badge bg-primary">₹${foodTotal.toFixed(2)}</span>
+                </h6>
+              </div>
+            </div>
+            
+            <div class="guest-details-section">
+              <h6>Payment Summary</h6>
+              <div class="payment-summary">
+                <div class="payment-summary-item">
+                  <span>Advance Paid:</span>
+                  <span>₹${guest.advanceAmount || 0} 
+                    <span class="payment-mode">${guest.advanceMode ? `(${guest.advanceMode})` : ''}</span>
+                  </span>
+                </div>
+                <div class="payment-summary-item">
+                  <span>Food Orders:</span>
+                  <span>₹${foodTotal.toFixed(2)}</span>
+                </div>
+                <div class="payment-summary-item">
+                  <span>Balance Paid:</span>
+                  <span>₹${guest.balanceAmount || 0} 
+                    <span class="payment-mode">${guest.PaymentType ? `(${guest.PaymentType})` : ''}</span>
+                  </span>
+                </div>
+                <div class="payment-summary-item total">
+                  <span>Total Paid:</span>
+                  <span>₹${((parseFloat(guest.advanceAmount) || 0) + (parseFloat(guest.balanceAmount) || 0)).toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+          `;
+          
+          document.getElementById('viewPastFoodOrders').addEventListener('click', () => {
+            this.showFoodOrdersModal(guestId);
+          });
+        } catch (error) {
+          console.error('Error loading past guest details:', error);
+          document.getElementById('pastGuestDetailsContent').innerHTML = `
+            <div class="alert alert-danger">Failed to load guest details</div>
+          `;
+        }
+      },
+      
+      async loadLogs() {
+        const container = document.getElementById('logs-container');
+        if (!container) return;
+        
+        logger.renderLogs();
+      },
+      
+      showRegistrationSuccess(guest, homeLink) {
+        const modal = new bootstrap.Modal(document.getElementById('registrationSuccessModal'));
+        const detailsDiv = document.getElementById('registrationSuccessDetails');
+        const linkInput = document.getElementById('guestLinkInput');
+        
+        detailsDiv.innerHTML = `
+          <div class="mb-2"><strong>Name:</strong> ${guest.name || 'Unnamed Guest'}</div>
+          <div class="mb-2"><strong>Room:</strong> ${guest.room}</div>
+          <div class="mb-2"><strong>Dates:</strong> ${helpers.formatDate(guest.checkin)} to ${helpers.formatDate(guest.checkout)}</div>
+          <div class="mb-2"><strong>Mobile:</strong> ${guest.mobile || 'Not provided'}</div>
+          <div class="mb-2"><strong>Advance:</strong> ₹${guest.advanceAmount || 0} ${guest.advanceMode ? `(${guest.advanceMode})` : ''}</div>
+        `;
+        
+        linkInput.value = homeLink;
+        
+        document.getElementById('sendEmailFromModal').onclick = () => {
+          window.open(`mailto:?subject=OCB Stays Booking Confirmation&body=${encodeURIComponent(this.generateEmailBody(guest, homeLink))}`);
+        };
+        
+        document.getElementById('sendWhatsappFromModal').onclick = () => {
+          window.open(`https://wa.me/${guest.mobile}?text=${encodeURIComponent(this.generateWhatsappMessage(guest, homeLink))}`);
+        };
+        
+        modal.show();
+      }
     };
 
-    // Event handlers - Updated to use API service
+    // Event handlers
     const handlers = {
       async registerGuest(e) {
         e.preventDefault();
@@ -1307,7 +2272,6 @@
           const guestID = helpers.generateGuestId();
           const homeLink = `${config.urls.guestPortal}?guestID=${guestID}&room=${encodeURIComponent(formData.room)}`;
           
-          // Create guest via API
           const response = await apiService.createGuest({
             ...formData,
             guestID,
@@ -1319,10 +2283,8 @@
 
           if (!response.id) throw new Error('Failed to create guest record');
           
-          // Clear form
           document.getElementById('guestForm').reset();
           
-          // Show success modal
           app.showRegistrationSuccess(formData, homeLink);
           
           await app.loadActiveGuests();
@@ -1338,6 +2300,98 @@
           btn.disabled = false;
           helpers.toggleSpinner('registerSpinner', false);
         }
+      },
+      
+      async generateBill() {
+        const guestList = document.getElementById('guestList');
+        const selectedGuest = guestList.querySelector('.guest-list-item.active');
+        if (!selectedGuest) {
+          return helpers.showToast('Please select a guest', 'warning');
+        }
+        
+        const btn = document.getElementById('generateBill');
+        btn.disabled = true;
+        helpers.toggleSpinner('billSpinner', true);
+        document.getElementById('billOutput').innerHTML = '<div class="alert alert-info">Generating food bill...</div>';
+        
+        try {
+          const guestId = selectedGuest.dataset.guestId;
+          const guestData = JSON.parse(selectedGuest.dataset.guest);
+          const orders = await app.getGuestOrders(guestData.guestID);
+          if (!orders.length) return helpers.showToast('No food orders found', 'warning');
+          
+          const billResult = await app.createFoodBill(guestId, guestData, orders);
+          
+          const billItems = billResult.orders.map(order => `
+            <tr>
+              <td>${order.item}</td>
+              <td class="text-center">${order.quantity}</td>
+              <td class="text-right">₹${order.price.toFixed(2)}</td>
+              <td class="text-right">₹${order.amount.toFixed(2)}</td>
+            </tr>
+          `).join('');
+          
+          document.getElementById('billOutput').innerHTML = `
+            <div class="alert alert-success">Food bill generated!</div>
+            <div class="bill-container">
+              <div class="bill-header">
+                <div class="bill-title">OCB Stays</div>
+                <div class="bill-subtitle">Food Order Bill</div>
+              </div>
+              
+              <div class="bill-meta">
+                <div>
+                  <div><strong>Guest:</strong> ${billResult.guest.name || 'Unnamed'}</div>
+                  <div><strong>Room:</strong> ${billResult.guest.room}</div>
+                </div>
+                <div>
+                  <div><strong>Bill ID:</strong> ${billResult.billId}</div>
+                  <div><strong>Date:</strong> ${new Date().toLocaleDateString()}</div>
+                </div>
+              </div>
+              
+              <table class="bill-items">
+                <thead>
+                  <tr>
+                    <th>Item</th>
+                    <th class="text-center">Qty</th>
+                    <th class="text-right">Price</th>
+                    <th class="text-right">Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${billItems}
+                </tbody>
+              </table>
+              
+              <div class="bill-total">
+                Total Amount: ₹${billResult.totalAmount.toFixed(2)}
+              </div>
+            </div>
+            
+            <div class="action-buttons mt-3">
+              <button class="btn btn-primary" onclick="app.downloadBillAsImage()">
+                <i class="fas fa-download"></i> Download Bill
+              </button>
+            </div>
+          `;
+        } catch (error) {
+          console.error("Bill generation error:", error);
+          helpers.showToast(`Error: ${error.message}`, 'danger');
+        } finally {
+          btn.disabled = false;
+          helpers.toggleSpinner('billSpinner', false);
+        }
+      },
+      
+      async checkoutGuest() {
+        const guestList = document.getElementById('guestList');
+        const selectedGuest = guestList.querySelector('.guest-list-item.active');
+        if (!selectedGuest) {
+          return helpers.showToast('Please select a guest', 'warning');
+        }
+        
+        await app.showCheckoutModal(selectedGuest.dataset.guestId);
       },
       
       async confirmCheckout() {
@@ -1360,14 +2414,12 @@
           const guest = await app.loadGuestDetails(guestId);
           const foodTotal = await app.calculateFoodTotal(guest.guestID);
           
-          // Checkout via API
           await apiService.checkoutGuest(guestId, {
             PaymentType: paymentType,
             Comments: comments || guest.Comments || '',
             balanceAmount: parseFloat(guest.balanceAmount) || 0
           });
           
-          // Close modal
           const modal = bootstrap.Modal.getInstance(document.getElementById('checkoutModal'));
           modal.hide();
           
@@ -1384,6 +2436,120 @@
         } finally {
           btn.disabled = false;
         }
+      },
+      
+      setupGuestSelection() {
+        const guestList = document.getElementById('guestList');
+        if (!guestList) return;
+        
+        guestList.addEventListener('click', async function(e) {
+          const guestItem = e.target.closest('.guest-list-item');
+          if (!guestItem) return;
+          
+          const items = guestList.querySelectorAll('.guest-list-item');
+          items.forEach(item => item.classList.remove('active'));
+          guestItem.classList.add('active');
+          
+          window.selectedGuestId = guestItem.dataset.guestId;
+          
+          document.getElementById('guestDetailsContent').innerHTML = `
+            <div class="text-center py-3">
+              <div class="spinner-border text-primary" role="status"></div>
+              <div>Loading guest details...</div>
+            </div>
+          `;
+          
+          document.getElementById('selectedGuestInfo').style.display = 'block';
+          document.getElementById('billOutput').innerHTML = '';
+          
+          try {
+            await app.loadGuestDetailsForDisplay(guestItem.dataset.guestId, JSON.parse(guestItem.dataset.guest));
+          } catch (error) {
+            console.error('Error loading guest details:', error);
+            document.getElementById('guestDetailsContent').innerHTML = `
+              <div class="alert alert-danger">Failed to load guest details</div>
+            `;
+          }
+        });
+      },
+      
+      setupPastGuestSelection() {
+        const pastGuestList = document.getElementById('pastGuestList');
+        if (!pastGuestList) return;
+        
+        pastGuestList.addEventListener('click', async function(e) {
+          const guestItem = e.target.closest('.guest-list-item');
+          if (!guestItem) return;
+          
+          const items = pastGuestList.querySelectorAll('.guest-list-item');
+          items.forEach(item => item.classList.remove('active'));
+          guestItem.classList.add('active');
+          
+          window.selectedPastGuestId = guestItem.dataset.guestId;
+          
+          document.getElementById('pastGuestDetailsContent').innerHTML = `
+            <div class="text-center py-3">
+              <div class="spinner-border text-primary" role="status"></div>
+              <div>Loading guest details...</div>
+            </div>
+          `;
+          
+          document.getElementById('selectedPastGuestInfo').style.display = 'block';
+          
+          try {
+            await app.loadPastGuestDetails(guestItem.dataset.guestId);
+          } catch (error) {
+            console.error('Error loading past guest details:', error);
+            document.getElementById('pastGuestDetailsContent').innerHTML = `
+              <div class="alert alert-danger">Failed to load guest details</div>
+            `;
+          }
+        });
+      },
+      
+      setupPlaceOrder() {
+        const placeOrderBtn = document.getElementById('placeOrder');
+        if (!placeOrderBtn) return;
+        
+        placeOrderBtn.addEventListener('click', () => {
+          const guestList = document.getElementById('guestList');
+          const selectedGuest = guestList.querySelector('.guest-list-item.active');
+          if (!selectedGuest) {
+            return helpers.showToast('Please select a guest', 'warning');
+          }
+          
+          const guest = JSON.parse(selectedGuest.dataset.guest);
+          const menuLink = `${config.urls.guestMenu}?guestID=${guest.guestID}&room=${encodeURIComponent(guest.room)}`;
+          window.open(menuLink, '_blank');
+        });
+      },
+      
+      setupEditGuest() {
+        const editBtn = document.getElementById('editGuestBtn');
+        if (!editBtn) return;
+        
+        editBtn.addEventListener('click', async () => {
+          const guestList = document.getElementById('guestList');
+          const selectedGuest = guestList.querySelector('.guest-list-item.active');
+          if (!selectedGuest) return;
+          
+          const guestId = selectedGuest.dataset.guestId;
+          const guest = JSON.parse(selectedGuest.dataset.guest);
+          
+          document.getElementById('editName').value = guest.name || '';
+          document.getElementById('editMobile').value = guest.mobile || '';
+          document.getElementById('editRoom').value = guest.room || '';
+          document.getElementById('editCheckin')._flatpickr.setDate(guest.checkin);
+          document.getElementById('editCheckout')._flatpickr.setDate(guest.checkout);
+          document.getElementById('editAdvance').value = guest.advanceAmount || 0;
+          document.getElementById('editAdvanceMode').value = guest.advanceMode || '';
+          document.getElementById('editBalance').value = guest.balanceAmount || 0;
+          document.getElementById('editComments').value = guest.Comments || '';
+          document.getElementById('editGuestId').value = guestId;
+          
+          const modal = new bootstrap.Modal(document.getElementById('editGuestModal'));
+          modal.show();
+        });
       },
       
       async saveGuestChanges() {
@@ -1412,21 +2578,17 @@
           if (!formData.checkin) throw new Error('Check-in date is required');
           if (!formData.checkout) throw new Error('Check-out date is required');
           
-          // Update guest via API
           await apiService.updateGuest(guestId, formData);
           
-          // Close modal
           const modal = bootstrap.Modal.getInstance(document.getElementById('editGuestModal'));
           modal.hide();
           
-          // Reload guest data
           helpers.showToast('Guest details updated successfully!', 'success');
           await app.loadActiveGuests();
           await app.loadTodaysGuests();
           await app.loadUpcomingGuests();
           await app.generateCalendarView();
           
-          // Refresh selected guest
           window.selectedGuestId = guestId;
           const guestList = document.getElementById('guestList');
           const guestItem = guestList.querySelector(`[data-guest-id="${guestId}"]`);
@@ -1441,20 +2603,123 @@
           btn.disabled = false;
         }
       },
-
-      // ... other handlers remain the same structure but use apiService
+      
+      setupContactIcon() {
+        const contactIcon = document.getElementById('openContacts');
+        if (!contactIcon) return;
+        
+        contactIcon.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const mobileInput = document.getElementById('mobile');
+          mobileInput.focus();
+          
+          if (navigator.contacts && navigator.contacts.select) {
+            navigator.contacts.select(['name', 'tel'], { multiple: false })
+              .then(contacts => {
+                if (contacts && contacts.length > 0) {
+                  const contact = contacts[0];
+                  mobileInput.value = contact.tel ? contact.tel[0] : '';
+                }
+              })
+              .catch(console.error);
+          } else {
+            if (typeof mobileInput.select === 'function') {
+              mobileInput.select();
+            }
+          }
+        });
+      },
+      
+      setupAvailabilityCheck() {
+        const dateRange = document.getElementById('dateRange');
+        if (!dateRange) return;
+        
+        dateRange.addEventListener('change', () => {
+          if (dateRange.value) {
+            app.checkRoomAvailability();
+          }
+        });
+      },
+      
+      setupPropertyFilter() {
+        const filter = document.getElementById('propertyFilter');
+        if (!filter) return;
+        
+        filter.addEventListener('change', () => {
+          app.generateCalendarView(filter.value);
+        });
+      },
+      
+      setupTabNavigation() {
+        document.querySelectorAll('#mainTabs .nav-link').forEach(tab => {
+          tab.addEventListener('click', (e) => {
+            e.preventDefault();
+            const target = tab.dataset.tabTarget;
+            
+            document.querySelectorAll('.main-content > div').forEach(content => {
+              content.style.display = 'none';
+            });
+            
+            document.getElementById(`${target}-content`).style.display = 'block';
+            
+            document.querySelectorAll('#mainTabs .nav-link').forEach(t => {
+              t.classList.remove('active');
+            });
+            tab.classList.add('active');
+            
+            if (target === 'dashboard') {
+              app.loadTodaysGuests();
+              app.loadUpcomingGuests();
+              app.generateCalendarView();
+              app.loadAnalytics();
+            } else if (target === 'manage') {
+              app.loadActiveGuests();
+              app.loadPastGuests();
+            } else if (target === 'register') {
+              app.loadAvailableRooms();
+            } else if (target === 'logs') {
+              app.loadLogs();
+            }
+          });
+        });
+        
+        document.getElementById('past-tab')?.addEventListener('click', () => {
+          app.loadPastGuests();
+        });
+      },
+      
+      setupAutoFocus() {
+        document.querySelectorAll('input, select').forEach(input => {
+          input.addEventListener('change', function() {
+            if (this.value) {
+              helpers.focusNextInput(this);
+            }
+          });
+          
+          input.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+              helpers.focusNextInput(this);
+            }
+          });
+        });
+      },
+      
+      setupLogsButtons() {
+        document.getElementById('refreshLogs')?.addEventListener('click', () => {
+          app.loadLogs();
+        });
+        
+        document.getElementById('clearLogs')?.addEventListener('click', () => {
+          logger.clear();
+        });
+      }
     };
-
-    // All other setup functions remain the same
-    // ... (setupGuestSelection, setupPastGuestSelection, etc.)
 
     // Initialize
     window.addEventListener('DOMContentLoaded', async () => {
-      // Initialize logger
       window.logger = logger;
       logger.log('Dashboard initialized', 'info');
       
-      // Setup event listeners
       document.getElementById('guestForm')?.addEventListener('submit', handlers.registerGuest);
       document.getElementById('generateBill')?.addEventListener('click', handlers.generateBill);
       document.getElementById('checkoutGuest')?.addEventListener('click', handlers.checkoutGuest);
@@ -1464,7 +2729,6 @@
         document.querySelector('#register-footer-tab').click();
       });
       
-      // Setup other handlers (unchanged)
       handlers.setupGuestSelection();
       handlers.setupPastGuestSelection();
       handlers.setupPlaceOrder();
@@ -1476,10 +2740,8 @@
       handlers.setupAutoFocus();
       handlers.setupLogsButtons();
       
-      // Initialize calendar
       app.initCalendar();
       
-      // Load initial data
       await app.loadTodaysGuests();
       await app.loadUpcomingGuests();
       await app.generateCalendarView();
@@ -1487,7 +2749,6 @@
       await app.loadPastGuests();
       await app.loadAnalytics();
       
-      // Make app functions available globally
       window.app = app;
       window.showToast = helpers.showToast;
     });
