@@ -1345,7 +1345,7 @@ async getAnalytics() {
           data.forEach(guest => {
             const item = document.createElement('div');
             item.className = 'guest-list-item';
-            item.dataset.guestId = guest.id;
+            item.dataset.guestId = guest.guestID;
             item.dataset.guest = JSON.stringify(guest);
             item.innerHTML = `
               <div class="guest-list-name">${guest.name || 'Unnamed Guest'} (${guest.guestID})</div>
@@ -1390,7 +1390,7 @@ async getAnalytics() {
           data.forEach(guest => {
             const item = document.createElement('div');
             item.className = 'guest-list-item';
-            item.dataset.guestId = guest.id;
+            item.dataset.guestId = guest.guestID;
             item.dataset.guest = JSON.stringify(guest);
             item.innerHTML = `
               <div class="guest-list-name">${guest.name || 'Unnamed Guest'} (${guest.guestID})</div>
@@ -1481,7 +1481,7 @@ async getAnalytics() {
             
             const card = document.createElement('div');
             card.className = 'guest-card';
-            card.dataset.guestId = guest.id;
+            card.dataset.guestId = guest.guestID;
             card.innerHTML = `
               <div class="guest-summary">
                 <div>
@@ -1546,7 +1546,7 @@ async getAnalytics() {
             
             const card = document.createElement('div');
             card.className = 'guest-card';
-            card.dataset.guestId = guest.id;
+            card.dataset.guestId = guest.guestID;
             card.innerHTML = `
               <div class="guest-summary">
                 <div>
@@ -1709,7 +1709,7 @@ async getAnalytics() {
             }
             
             return `
-              <div class="modal-event" data-guest-id="${booking.id}">
+              <div class="modal-event" data-guest-id="${booking.guestID}">
                 <div><strong>${guest.name || 'Unnamed Guest'}</strong> ${statusBadge}</div>
                 <div>Room: ${guest.room}</div>
                 <div>Dates: ${helpers.formatDate(guest.checkin)} to ${helpers.formatDate(guest.checkout)}</div>
@@ -1782,7 +1782,7 @@ async getAnalytics() {
               <div class="card mb-3">
                 <div class="card-header">
                   <div class="d-flex justify-content-between">
-                    <div>Order #${order.OrderID || order.id}</div>
+                    <div>Order #${order.OrderID || order.guestID}</div>
                     <div>${orderDate}</div>
                   </div>
                   <div class="d-flex justify-content-between mt-1">
@@ -1866,7 +1866,7 @@ async getAnalytics() {
           
           let billId;
           if (existingBill && existingBill.length > 0) {
-            billId = existingBill[0].id;
+            billId = existingBill[0].guestID;
             await apiService.updateBill(billId, {
               totalAmount: totalAmount,
               orderDetails: JSON.stringify(allOrderItems),
@@ -1883,7 +1883,7 @@ async getAnalytics() {
             };
 
             const response = await apiService.createBill(billData);
-            billId = response.id;
+            billId = response.guestID;
             logger.log(`Created new bill for guest ${guestRecordId}`, 'success');
           }
 
