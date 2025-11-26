@@ -2274,7 +2274,7 @@ Team OCB Stays`;
             balanceAmount: parseFloat(formData.balanceAmount)
           });
 
-          if (!response.id) throw new Error('Failed to create guest record');
+          if (!response.guestID) throw new Error('Failed to create guest record');
           
           document.getElementById('guestForm').reset();
           
