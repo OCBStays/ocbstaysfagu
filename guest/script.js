@@ -1,512 +1,477 @@
-// Configuration
+console.log('🟢 guest script.js loaded');
+
 const config = {
-  airtable: {
-    token: 'patWo5RyRmRCbKXp3.afc1eefc274991a91c14b6b95b2f5bb726cfb14deee85b57e10e5b0f84bc2980',
-    baseId: 'app2UvEfKduRwGjfR',
-    tables: {
-      guests: 'Guests',
-      orders: 'Orders',
-      bills: 'Bills'
-    }
-  },
-  locations: {
-    fagu: 'https://maps.app.goo.gl/hdQtqqrPfXkuW9kH8?g_st=com.google.maps.preview.copy',
-    cheog: 'https://maps.app.goo.gl/TkR5taVRB1goYrYh9?g_st=iwb',
-    temple: 'https://maps.app.goo.gl/TXE7zRfKxUPBtKNL7?g_st=com.google.maps.preview.copy',
-    property: 'https://maps.app.goo.gl/ML1D8MqbNofVC5Zq6?g_st=com.google.maps.preview.copy'
-  },
-  wifi: {
-    ssid: 'OCB Stays',
-    password: 'CozyBalcony!'
+  apiBaseUrl: 'https://railway-production-1577.up.railway.app/api',
+  menuUrl: 'https://ocbstays.github.io/ocbstaysfagu/guest/menu.html'
+};
+
+let currentGuest = null;
+let currentGuestID = null;
+let currentRoom = null;
+let currentOrders = [];
+
+// ---------- Generic helpers ----------
+
+function formatDateTime(dateStr) {
+  if (!dateStr) return 'Not available';
+  const d = new Date(dateStr);
+  if (Number.isNaN(d.getTime())) return dateStr;
+  return d.toLocaleString('en-IN', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return 'Not available';
+  const d = new Date(dateStr);
+  if (Number.isNaN(d.getTime())) return dateStr;
+  return d.toLocaleDateString('en-IN', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  });
+}
+
+function rupee(amount) {
+  const n = Number(amount) || 0;
+  return `₹${n.toFixed(2)}`;
+}
+
+// ---------- DOM helper actions ----------
+
+function setText(id, value) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = value;
+}
+
+function toggleCollapse(id) {
+  const content = document.getElementById(id);
+  const icon = document.getElementById('guestDetailsToggle');
+  if (!content) return;
+  const isVisible = content.style.display === 'block';
+  content.style.display = isVisible ? 'none' : 'block';
+  if (icon) {
+    icon.classList.toggle('fa-chevron-down', isVisible);
+    icon.classList.toggle('fa-chevron-up', !isVisible);
   }
-};
+}
 
-// State
-const state = {
-  currentGuest: null,
-  guestOrders: null,
-  guestBill: null
-};
+function makeCall(number) {
+  if (!number) return;
+  window.location.href = `tel:${number}`;
+}
 
-// DOM Elements
-const elements = {
-  welcomeMessage: document.getElementById('welcomeMessage'),
-  guestName: document.getElementById('guestName'),
-  guestID: document.getElementById('guestID'),
-  room: document.getElementById('room'),
-  checkin: document.getElementById('checkin'),
-  menuButton: document.getElementById('menuButton'),
-  ordersList: document.getElementById('ordersList'),
-  billDetails: document.getElementById('billDetails'),
-  connectWifiBtn: document.getElementById('connectWifiBtn'),
-  orderModalTitle: document.getElementById('orderModalTitle'),
-  orderModalBody: document.getElementById('orderModalBody'),
-  cancelOrderBtn: document.getElementById('cancelOrderBtn'),
-  guestDetailsCollapse: document.getElementById('guestDetailsCollapse'),
-  guestDetailsToggle: document.getElementById('guestDetailsToggle')
-};
+function openWhatsApp(number) {
+  if (!number) return;
+  const text = encodeURIComponent('Hi, I am staying at OCB Stays and need some help.');
+  window.open(`https://wa.me/${number.replace('+', '')}?text=${text}`, '_blank');
+}
 
-// Initialize modals
-const modals = {
-  orderModal: new bootstrap.Modal(document.getElementById('orderModal')),
-  rulesModal: new bootstrap.Modal(document.getElementById('rulesModal'))
-};
-
-// Helper Functions
-const helpers = {
-  toggleCollapse: (id) => {
-    const content = document.getElementById(id);
-    const toggleIcon = document.getElementById(`${id}Toggle`);
-    content.classList.toggle('expanded');
-    toggleIcon.classList.toggle('expanded');
-  },
-
-  openLocation: (locationKey) => {
-    const url = config.locations[locationKey];
-    if (url) window.open(url, '_blank');
-  },
-
-  openAllLocations: () => {
-    window.open(config.locations.property, '_blank');
-  },
-
-  highlightSection: (sectionId) => {
-    const section = document.getElementById(sectionId);
-    if (section) {
-      section.classList.add('section-highlight');
-      setTimeout(() => section.classList.remove('section-highlight'), 2000);
-    }
-  },
-
-  smoothScrollTo: (elementId) => {
-    const element = document.getElementById(elementId);
-    if (element) {
-      const offset = 20;
-      const elementPosition = element.getBoundingClientRect().top + window.pageYOffset;
-      window.scrollTo({
-        top: elementPosition - offset,
-        behavior: 'smooth'
-      });
-      helpers.highlightSection(elementId);
-    }
-  },
-
-  makeCall: (phone) => {
-    window.location.href = `tel:${phone}`;
-  },
-
-  openWhatsApp: (phone) => {
-    window.location.href = `https://wa.me/${phone.replace('+', '')}`;
+function openLocation(key) {
+  let url = '';
+  switch (key) {
+    case 'fagu':
+      url = 'https://www.google.com/maps/search/?api=1&query=Fagu%20Himachal%20Pradesh';
+      break;
+    case 'cheog':
+      url = 'https://www.google.com/maps/search/?api=1&query=Cheog%20Market%20Himachal%20Pradesh';
+      break;
+    case 'temple':
+      url = 'https://www.google.com/maps/search/?api=1&query=Banga%20Pani%20Temple%20Cheog';
+      break;
+    case 'property':
+      url = 'https://www.google.com/maps/search/?api=1&query=OCB%20Stays%20Fagu%20Cottage';
+      break;
+    default:
+      url = 'https://www.google.com/maps/search/?api=1&query=Fagu%20Himachal%20Pradesh';
   }
-};
+  window.open(url, '_blank');
+}
 
-// API Functions
-const api = {
-  // In script.js - Update the fetchGuestData function
-fetchGuestData: async () => {
+function openAllLocations() {
+  // Simple all-locations view: open Fagu area; you can replace with your custom MyMaps link
+  window.open('https://www.google.com/maps/search/?api=1&query=OCB%20Stays%20Fagu', '_blank');
+}
+
+// Footer nav smooth-scroll & active state
+function initFooterNav() {
+  const tabs = document.querySelectorAll('.footer-nav .nav-tab');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', (e) => {
+      e.preventDefault();
+      const href = tab.getAttribute('href');
+      if (href && href.startsWith('#')) {
+        const target = document.querySelector(href);
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+    });
+  });
+}
+
+// Wi-Fi copy button
+function initWifiButton() {
+  const btn = document.getElementById('connectWifiBtn');
+  if (!btn) return;
+  btn.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText('OCBStays123');
+      alert('Wi-Fi password copied to clipboard: OCBStays123');
+    } catch (err) {
+      console.error('Clipboard error:', err);
+      alert('Wi-Fi password: OCBStays123');
+    }
+  });
+}
+
+// ---------- API calls ----------
+
+async function apiGet(path) {
+  const url = `${config.apiBaseUrl}${path}`;
+  console.log('🌐 GET', url);
+  const res = await fetch(url);
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`GET ${path} failed: ${res.status} ${text}`);
+  }
+  return res.json();
+}
+
+async function apiPut(path, body) {
+  const url = `${config.apiBaseUrl}${path}`;
+  console.log('🌐 PUT', url, body);
+  const res = await fetch(url, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body || {})
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`PUT ${path} failed: ${res.status} ${text}`);
+  }
+  return res.json();
+}
+
+// ---------- Guest + Orders + Bill ----------
+
+async function loadGuestDetails() {
   const params = new URLSearchParams(window.location.search);
   const guestID = params.get('guestID');
   const room = params.get('room');
 
-  if (!guestID || !room) {
-    throw new Error('Missing required parameters');
+  currentGuestID = guestID || null;
+  currentRoom = room || null;
+
+  if (!guestID) {
+    setText('guestName', 'Guest (ID missing)');
+    setText('room', room || 'Not specified');
+    setText('guestID', 'N/A');
+    setText('checkin', 'N/A');
+    document.getElementById('billDetails').innerHTML =
+      '<p>Please open the link shared by your host, it should contain a <code>guestID</code> parameter.</p>';
+    return;
   }
 
-  const baseUrl = 'https://api.airtable.com/v0';
-  
-  const [guestResponse, ordersResponse, billResponse] = await Promise.all([
-    fetch(`${baseUrl}/${config.airtable.baseId}/${config.airtable.tables.guests}?filterByFormula=AND({guestID}='${guestID}',{room}='${room}',{status}='Active')`, {
-      headers: { Authorization: `Bearer ${config.airtable.token}` }
-    }),
-    fetch(`${baseUrl}/${config.airtable.baseId}/${config.airtable.tables.orders}?filterByFormula=AND({Guest}='${guestID}')&sort[0][field]=OrderDate&sort[0][direction]=desc`, {
-      headers: { Authorization: `Bearer ${config.airtable.token}` }
-    }),
-    fetch(`${baseUrl}/${config.airtable.baseId}/${config.airtable.tables.bills}?filterByFormula={guestID}='${guestID}'`, {
-      headers: { Authorization: `Bearer ${config.airtable.token}` }
-    })
-  ]);
+  try {
+    const guest = await apiGet(`/guests/by-guest-id/${encodeURIComponent(guestID)}`);
+    currentGuest = guest;
 
-  if (!guestResponse.ok) throw new Error(`Guest data error: ${guestResponse.status}`);
-  if (!ordersResponse.ok) throw new Error(`Orders error: ${ordersResponse.status}`);
-  if (!billResponse.ok) throw new Error(`Bill error: ${billResponse.status}`);
+    const displayName = guest.name || 'Guest';
+    setText('welcomeMessage', `Welcome to OCB Stays 🌲, ${displayName}`);
+    setText('guestName', displayName);
+    setText('room', guest.room || room || 'Not specified');
+    setText('guestID', guest.guestID || guestID);
+    setText('checkin', formatDate(guest.checkin));
 
-  const [guestData, ordersData, billData] = await Promise.all([
-    guestResponse.json(),
-    ordersResponse.json(),
-    billResponse.json()
-  ]);
+    // Also update menu button link (for safety)
+    initMenuButton();
 
-  return {
-    guest: guestData.records[0]?.fields,
-    orders: ordersData.records,
-    bill: billData.records[0]?.fields
-  };
-},
-  cancelOrder: async (orderId) => {
-    const response = await fetch(`${config.airtable.baseId}/${config.airtable.tables.orders}/${orderId}`, {
-      method: 'PATCH',
-      headers: {
-        'Authorization': `Bearer ${config.airtable.token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        fields: { Status: 'Cancelled' }
-      })
-    });
-
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-    return response.json();
+  } catch (err) {
+    console.error('Error loading guest:', err);
+    setText('guestName', 'Guest not found');
+    setText('room', room || 'Not found');
+    setText('guestID', currentGuestID);
+    setText('checkin', 'Not found');
+    document.getElementById('billDetails').innerHTML =
+      '<p class="text-danger">We could not find your booking. Please contact the host.</p>';
   }
-};
+}
 
-// UI Functions
-const ui = {
-  updatePageWithData: (data) => {
-    state.currentGuest = data.guest;
-    state.guestOrders = data.orders;
-    state.guestBill = data.bill;
+async function loadOrders() {
+  const list = document.getElementById('ordersList');
+  if (!list) return;
 
-    if (!state.currentGuest) {
-      throw new Error('Guest not found or no longer active');
-    }
+  if (!currentGuestID) {
+    list.innerHTML = '<p>Orders will appear here once your guest link has a valid guestID.</p>';
+    return;
+  }
 
-    // Update guest details
-    elements.guestName.textContent = state.currentGuest.name;
-    elements.guestID.textContent = state.currentGuest.guestID;
-    elements.room.textContent = state.currentGuest.room;
-    
-    const checkinDate = new Date(state.currentGuest.checkin);
-    const formattedDate = checkinDate.toLocaleDateString('en-IN', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric'
-    });
-    elements.checkin.textContent = `${formattedDate} at 01:30 PM`;
-    
-    elements.welcomeMessage.textContent = `Hello, ${state.currentGuest.name}! Welcome to OCB Stays 🌲`;
+  try {
+    list.innerHTML = '<p>Loading your orders...</p>';
+    const orders = await apiGet(`/orders?guest=${encodeURIComponent(currentGuestID)}`);
+    currentOrders = orders || [];
 
-    // Set up menu button
-    elements.menuButton.onclick = () => {
-      window.location.href = `menu.html?guestID=${state.currentGuest.guestID}&room=${encodeURIComponent(state.currentGuest.room)}`;
-    };
-
-    // Display orders and bill
-    ui.displayOrders(state.guestOrders);
-    ui.displayBillDetails(state.guestBill);
-  },
-
-  displayBillDetails: (bill) => {
-    if (!bill) {
-      elements.billDetails.innerHTML = '<p>No outstanding bill found. Please confirm with your host before departure.</p>';
+    if (!currentOrders.length) {
+      list.innerHTML = '<p class="text-muted">No orders placed yet. Use the button above to view the menu.</p>';
       return;
     }
 
-    let itemsHtml = '';
-    let totalAmount = 0;
-    
-    try {
-      const items = JSON.parse(bill.orderDetails || '[]');
-      items.forEach(item => {
-        itemsHtml += `
-          <div class="order-item">
-            <span>${item.item}</span>
-            <span>₹${item.amount}</span>
-          </div>
-        `;
-        totalAmount += item.amount;
-      });
-    } catch (e) {
-      console.error('Error parsing bill items:', e);
-      itemsHtml = '<p>Could not load bill items</p>';
-    }
-
-    const displayTotal = bill.totalAmount || totalAmount;
-
-    elements.billDetails.innerHTML = `
-      <p>Please settle your bill with the host before departure.</p>
-      <div class="mt-3">
-        <h5>Your Bill Summary</h5>
-        <div class="order-items">
-          ${itemsHtml}
-          <div class="order-item mt-2 pt-2 border-top">
-            <strong>Total Amount:</strong>
-            <strong>₹${displayTotal}</strong>
-            <i class="fas fa-download download-btn" onclick="app.downloadBill()" title="Download Bill"></i>
-          </div>
-        </div>
-      </div>
-      ${bill.paymentStatus === 'Paid' ? 
-        '<div class="alert alert-success mt-3">Payment already settled. Thank you!</div>' : 
-        '<p class="mt-3">Payment methods: Cash, UPI, or Bank Transfer</p>'}
-    `;
-  },
-
-  displayOrders: (orders) => {
-    if (!orders || orders.length === 0) {
-      elements.ordersList.innerHTML = '<p>You have no orders yet.</p>';
-      return;
-    }
-
-    elements.ordersList.innerHTML = '';
-    
-    orders.forEach(order => {
-      const orderData = order.fields;
-      const orderDate = new Date(orderData.OrderDate);
-      const formattedDate = orderDate.toLocaleString('en-IN', {
-        day: 'numeric',
-        month: 'short',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-      
-      const orderCard = document.createElement('div');
-      orderCard.className = `order-card order-${orderData.Status ? orderData.Status.toLowerCase() : 'default'}`;
-      orderCard.innerHTML = `
-        <div class="d-flex justify-content-between align-items-center">
-          <div>
-            <strong>Order #${orderData.OrderID || order.id}</strong>
-            <div>${formattedDate} • ${orderData.Status || 'Unknown'}</div>
-          </div>
-          <button class="btn btn-sm btn-outline-secondary view-order-btn" data-order-id="${order.id}">
-            View Details
-          </button>
-        </div>
-      `;
-      
-      elements.ordersList.appendChild(orderCard);
+    currentOrders.sort((a, b) => {
+      const d1 = new Date(a.OrderDate || a.created_at || 0).getTime();
+      const d2 = new Date(b.OrderDate || b.created_at || 0).getTime();
+      return d2 - d1;
     });
 
-    document.querySelectorAll('.view-order-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const orderId = e.target.getAttribute('data-order-id');
-        ui.showOrderDetails(orderId);
-      });
-    });
-  },
+    const html = currentOrders.map(order => {
+      const status = order.Status || 'Pending';
+      const dateStr = formatDateTime(order.OrderDate || order.created_at);
+      const total = rupee(order.TotalAmount || 0);
+      const badgeClass =
+        status === 'Delivered' ? 'bg-success' :
+        status === 'Cancelled' ? 'bg-secondary' :
+        'bg-warning';
 
-  showOrderDetails: async (orderId) => {
-    const cachedOrder = state.guestOrders.find(o => o.id === orderId);
-    if (cachedOrder) {
-      ui.displayOrderModal(cachedOrder);
-      return;
-    }
-
-    try {
-      elements.orderModalBody.innerHTML = `
-        <div class="text-center">
-          <div class="spinner"></div>
-          <p>Loading order details...</p>
-        </div>
-      `;
-      modals.orderModal.show();
-
-      const response = await fetch(`${config.airtable.baseId}/${config.airtable.tables.orders}/${orderId}`, {
-        headers: { Authorization: `Bearer ${config.airtable.token}` }
-      });
-
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
-      const data = await response.json();
-      ui.displayOrderModal(data);
-    } catch (error) {
-      console.error('Error fetching order details:', error);
-      elements.orderModalBody.innerHTML = `
-        <p>Error loading order details. Please try again later.</p>
-      `;
-    }
-  },
-
-  displayOrderModal: (orderData) => {
-    const order = orderData.fields || orderData;
-    const orderDate = new Date(order.OrderDate);
-    const formattedDate = orderDate.toLocaleString('en-IN', {
-      day: 'numeric',
-      month: 'short',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-
-    let itemsHtml = '';
-    let totalAmount = 0;
-    try {
-      const items = JSON.parse(order.Items || '[]');
-      items.forEach(item => {
-        itemsHtml += `
-          <div class="order-item">
-            <span>${item.quantity} × ${item.name}</span>
-            <span>₹${item.price * item.quantity}</span>
+      return `
+        <div class="order-card mb-2 p-2 border rounded" data-order-id="${order.OrderID}">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <strong>Order #${order.OrderID}</strong><br>
+              <small>${dateStr}</small>
+            </div>
+            <div class="text-end">
+              <span class="badge ${badgeClass}">${status}</span><br>
+              <small>${total}</small>
+            </div>
           </div>
-        `;
-        totalAmount += item.price * item.quantity;
-      });
-    } catch (e) {
-      console.error('Error parsing items:', e);
-      itemsHtml = '<p>Could not load order items</p>';
-    }
-
-    const canCancel = order.Status === 'Pending' && 
-                     (new Date() - orderDate) < (5 * 60 * 1000);
-    
-    elements.orderModalTitle.textContent = `Order #${order.OrderID || orderData.id}`;
-    elements.orderModalBody.innerHTML = `
-      <div class="mb-3">
-        <div><strong>Status:</strong> ${order.Status || 'Unknown'}</div>
-        <div><strong>Order Date:</strong> ${formattedDate}</div>
-        ${order.SpecialInstructions ? `<div><strong>Special Instructions:</strong> ${order.SpecialInstructions}</div>` : ''}
-      </div>
-      <div class="order-items">
-        <h6>Items:</h6>
-        ${itemsHtml}
-        <div class="order-item mt-2 pt-2 border-top">
-          <strong>Total:</strong>
-          <strong>₹${totalAmount}</strong>
         </div>
-      </div>
-    `;
+      `;
+    }).join('');
 
-    if (canCancel) {
-      elements.cancelOrderBtn.classList.remove('d-none');
-      elements.cancelOrderBtn.onclick = async () => {
-        if (confirm('Are you sure you want to cancel this order?')) {
-          try {
-            await api.cancelOrder(orderData.id);
-            alert('Order cancelled successfully!');
-            modals.orderModal.hide();
-            const orderIndex = state.guestOrders.findIndex(o => o.id === orderData.id);
-            if (orderIndex !== -1) {
-              state.guestOrders[orderIndex].fields.Status = 'Cancelled';
-              ui.displayOrders(state.guestOrders);
-            }
-          } catch (error) {
-            console.error('Error cancelling order:', error);
-            alert('Failed to cancel order. Please try again or contact your host.');
-          }
+    list.innerHTML = html;
+
+    // Attach click handlers for each order card
+    document.querySelectorAll('.order-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const orderID = card.getAttribute('data-order-id');
+        const order = currentOrders.find(o => String(o.OrderID) === String(orderID));
+        if (order) {
+          openOrderModal(order);
         }
-      };
-    } else {
-      elements.cancelOrderBtn.classList.add('d-none');
-    }
-
-    modals.orderModal.show();
-  },
-
-  downloadBill: () => {
-    html2canvas(elements.billDetails).then(canvas => {
-      const link = document.createElement('a');
-      link.download = `OCB-Stays-Bill-${state.currentGuest.name}-${new Date().toISOString().slice(0,10)}.png`;
-      link.href = canvas.toDataURL('image/png');
-      link.click();
+      });
     });
-  },
 
-  connectToWifi: () => {
-    if (navigator.connection && navigator.connection.type === 'wifi') {
+  } catch (err) {
+    console.error('Error loading orders:', err);
+    list.innerHTML = '<p class="text-danger">Failed to load your orders. Please try again later.</p>';
+  }
+}
+
+function parseItems(itemsField) {
+  if (!itemsField) return [];
+  if (Array.isArray(itemsField)) return itemsField;
+  if (typeof itemsField === 'object') return itemsField;
+  try {
+    const parsed = JSON.parse(itemsField);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function openOrderModal(order) {
+  const modalEl = document.getElementById('orderModal');
+  const body = document.getElementById('orderModalBody');
+  const cancelBtn = document.getElementById('cancelOrderBtn');
+
+  if (!modalEl || !body || !cancelBtn) return;
+
+  const items = parseItems(order.Items);
+  const listHtml = items.length
+    ? items.map(item => {
+        const qty = item.quantity || 1;
+        const price = Number(item.price) || 0;
+        const name = item.name || 'Item';
+        const amount = price * qty;
+        const notes = item.specialInstructions || item.notes || '';
+        return `
+          <div class="d-flex justify-content-between border-bottom py-1">
+            <div>
+              <strong>${qty}× ${name}</strong>
+              ${notes ? `<div class="text-muted small">${notes}</div>` : ''}
+            </div>
+            <div>${rupee(amount)}</div>
+          </div>
+        `;
+      }).join('')
+    : '<p class="text-muted">No item details available for this order.</p>';
+
+  body.innerHTML = `
+    <p><strong>Order ID:</strong> ${order.OrderID}</p>
+    <p><strong>Date:</strong> ${formatDateTime(order.OrderDate || order.created_at)}</p>
+    <p><strong>Status:</strong> ${order.Status || 'Pending'}</p>
+    <hr>
+    <h6>Items</h6>
+    ${listHtml}
+    <hr>
+    <p class="text-end"><strong>Total:</strong> ${rupee(order.TotalAmount || 0)}</p>
+  `;
+
+  // Cancel button visibility
+  if ((order.Status || 'Pending') === 'Pending') {
+    cancelBtn.classList.remove('d-none');
+    cancelBtn.onclick = async () => {
+      const confirmCancel = window.confirm('Are you sure you want to cancel this order?');
+      if (!confirmCancel) return;
+
       try {
-        if (window.WifiWizard2) {
-          window.WifiWizard2.connect(
-            config.wifi.ssid, 
-            false, 
-            config.wifi.password,
-            () => alert('Connected to WiFi successfully!'),
-            (error) => alert('Failed to connect: ' + error)
-          );
-        } else if (navigator.wifiManager) {
-          navigator.wifiManager.connect(
-            config.wifi.ssid, 
-            config.wifi.password,
-            () => alert('Connected to WiFi successfully!'),
-            (error) => alert('Failed to connect: ' + error)
-          );
-        } else {
-          alert(`Automatic connection not supported in your browser. Please connect manually:\n\nNetwork: ${config.wifi.ssid}\nPassword: ${config.wifi.password}`);
-        }
-      } catch (e) {
-        console.error('WiFi connection error:', e);
-        alert(`Automatic connection failed. Please connect manually:\n\nNetwork: ${config.wifi.ssid}\nPassword: ${config.wifi.password}`);
+        await apiPut(`/orders/${encodeURIComponent(order.OrderID)}`, {
+          Status: 'Cancelled'
+        });
+        alert('Order cancelled.');
+        const modalInstance = bootstrap.Modal.getInstance(modalEl);
+        if (modalInstance) modalInstance.hide();
+        await loadOrders();
+      } catch (err) {
+        console.error('Cancel order error:', err);
+        alert('Failed to cancel order. Please contact your host.');
       }
-    } else {
-      alert(`Please connect to WiFi manually:\n\nNetwork: ${config.wifi.ssid}\nPassword: ${config.wifi.password}`);
-    }
-  },
-
-  handleDataError: (error) => {
-    if (error.message.includes('Guest not found')) {
-      alert('Guest not found or no longer active. Please contact your host.');
-      document.body.innerHTML = `
-        <h1>Access Denied</h1>
-        <p>Your stay is not active or the link is invalid.</p>
-        <p>Please contact your host if you believe this is an error.</p>
-      `;
-    } else {
-      document.body.innerHTML = `
-        <h1>Error Loading Data</h1>
-        <p>We couldn't load your stay information. Please try again later.</p>
-        <p>If the problem persists, contact your host.</p>
-      `;
-    }
-  },
-
-  setupNavigation: () => {
-    const navTabs = document.querySelectorAll('.nav-tab');
-    navTabs.forEach(tab => {
-      tab.addEventListener('click', function(e) {
-        e.preventDefault();
-        const target = this.getAttribute('href');
-        helpers.smoothScrollTo(target.substring(1));
-        navTabs.forEach(t => t.classList.remove('active'));
-        this.classList.add('active');
-      });
-    });
-    
-    window.addEventListener('scroll', function() {
-      const sections = ['stayDetails', 'propertyLocation', 'teamSection', 'wifiSection', 'foodOrders', 'checkoutInfo'];
-      const scrollPosition = window.scrollY + 100;
-      
-      for (const section of sections) {
-        const element = document.getElementById(section);
-        if (element && element.offsetTop <= scrollPosition && 
-            element.offsetTop + element.offsetHeight > scrollPosition) {
-          navTabs.forEach(tab => tab.classList.remove('active'));
-          document.querySelector(`.nav-tab[href="#${section}"]`).classList.add('active');
-          break;
-        }
-      }
-    });
+    };
+  } else {
+    cancelBtn.classList.add('d-none');
+    cancelBtn.onclick = null;
   }
-};
 
-// App Controller
-const app = {
-  init: async () => {
-    try {
-      const data = await api.fetchGuestData();
-      ui.updatePageWithData(data);
-    } catch (error) {
-      console.error('Error initializing app:', error);
-      ui.handleDataError(error);
+  const modalInstance = new bootstrap.Modal(modalEl);
+  modalInstance.show();
+}
+
+async function loadBill() {
+  const container = document.getElementById('billDetails');
+  if (!container) return;
+
+  if (!currentGuestID) {
+    container.innerHTML = '<p>Bill will appear here once your booking is linked with a valid guestID.</p>';
+    return;
+  }
+
+  try {
+    container.innerHTML = '<p>Loading bill information...</p>';
+    const bills = await apiGet(`/bills?guest=${encodeURIComponent(currentGuestID)}`);
+
+    if (!bills || !bills.length) {
+      container.innerHTML = '<p class="text-muted">Your final bill will be prepared at the time of checkout.</p>';
+      return;
     }
 
-    // Set up event listeners
-    elements.connectWifiBtn.addEventListener('click', ui.connectToWifi);
-    ui.setupNavigation();
+    // Use the latest bill (by created_at, if present)
+    const sorted = [...bills].sort((a, b) => {
+      const t1 = new Date(a.created_at || a.checkinDate || 0).getTime();
+      const t2 = new Date(b.created_at || b.checkinDate || 0).getTime();
+      return t2 - t1;
+    });
+    const bill = sorted[0];
 
-    // Expand guest details by default
-    setTimeout(() => {
-      elements.guestDetailsCollapse.classList.add('expanded');
-      elements.guestDetailsToggle.classList.add('expanded');
-    }, 500);
-  },
+    const orderItems = parseItems(bill.orderDetails);
+    const itemsHtml = orderItems.length
+      ? `
+        <h6>Food & Amenities</h6>
+        <div class="mb-2">
+          ${orderItems.map(it => {
+            const qty = it.quantity || 1;
+            const price = Number(it.price) || 0;
+            const amount = qty * price;
+            return `
+              <div class="d-flex justify-content-between small border-bottom py-1">
+                <div>${qty}× ${it.item || it.name || 'Item'}</div>
+                <div>${rupee(amount)}</div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `
+      : '';
 
-  downloadBill: ui.downloadBill
-};
+    const roomLine = bill.roomRate && bill.nightsStayed
+      ? `
+        <div class="d-flex justify-content-between">
+          <span>Stay (${bill.nightsStayed} night(s) × ${rupee(bill.roomRate)})</span>
+          <span>${rupee(bill.subtotal || (bill.nightsStayed * bill.roomRate))}</span>
+        </div>
+      `
+      : '';
 
-// Initialize the app
-document.addEventListener('DOMContentLoaded', app.init);
+    const subtotal = bill.subtotal || 0;
+    const taxes = bill.taxes || 0;
+    const total = bill.totalAmount || (subtotal + taxes);
 
-// Expose app to global scope for HTML onclick handlers
-window.app = app;
-window.makeCall = helpers.makeCall;
-window.openWhatsApp = helpers.openWhatsApp;
-window.openLocation = helpers.openLocation;
-window.openAllLocations = helpers.openAllLocations;
-window.toggleCollapse = helpers.toggleCollapse;
+    container.innerHTML = `
+      <div class="p-2 border rounded">
+        <p><strong>Bill ID:</strong> ${bill.billID}</p>
+        ${roomLine}
+        ${itemsHtml}
+        <hr>
+        <div class="d-flex justify-content-between">
+          <span>Subtotal</span>
+          <span>${rupee(subtotal)}</span>
+        </div>
+        <div class="d-flex justify-content-between">
+          <span>Taxes</span>
+          <span>${rupee(taxes)}</span>
+        </div>
+        <div class="d-flex justify-content-between fw-bold mt-2">
+          <span>Total</span>
+          <span>${rupee(total)}</span>
+        </div>
+        <p class="mt-2 small text-muted mb-0">
+          Please confirm the amount with your host at checkout. If anything looks incorrect, reach out to the team.
+        </p>
+      </div>
+    `;
+  } catch (err) {
+    console.error('Error loading bill:', err);
+    container.innerHTML = '<p class="text-danger">Failed to load bill details. Please contact your host.</p>';
+  }
+}
+
+// ---------- Menu button (opens menu.html) ----------
+
+function initMenuButton() {
+  const btn = document.getElementById('menuButton');
+  if (!btn) return;
+
+  btn.onclick = () => {
+    const params = new URLSearchParams();
+    if (currentGuestID) params.set('guestID', currentGuestID);
+    if (currentRoom) params.set('room', currentRoom);
+    const url = `${config.menuUrl}?${params.toString()}`;
+    window.open(url, '_blank');
+  };
+}
+
+// ---------- Init ----------
+
+async function initGuestPortal() {
+  console.log('🚀 initGuestPortal');
+
+  initFooterNav();
+  initWifiButton();
+  initMenuButton();
+
+  await loadGuestDetails();
+  await loadOrders();
+  await loadBill();
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  console.log('📌 DOMContentLoaded (guest portal)');
+  initGuestPortal().catch(err => {
+    console.error('Guest portal init error:', err);
+  });
+});
