@@ -1067,61 +1067,54 @@
         }
       },
 
-      async getGuests(status = null) {
-        const endpoint = status ? `/Guests?status=${status}` : '/Guests';
-        return this.request(endpoint);
-      },
+async getGuests(status = null) {
+  const endpoint = status ? `/guests?status=${status}` : '/guests';
+  return this.request(endpoint);
+},
 
-      async getGuest(id) {
-        return this.request(`/Guests/${id}`);
-      },
+async getGuest(id) {
+  return this.request(`/guests/${id}`);
+},
 
-      async createGuest(guestData) {
-        return this.request('/guests', {
-          method: 'POST',
-          body: JSON.stringify(guestData)
-        });
-      },
+async createGuest(guestData) {
+  return this.request('/guests', {
+    method: 'POST',
+    body: JSON.stringify(guestData)
+  });
+},
 
-      async updateGuest(id, guestData) {
-        return this.request(`/Guests/${id}`, {
-          method: 'PUT',
-          body: JSON.stringify(guestData)
-        });
-      },
+async updateGuest(id, guestData) {
+  return this.request(`/guests/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(guestData)
+  });
+},
 
-      async checkoutGuest(id, checkoutData) {
-        return this.request(`/Guests/${id}/checkout`, {
-          method: 'POST',
-          body: JSON.stringify(checkoutData)
-        });
-      },
+async checkoutGuest(id, checkoutData) {
+  return this.request(`/guests/${id}/checkout`, {
+    method: 'POST',
+    body: JSON.stringify(checkoutData)
+  });
+},
 
-      async getGuestOrders(guestID) {
-        return this.request(`/Orders?guest=${guestID}`);
-      },
+async getGuestOrders(guestID) {
+  return this.request(`/orders?guest=${guestID}`);
+},
 
-      async createBill(billData) {
-        return this.request('/Bills', {
-          method: 'POST',
-          body: JSON.stringify(billData)
-        });
-      },
+async createBill(billData) {
+  return this.request('/bills', {
+    method: 'POST',
+    body: JSON.stringify(billData)
+  });
+},
 
-      async getGuestBill(guestID) {
-        return this.request(`/Bills?guest=${guestID}`);
-      },
+async getGuestBill(guestID) {
+  return this.request(`/bills?guest=${guestID}`);
+},
 
-      async updateBill(id, billData) {
-        return this.request(`/Bills/${id}`, {
-          method: 'PUT',
-          body: JSON.stringify(billData)
-        });
-      },
-
-      async getAnalytics() {
-        return this.request('/analytics');
-      }
+async getAnalytics() {
+  return this.request('/analytics');
+}
     };
 
     // Logging system
