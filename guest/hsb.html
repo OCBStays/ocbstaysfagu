@@ -1024,7 +1024,7 @@
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
   <script>
-    // Configuration
+        // Configuration
     const config = {
       api: {
         baseUrl: 'https://railway-production-1577.up.railway.app/api'
@@ -1051,19 +1051,23 @@
             ...options
           });
 
+          const isJson = response.headers.get('content-type')?.includes('application/json');
+
           if (!response.ok) {
-            let errorMessage = 'API request failed';
-            try {
-              const error = await response.json();
-              errorMessage = error.message || error.error || errorMessage;
-            } catch (e) {
-              // ignore parse error
+            let errorBody = {};
+            if (isJson) {
+              try {
+                errorBody = await response.json();
+              } catch (_) {
+                errorBody = {};
+              }
             }
-            logger.log(`API Error: ${errorMessage}`, 'error');
-            throw new Error(errorMessage);
+            const msg = errorBody.message || errorBody.error || 'API request failed';
+            logger.log(`API Error: ${msg}`, 'error');
+            throw new Error(msg);
           }
 
-          const data = await response.json();
+          const data = isJson ? await response.json() : null;
           logger.log(`API Success: ${url}`, 'success');
           return data;
         } catch (error) {
@@ -1074,12 +1078,12 @@
       },
 
       async getGuests(status = null) {
-        const endpoint = status ? `/guests?status=${status}` : '/guests';
+        const endpoint = status ? `/guests?status=${encodeURIComponent(status)}` : '/guests';
         return this.request(endpoint);
       },
 
-      async getGuest(id) {
-        return this.request(`/guests/${id}`);
+      async getGuest(guestID) {
+        return this.request(`/guests/${encodeURIComponent(guestID)}`);
       },
 
       async createGuest(guestData) {
@@ -1089,22 +1093,22 @@
         });
       },
 
-      async updateGuest(id, guestData) {
-        return this.request(`/guests/${id}`, {
+      async updateGuest(guestID, guestData) {
+        return this.request(`/guests/${encodeURIComponent(guestID)}`, {
           method: 'PUT',
           body: JSON.stringify(guestData)
         });
       },
 
-      async checkoutGuest(id, checkoutData) {
-        return this.request(`/guests/${id}/checkout`, {
+      async checkoutGuest(guestID, checkoutData) {
+        return this.request(`/guests/${encodeURIComponent(guestID)}/checkout`, {
           method: 'POST',
           body: JSON.stringify(checkoutData)
         });
       },
 
       async getGuestOrders(guestID) {
-        return this.request(`/orders?guest=${guestID}`);
+        return this.request(`/orders?guest=${encodeURIComponent(guestID)}`);
       },
 
       async createBill(billData) {
@@ -1114,15 +1118,15 @@
         });
       },
 
-      async updateBill(id, billData) {
-        return this.request(`/bills/${id}`, {
+      async updateBill(billID, billData) {
+        return this.request(`/bills/${encodeURIComponent(billID)}`, {
           method: 'PUT',
           body: JSON.stringify(billData)
         });
       },
 
       async getGuestBill(guestID) {
-        return this.request(`/bills?guest=${guestID}`);
+        return this.request(`/bills?guest=${encodeURIComponent(guestID)}`);
       },
 
       async getAnalytics() {
@@ -1133,23 +1137,26 @@
     // Logging system
     const logger = {
       logs: [],
-      log: function(message, type = 'info') {
+      log(message, type = 'info') {
         const timestamp = new Date().toISOString();
         this.logs.push({ timestamp, message, type });
         this.renderLogs();
       },
-      renderLogs: function() {
+      renderLogs() {
         const container = document.getElementById('logs-container');
         if (!container) return;
 
-        container.innerHTML = this.logs.map(log => `
-          <div class="log-entry">
-            <span class="log-timestamp">${new Date(log.timestamp).toLocaleTimeString()}</span>
-            <span class="log-${log.type}">${log.message}</span>
-          </div>
-        `).reverse().join('');
+        container.innerHTML = this.logs
+          .map(log => `
+            <div class="log-entry">
+              <span class="log-timestamp">${new Date(log.timestamp).toLocaleTimeString()}</span>
+              <span class="log-${log.type}">${log.message}</span>
+            </div>
+          `)
+          .reverse()
+          .join('');
       },
-      clear: function() {
+      clear() {
         this.logs = [];
         this.renderLogs();
       }
@@ -1157,16 +1164,26 @@
 
     // Helper functions
     const helpers = {
-      generateGuestId: () => 'GST' + Array.from({length: 5}, () =>
-        'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'[Math.floor(Math.random() * 62)]).join(''),
+      generateGuestId: () =>
+        'GST' +
+        Array.from({ length: 5 }, () =>
+          'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'[
+            Math.floor(Math.random() * 62)
+          ]
+        ).join(''),
 
-      formatDate: (dateString) => new Date(dateString).toLocaleDateString('en-US', {
-        month: 'short', day: 'numeric', year: 'numeric'
-      }),
+      formatDate: dateString =>
+        new Date(dateString).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric'
+        }),
 
-      formatShortDate: (dateString) => new Date(dateString).toLocaleDateString('en-US', {
-        month: 'short', day: 'numeric'
-      }),
+      formatShortDate: dateString =>
+        new Date(dateString).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric'
+        }),
 
       toggleSpinner: (elementId, show) => {
         const spinner = document.getElementById(elementId);
@@ -1197,16 +1214,18 @@
         }, 5000);
       },
 
-      datesOverlap: (start1, end1, start2, end2) => {
-        const d1 = new Date(start1);
-        const d2 = new Date(end1);
-        const d3 = new Date(start2);
-        const d4 = new Date(end2);
-
-        return (d1 < d4) && (d3 < d2);
+      // inclusive start, exclusive end
+      dateInRange(dateStr, startStr, endStr) {
+        const d = new Date(dateStr);
+        const s = new Date(startStr);
+        const e = new Date(endStr);
+        s.setHours(0, 0, 0, 0);
+        e.setHours(0, 0, 0, 0);
+        d.setHours(0, 0, 0, 0);
+        return d >= s && d < e;
       },
 
-      focusNextInput: (currentInput) => {
+      focusNextInput(currentInput) {
         const form = currentInput.closest('form');
         if (!form) return;
 
@@ -1217,38 +1236,28 @@
         }
       },
 
-      getDaysInMonth: (year, month) => {
-        return new Date(year, month + 1, 0).getDate();
-      },
+      getDaysInMonth: (year, month) => new Date(year, month + 1, 0).getDate(),
 
-      getFirstDayOfMonth: (year, month) => {
-        return new Date(year, month, 1).getDay();
-      },
+      getFirstDayOfMonth: (year, month) => new Date(year, month, 1).getDay(),
 
-      calculateNights: (checkin, checkout) => {
+      calculateNights(checkin, checkout) {
         const oneDay = 24 * 60 * 60 * 1000;
         const start = new Date(checkin);
         const end = new Date(checkout);
-        return Math.round(Math.abs((start - end) / oneDay));
+        return Math.round((end - start) / oneDay);
       },
 
-      isSameDay: (date1, date2) => {
+      isSameDay(date1, date2) {
         const d1 = new Date(date1);
         const d2 = new Date(date2);
-        return d1.getFullYear() === d2.getFullYear() &&
-               d1.getMonth() === d2.getMonth() &&
-               d1.getDate() === d2.getDate();
+        return (
+          d1.getFullYear() === d2.getFullYear() &&
+          d1.getMonth() === d2.getMonth() &&
+          d1.getDate() === d2.getDate()
+        );
       },
 
-      isToday: (dateStr) => {
-        const today = new Date();
-        const date = new Date(dateStr);
-        return date.getFullYear() === today.getFullYear() &&
-               date.getMonth() === today.getMonth() &&
-               date.getDate() === today.getDate();
-      },
-
-      isPastDate: (dateStr) => {
+      isPastDate(dateStr) {
         const today = new Date();
         const date = new Date(dateStr);
         today.setHours(0, 0, 0, 0);
@@ -1289,7 +1298,8 @@
       async checkRoomAvailability() {
         const dateRange = document.getElementById('dateRange').value;
         if (!dateRange) {
-          document.getElementById('availabilityStatus').innerHTML = '<span class="unavailable">Please select dates</span>';
+          document.getElementById('availabilityStatus').innerHTML =
+            '<span class="unavailable">Please select dates</span>';
           return;
         }
 
@@ -1304,10 +1314,8 @@
 
           const bookedRooms = new Set();
           data.forEach(guest => {
-            if (helpers.datesOverlap(
-              guest.checkin, guest.checkout,
-              checkin, checkout
-            )) {
+            if (helpers.dateInRange(checkin, guest.checkin, guest.checkout) ||
+                helpers.dateInRange(guest.checkin, checkin, checkout)) {
               bookedRooms.add(guest.room);
             }
           });
@@ -1326,7 +1334,8 @@
           });
 
           if (availableCount === 0) {
-            statusDiv.innerHTML = '<span class="unavailable">No rooms available for selected dates</span>';
+            statusDiv.innerHTML =
+              '<span class="unavailable">No rooms available for selected dates</span>';
             roomSelect.disabled = true;
           } else {
             statusDiv.innerHTML = `<span class="available">${availableCount} room(s) available for selected dates</span>`;
@@ -1343,13 +1352,15 @@
         if (!guestList) return;
 
         try {
-          guestList.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>';
+          guestList.innerHTML =
+            '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>';
           const data = await apiService.getGuests('Active');
 
           if (!data || data.length === 0) {
-            guestList.innerHTML = '<div class="text-center py-3 text-muted">No active guests found</div>';
-            const info = document.getElementById('selectedGuestInfo');
-            if (info) info.style.display = 'none';
+            guestList.innerHTML =
+              '<div class="text-center py-3 text-muted">No active guests found</div>';
+            const selectedInfo = document.getElementById('selectedGuestInfo');
+            if (selectedInfo) selectedInfo.style.display = 'none';
             return;
           }
 
@@ -1371,16 +1382,23 @@
 
           const selectedGuestId = window.selectedGuestId;
           if (selectedGuestId) {
-            const selectedItem = guestList.querySelector(\`[data-guest-id="\${selectedGuestId}"]\`);
+            const selectedItem = guestList.querySelector(
+              `[data-guest-id="${selectedGuestId}"]`
+            );
             if (selectedItem) {
               selectedItem.classList.add('active');
-              document.getElementById('selectedGuestInfo').style.display = 'block';
-              this.loadGuestDetailsForDisplay(selectedGuestId, JSON.parse(selectedItem.dataset.guest));
+              const selectedInfo = document.getElementById('selectedGuestInfo');
+              if (selectedInfo) selectedInfo.style.display = 'block';
+              this.loadGuestDetailsForDisplay(
+                selectedGuestId,
+                JSON.parse(selectedItem.dataset.guest)
+              );
             }
           }
         } catch (error) {
           console.error('Error loading guests:', error);
-          guestList.innerHTML = '<div class="text-center py-3 text-danger">Failed to load guests</div>';
+          guestList.innerHTML =
+            '<div class="text-center py-3 text-danger">Failed to load guests</div>';
         }
       },
 
@@ -1389,13 +1407,15 @@
         if (!pastGuestList) return;
 
         try {
-          pastGuestList.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>';
+          pastGuestList.innerHTML =
+            '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>';
           const data = await apiService.getGuests('Checked Out');
 
           if (!data || data.length === 0) {
-            pastGuestList.innerHTML = '<div class="text-center py-3 text-muted">No past guests found</div>';
-            const info = document.getElementById('selectedPastGuestInfo');
-            if (info) info.style.display = 'none';
+            pastGuestList.innerHTML =
+              '<div class="text-center py-3 text-muted">No past guests found</div>';
+            const selectedInfo = document.getElementById('selectedPastGuestInfo');
+            if (selectedInfo) selectedInfo.style.display = 'none';
             return;
           }
 
@@ -1417,16 +1437,20 @@
 
           const selectedPastGuestId = window.selectedPastGuestId;
           if (selectedPastGuestId) {
-            const selectedItem = pastGuestList.querySelector(\`[data-guest-id="\${selectedPastGuestId}"]\`);
+            const selectedItem = pastGuestList.querySelector(
+              `[data-guest-id="${selectedPastGuestId}"]`
+            );
             if (selectedItem) {
               selectedItem.classList.add('active');
-              document.getElementById('selectedPastGuestInfo').style.display = 'block';
+              const selectedInfo = document.getElementById('selectedPastGuestInfo');
+              if (selectedInfo) selectedInfo.style.display = 'block';
               this.loadPastGuestDetails(selectedPastGuestId);
             }
           }
         } catch (error) {
           console.error('Error loading past guests:', error);
-          pastGuestList.innerHTML = '<div class="text-center py-3 text-danger">Failed to load past guests</div>';
+          pastGuestList.innerHTML =
+            '<div class="text-center py-3 text-danger">Failed to load past guests</div>';
         }
       },
 
@@ -1435,7 +1459,8 @@
         if (!container) return;
 
         try {
-          container.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>';
+          container.innerHTML =
+            '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>';
           const data = await apiService.getAnalytics();
 
           container.innerHTML = `
@@ -1460,36 +1485,30 @@
           `;
         } catch (error) {
           console.error('Error loading analytics:', error);
-          container.innerHTML = '<div class="alert alert-danger">Failed to load analytics</div>';
+          container.innerHTML =
+            '<div class="alert alert-danger">Failed to load analytics</div>';
         }
       },
 
       async loadTodaysGuests() {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        const todayStr = \`\${today.getFullYear()}-\${String(today.getMonth() + 1).padStart(2, '0')}-\${String(today.getDate()).padStart(2, '0')}\`;
-        const tomorrow = new Date(today);
-        tomorrow.setDate(today.getDate() + 1);
-        const tomorrowStr = \`\${tomorrow.getFullYear()}-\${String(tomorrow.getMonth() + 1).padStart(2, '0')}-\${String(tomorrow.getDate()).padStart(2, '0')}\`;
-
+        const todayStr = today.toISOString().split('T')[0];
         const container = document.getElementById('today-guests-list');
         if (!container) return;
 
         try {
-          container.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>';
+          container.innerHTML =
+            '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>';
           const data = await apiService.getGuests('Active');
 
-          const todaysGuests = data.filter(guest => {
-            return helpers.datesOverlap(
-              guest.checkin,
-              guest.checkout,
-              todayStr,
-              tomorrowStr
-            );
-          });
+          const todaysGuests = data.filter(guest =>
+            helpers.dateInRange(todayStr, guest.checkin, guest.checkout)
+          );
 
           if (todaysGuests.length === 0) {
-            container.innerHTML = '<div class="alert alert-info">No guests staying today</div>';
+            container.innerHTML =
+              '<div class="alert alert-info">No guests staying today</div>';
             return;
           }
 
@@ -1507,9 +1526,21 @@
                   <h5>${guest.name || 'Unnamed Guest'}</h5>
                   <div class="guest-meta">
                     ${guest.room} • ${helpers.formatShortDate(guest.checkin)} to ${helpers.formatShortDate(guest.checkout)}
-                    ${isCheckingInToday ? '<span class="badge bg-primary">Checking In</span>' : ''}
-                    ${isCheckingOutToday ? '<span class="badge bg-danger">Checking Out</span>' : ''}
-                    ${!isCheckingInToday && !isCheckingOutToday ? '<span class="badge bg-success">Staying</span>' : ''}
+                    ${
+                      isCheckingInToday
+                        ? '<span class="badge bg-primary">Checking In</span>'
+                        : ''
+                    }
+                    ${
+                      isCheckingOutToday
+                        ? '<span class="badge bg-danger">Checking Out</span>'
+                        : ''
+                    }
+                    ${
+                      !isCheckingInToday && !isCheckingOutToday
+                        ? '<span class="badge bg-success">Staying</span>'
+                        : ''
+                    }
                   </div>
                 </div>
               </div>
@@ -1524,7 +1555,9 @@
                 document.querySelector('#active-tab').click();
                 const guestId = card.dataset.guestId;
                 const guestList = document.getElementById('guestList');
-                const guestItem = guestList.querySelector(\`[data-guest-id="\${guestId}"]\`);
+                const guestItem = guestList.querySelector(
+                  `[data-guest-id="${guestId}"]`
+                );
                 if (guestItem) {
                   guestItem.click();
                 }
@@ -1532,27 +1565,30 @@
             });
           });
         } catch (error) {
-          console.error('Error loading today\\'s guests:', error);
-          container.innerHTML = '<div class="alert alert-danger">Failed to load today\'s guests</div>';
+          console.error("Error loading today's guests:", error);
+          container.innerHTML =
+            '<div class="alert alert-danger">Failed to load today\'s guests</div>';
         }
       },
 
       async loadUpcomingGuests() {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        const todayStr = \`\${today.getFullYear()}-\${String(today.getMonth() + 1).padStart(2, '0')}-\${String(today.getDate()).padStart(2, '0')}\`;
-
         const container = document.getElementById('upcoming-guests-list');
         if (!container) return;
 
         try {
-          container.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>';
+          container.innerHTML =
+            '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>';
           const data = await apiService.getGuests('Active');
 
-          const upcomingGuests = data.filter(guest => new Date(guest.checkin) > new Date(todayStr));
+          const upcomingGuests = data.filter(
+            guest => new Date(guest.checkin) > today
+          );
 
           if (upcomingGuests.length === 0) {
-            container.innerHTML = '<div class="alert alert-info">No upcoming guests</div>';
+            container.innerHTML =
+              '<div class="alert alert-info">No upcoming guests</div>';
             return;
           }
 
@@ -1561,8 +1597,9 @@
           container.innerHTML = '';
           upcomingGuests.forEach(guest => {
             const checkinDate = new Date(guest.checkin);
-            const todayDate = new Date();
-            const daysToCheckin = Math.ceil((checkinDate - todayDate) / (1000 * 60 * 60 * 24));
+            const daysToCheckin = Math.ceil(
+              (checkinDate - today) / (1000 * 60 * 60 * 24)
+            );
 
             const card = document.createElement('div');
             card.className = 'guest-card';
@@ -1580,23 +1617,28 @@
             container.appendChild(card);
           });
 
-          document.querySelectorAll('#upcoming-guests-list .guest-card').forEach(card => {
-            card.addEventListener('click', () => {
-              document.querySelector('#manage-footer-tab').click();
-              setTimeout(() => {
-                document.querySelector('#active-tab').click();
-                const guestId = card.dataset.guestId;
-                const guestList = document.getElementById('guestList');
-                const guestItem = guestList.querySelector(\`[data-guest-id="\${guestId}"]\`);
-                if (guestItem) {
-                  guestItem.click();
-                }
-              }, 100);
+          document
+            .querySelectorAll('#upcoming-guests-list .guest-card')
+            .forEach(card => {
+              card.addEventListener('click', () => {
+                document.querySelector('#manage-footer-tab').click();
+                setTimeout(() => {
+                  document.querySelector('#active-tab').click();
+                  const guestId = card.dataset.guestId;
+                  const guestList = document.getElementById('guestList');
+                  const guestItem = guestList.querySelector(
+                    `[data-guest-id="${guestId}"]`
+                  );
+                  if (guestItem) {
+                    guestItem.click();
+                  }
+                }, 100);
+              });
             });
-          });
         } catch (error) {
           console.error('Error loading upcoming guests:', error);
-          container.innerHTML = '<div class="alert alert-danger">Failed to load upcoming guests</div>';
+          container.innerHTML =
+            '<div class="alert alert-danger">Failed to load upcoming guests</div>';
         }
       },
 
@@ -1605,20 +1647,28 @@
         if (!container) return;
 
         try {
-          container.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>';
+          container.innerHTML =
+            '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>';
           const data = await apiService.getGuests('Active');
 
-          const bookings = propertyFilter === 'all'
-            ? data
-            : data.filter(r => r.room === propertyFilter);
+          const bookings =
+            propertyFilter === 'all'
+              ? data
+              : data.filter(r => r.room === propertyFilter);
 
           const today = new Date();
           const currentMonth = today.getMonth();
           const currentYear = today.getFullYear();
 
-          const monthName = today.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+          const monthName = today.toLocaleDateString('en-US', {
+            month: 'long',
+            year: 'numeric'
+          });
           const daysInMonth = helpers.getDaysInMonth(currentYear, currentMonth);
-          const firstDayOfMonth = helpers.getFirstDayOfMonth(currentYear, currentMonth);
+          const firstDayOfMonth = helpers.getFirstDayOfMonth(
+            currentYear,
+            currentMonth
+          );
 
           let html = `<div class="month-calendar">
             <div class="month-header">
@@ -1630,25 +1680,18 @@
             <div class="days-grid">`;
 
           for (let i = 0; i < firstDayOfMonth; i++) {
-            html += '<div class="calendar-day"></div>';
+            html += `<div class="calendar-day"></div>`;
           }
 
           for (let day = 1; day <= daysInMonth; day++) {
             const date = new Date(currentYear, currentMonth, day);
+            date.setHours(0, 0, 0, 0);
             const dateStr = date.toISOString().split('T')[0];
-            const nextDay = new Date(date);
-            nextDay.setDate(date.getDate() + 1);
-            const nextDayStr = nextDay.toISOString().split('T')[0];
             const isToday = helpers.isSameDay(dateStr, today);
 
-            const dayBookings = bookings.filter(b => {
-              return helpers.datesOverlap(
-                b.checkin,
-                b.checkout,
-                dateStr,
-                nextDayStr
-              );
-            });
+            const dayBookings = bookings.filter(b =>
+              helpers.dateInRange(dateStr, b.checkin, b.checkout)
+            );
 
             const isBooked = dayBookings.length > 0;
             const dayClass = [
@@ -1656,28 +1699,30 @@
               isToday ? 'today' : '',
               isBooked ? 'booked-day' : 'available-day',
               helpers.isPastDate(dateStr) ? 'past-day' : ''
-            ].filter(Boolean).join(' ');
+            ]
+              .filter(Boolean)
+              .join(' ');
 
             html += `<div class="${dayClass}" data-date="${dateStr}">
               <div class="day-number">${day}</div>
               <div class="day-events">`;
 
             if (isBooked) {
-              html += '<span class="day-event-dot" style="display:inline-block;"></span>';
+              html += `<span class="day-event-dot" style="background-color: #2e7d32;"></span>`;
               if (dayBookings.length > 1) {
-                html += '<span class="day-event-dot" style="display:inline-block;"></span>';
+                html += `<span class="day-event-dot" style="background-color: #2e7d32;"></span>`;
               }
             }
 
-            html += '</div></div>';
+            html += `</div></div>`;
           }
 
-          html += '</div></div>';
+          html += `</div></div>`;
           container.innerHTML = html;
 
-          document.querySelectorAll('.calendar-day').forEach(dayEl => {
-            dayEl.addEventListener('click', () => {
-              const date = dayEl.dataset.date;
+          document.querySelectorAll('.calendar-day').forEach(day => {
+            day.addEventListener('click', () => {
+              const date = day.dataset.date;
               if (date) {
                 this.showDayDetails(date, bookings);
               }
@@ -1685,7 +1730,8 @@
           });
         } catch (error) {
           console.error('Error generating calendar:', error);
-          container.innerHTML = '<div class="alert alert-danger">Failed to load calendar</div>';
+          container.innerHTML =
+            '<div class="alert alert-danger">Failed to load calendar</div>';
         }
       },
 
@@ -1695,22 +1741,15 @@
         const modal = new bootstrap.Modal(document.getElementById('dayModal'));
 
         modalTitle.textContent = new Date(date).toLocaleDateString('en-US', {
-          weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
         });
 
-        const startDate = new Date(date);
-        const endDate = new Date(startDate);
-        endDate.setDate(startDate.getDate() + 1);
-        const endDateStr = endDate.toISOString().split('T')[0];
-
-        const dayBookings = allBookings.filter(b => {
-          return helpers.datesOverlap(
-            b.checkin,
-            b.checkout,
-            date,
-            endDateStr
-          );
-        });
+        const dayBookings = allBookings.filter(b =>
+          helpers.dateInRange(date, b.checkin, b.checkout)
+        );
 
         if (dayBookings.length === 0) {
           modalBody.innerHTML = `
@@ -1720,75 +1759,75 @@
             </div>
           `;
         } else {
-          modalBody.innerHTML = dayBookings.map(booking => {
-            const guest = booking;
-            const isCheckingIn = helpers.isSameDay(guest.checkin, date);
-            const isCheckingOut = helpers.isSameDay(guest.checkout, date);
+          modalBody.innerHTML = dayBookings
+            .map(booking => {
+              const guest = booking;
+              const isCheckingIn = helpers.isSameDay(guest.checkin, date);
+              const isCheckingOut = helpers.isSameDay(guest.checkout, date);
 
-            let statusBadge = '';
-            if (isCheckingIn && isCheckingOut) {
-              statusBadge = '<span class="badge bg-warning">Same Day</span>';
-            } else if (isCheckingIn) {
-              statusBadge = '<span class="badge bg-primary">Check-in</span>';
-            } else if (isCheckingOut) {
-              statusBadge = '<span class="badge bg-danger">Check-out</span>';
-            } else {
-              statusBadge = '<span class="badge bg-success">Staying</span>';
-            }
+              let statusBadge = '';
+              if (isCheckingIn && isCheckingOut) {
+                statusBadge = '<span class="badge bg-warning">Same Day</span>';
+              } else if (isCheckingIn) {
+                statusBadge = '<span class="badge bg-primary">Check-in</span>';
+              } else if (isCheckingOut) {
+                statusBadge = '<span class="badge bg-danger">Check-out</span>';
+              } else {
+                statusBadge = '<span class="badge bg-success">Staying</span>';
+              }
 
-            return `
-              <div class="modal-event" data-guest-id="${booking.guestID}">
-                <div><strong>${guest.name || 'Unnamed Guest'}</strong> ${statusBadge}</div>
-                <div>Room: ${guest.room}</div>
-                <div>Dates: ${helpers.formatDate(guest.checkin)} to ${helpers.formatDate(guest.checkout)}</div>
-                <div>Mobile: ${guest.mobile || 'Not provided'}</div>
-              </div>
-            `;
-          }).join('');
+              return `
+                <div class="modal-event" data-guest-id="${booking.guestID}">
+                  <div><strong>${guest.name || 'Unnamed Guest'}</strong> ${statusBadge}</div>
+                  <div>Room: ${guest.room}</div>
+                  <div>Dates: ${helpers.formatDate(guest.checkin)} to ${helpers.formatDate(guest.checkout)}</div>
+                  <div>Mobile: ${guest.mobile || 'Not provided'}</div>
+                </div>
+              `;
+            })
+            .join('');
         }
 
         modal.show();
 
-        document.querySelectorAll('#dayModalBody .modal-event').forEach(detail => {
-          detail.addEventListener('click', () => {
-            modal.hide();
-            document.querySelector('#manage-footer-tab').click();
-            setTimeout(() => {
-              document.querySelector('#active-tab').click();
-              const guestId = detail.dataset.guestId;
-              const guestList = document.getElementById('guestList');
-              const guestItem = guestList.querySelector(\`[data-guest-id="\${guestId}"]\`);
-              if (guestItem) {
-                guestItem.click();
-              }
-            }, 100);
+        document
+          .querySelectorAll('#dayModalBody .modal-event')
+          .forEach(detail => {
+            detail.addEventListener('click', () => {
+              modal.hide();
+              document.querySelector('#manage-footer-tab').click();
+              setTimeout(() => {
+                document.querySelector('#active-tab').click();
+                const guestId = detail.dataset.guestId;
+                const guestList = document.getElementById('guestList');
+                const guestItem = guestList.querySelector(
+                  `[data-guest-id="${guestId}"]`
+                );
+                if (guestItem) {
+                  guestItem.click();
+                }
+              }, 100);
+            });
           });
-        });
 
-        document.getElementById('bookThisDate')?.addEventListener('click', () => {
-          modal.hide();
-          document.querySelector('#register-footer-tab').click();
-          if (document.getElementById('dateRange')._flatpickr) {
-            document.getElementById('dateRange')._flatpickr.setDate([date, date]);
-          }
-        });
-
-        const bookThisDateBtn = document.getElementById('bookThisDateBtn');
-        if (bookThisDateBtn) {
-          bookThisDateBtn.addEventListener('click', () => {
+        const bookBtn = document.getElementById('bookThisDate');
+        if (bookBtn) {
+          bookBtn.onclick = () => {
             modal.hide();
             document.querySelector('#register-footer-tab').click();
             if (document.getElementById('dateRange')._flatpickr) {
-              document.getElementById('dateRange')._flatpickr.setDate([date, date]);
+              document
+                .getElementById('dateRange')
+                ._flatpickr.setDate([date, date]);
             }
-          });
+          };
         }
       },
 
       async getGuestOrders(guestID) {
         try {
           const data = await apiService.getGuestOrders(guestID);
-          return data;
+          return data || [];
         } catch (error) {
           console.error('Error fetching orders:', error);
           throw error;
@@ -1797,39 +1836,55 @@
 
       async showFoodOrdersModal(guestId) {
         const modalBody = document.getElementById('foodOrdersModalBody');
-        const modal = new bootstrap.Modal(document.getElementById('foodOrdersModal'));
-        modalBody.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>';
-        modal.show();
+        const modal = new bootstrap.Modal(
+          document.getElementById('foodOrdersModal')
+        );
 
         try {
+          modalBody.innerHTML =
+            '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>';
+          modal.show();
+
           const guest = await this.loadGuestDetails(guestId);
           const orders = await this.getGuestOrders(guest.guestID);
 
-          if (!orders || orders.length === 0) {
-            modalBody.innerHTML = '<div class="alert alert-info">No food orders found for this guest</div>';
+          if (!orders.length) {
+            modalBody.innerHTML =
+              '<div class="alert alert-info">No food orders found for this guest</div>';
             return;
           }
 
           let html = '';
 
           orders.forEach(order => {
-            const orderDate = new Date(order.OrderDate || order.created_at || order.createdAt).toLocaleString();
-            const items = Array.isArray(order.Items)
-              ? order.Items
-              : JSON.parse(order.Items || '[]');
+            const orderDate = order.OrderDate
+              ? new Date(order.OrderDate).toLocaleString()
+              : 'N/A';
 
-            const totalAmount = order.TotalAmount ||
-              items.reduce((sum, item) => sum + (item.price || 0) * (item.quantity || 1), 0);
+            const itemsRaw = order.Items;
+            const items = Array.isArray(itemsRaw)
+              ? itemsRaw
+              : JSON.parse(itemsRaw || '[]');
+
+            const totalAmount =
+              order.TotalAmount ||
+              items.reduce(
+                (sum, item) =>
+                  sum + (item.price || 0) * (item.quantity || 1),
+                0
+              );
 
             html += `
               <div class="card mb-3">
                 <div class="card-header">
                   <div class="d-flex justify-content-between">
-                    <div>Order #${order.OrderID || guest.guestID}</div>
+                    <div>Order #${order.OrderID || ''}</div>
                     <div>${orderDate}</div>
                   </div>
                   <div class="d-flex justify-content-between mt-1">
-                    <div>Status: <span class="badge bg-${order.Status === 'Delivered' ? 'success' : 'warning'}">${order.Status}</span></div>
+                    <div>Status: <span class="badge bg-${
+                      order.Status === 'Delivered' ? 'success' : 'warning'
+                    }">${order.Status}</span></div>
                     <div>Total: ₹${totalAmount.toFixed(2)}</div>
                   </div>
                 </div>
@@ -1842,22 +1897,32 @@
               html += `
                 <div class="order-item">
                   <div class="order-item-details">
-                    ${item.quantity} × ${item.name}
-                    ${item.specialInstructions ? `<div class="text-muted small">${item.specialInstructions}</div>` : ''}
+                    ${item.quantity || 1} × ${item.name || 'Item'}
+                    ${
+                      item.specialInstructions
+                        ? `<div class="text-muted small">${item.specialInstructions}</div>`
+                        : ''
+                    }
                   </div>
-                  <div class="order-item-price">₹${((item.price || 0) * (item.quantity || 1)).toFixed(2)}</div>
+                  <div class="order-item-price">₹${(
+                    (item.price || 0) * (item.quantity || 1)
+                  ).toFixed(2)}</div>
                 </div>
               `;
             });
 
             html += `
                   </div>
-                  ${order.SpecialInstructions ? `
+                  ${
+                    order.SpecialInstructions
+                      ? `
                   <div class="mt-2">
                     <strong>Special Instructions:</strong>
                     <div>${order.SpecialInstructions}</div>
                   </div>
-                  ` : ''}
+                  `
+                      : ''
+                  }
                 </div>
               </div>
             `;
@@ -1866,7 +1931,8 @@
           modalBody.innerHTML = html;
         } catch (error) {
           console.error('Error loading food orders:', error);
-          modalBody.innerHTML = '<div class="alert alert-danger">Failed to load food orders</div>';
+          modalBody.innerHTML =
+            '<div class="alert alert-danger">Failed to load food orders</div>';
         }
       },
 
@@ -1876,34 +1942,36 @@
           const itemMap = new Map();
 
           orders.forEach(order => {
-            const items = Array.isArray(order.Items)
-              ? order.Items
-              : JSON.parse(order.Items || '[]');
+            const itemsRaw = order.Items;
+            const items = Array.isArray(itemsRaw)
+              ? itemsRaw
+              : JSON.parse(itemsRaw || '[]');
 
-            const orderTotal = order.TotalAmount ||
-              items.reduce((sum, item) => sum + (item.price || 0) * (item.quantity || 1), 0);
-
+            const orderTotal =
+              order.TotalAmount ||
+              items.reduce(
+                (sum, item) =>
+                  sum + (item.price || 0) * (item.quantity || 1),
+                0
+              );
             totalAmount += orderTotal;
 
-            const orderDate = order.OrderDate || order.created_at || order.createdAt || new Date().toISOString();
-
             items.forEach(item => {
-              const itemKey = `${item.name || 'Unspecified item'}-${item.price || 0}`;
-              const existingItem = itemMap.get(itemKey);
+              const name = item.name || 'Unspecified item';
+              const price = item.price || 0;
+              const qty = item.quantity || 1;
+              const key = `${name}-${price}`;
 
-              if (existingItem) {
-                existingItem.quantity += item.quantity || 1;
-                existingItem.amount = existingItem.price * existingItem.quantity;
-                if (orderDate && (!existingItem.date || orderDate < existingItem.date)) {
-                  existingItem.date = orderDate;
-                }
+              const existing = itemMap.get(key);
+              if (existing) {
+                existing.quantity += qty;
+                existing.amount = existing.price * existing.quantity;
               } else {
-                itemMap.set(itemKey, {
-                  item: item.name || 'Unspecified item',
-                  quantity: item.quantity || 1,
-                  price: item.price || 0,
-                  amount: (item.price || 0) * (item.quantity || 1),
-                  date: orderDate
+                itemMap.set(key, {
+                  item: name,
+                  quantity: qty,
+                  price: price,
+                  amount: price * qty
                 });
               }
             });
@@ -1917,26 +1985,36 @@
           if (existingBill && existingBill.length > 0) {
             billId = existingBill[0].billID;
             await apiService.updateBill(billId, {
-              totalAmount,
-              orderDetails: allOrderItems,
-              updatedAt: new Date().toISOString()
+              totalAmount: totalAmount,
+              orderDetails: allOrderItems
             });
-            logger.log(`Updated existing bill for guest ${guestRecordId}`, 'info');
+            logger.log(
+              `Updated existing bill for guest ${guestRecordId}`,
+              'info'
+            );
           } else {
             const billData = {
               billID: `BIL-${Date.now().toString().slice(-6)}`,
               guestID: guestRecordId,
-              totalAmount,
-              status: "Pending",
+              totalAmount: totalAmount,
+              status: 'Pending',
               orderDetails: allOrderItems
             };
 
             const response = await apiService.createBill(billData);
             billId = response.billID || billData.billID;
-            logger.log(`Created new bill for guest ${guestRecordId}`, 'success');
+            logger.log(
+              `Created new bill for guest ${guestRecordId}`,
+              'success'
+            );
           }
 
-          return { guest: guestDetails, orders: allOrderItems, totalAmount, billId };
+          return {
+            guest: guestDetails,
+            orders: allOrderItems,
+            totalAmount,
+            billId
+          };
         } catch (error) {
           console.error('Error creating food bill:', error);
           throw error;
@@ -1945,7 +2023,8 @@
 
       downloadBillAsImage() {
         const billDetails = document.querySelector('.bill-container');
-        if (!billDetails) return helpers.showToast('No bill generated to download', 'warning');
+        if (!billDetails)
+          return helpers.showToast('No bill generated to download', 'warning');
         html2canvas(billDetails).then(canvas => {
           const link = document.createElement('a');
           link.download = 'food-bill.png';
@@ -1958,9 +2037,19 @@
         return `Hi ${guest.name},
 Thank you for choosing OCB Stays for your upcoming trip to Fagu. 
 
-Your booking for ${guest.room} for ${helpers.formatDate(guest.checkin)} is confirmed with advance payment of ₹${guest.advanceAmount || 0} (non-refundable), balance ₹${guest.balanceAmount || 0} to be transferred on arrival.
+Your booking for ${guest.room} for ${helpers.formatDate(
+          guest.checkin
+        )} is confirmed with advance payment of ₹${
+          guest.advanceAmount || 0
+        } (non-refundable), balance ₹${
+          guest.balanceAmount || 0
+        } to be transferred on arrival.
 
-Check-in : ${helpers.formatDate(guest.checkin)} 1pm || Check Out: ${helpers.formatDate(guest.checkout)} 11am
+Check-in : ${helpers.formatDate(
+          guest.checkin
+        )} 1pm || Check Out: ${helpers.formatDate(
+          guest.checkout
+        )} 11am
 
 Please follow the below link for CheckIn instructions and other important info:
 ${link}
@@ -1994,7 +2083,7 @@ Team OCB Stays`;
         }
       },
 
-            async loadGuestDetailsForDisplay(guestId, guestData) {
+      async loadGuestDetailsForDisplay(guestId, guestData) {
         try {
           const guest = guestData || await this.loadGuestDetails(guestId);
           const foodTotal = await this.calculateFoodTotal(guest.guestID);
@@ -2078,13 +2167,19 @@ Team OCB Stays`;
             helpers.showToast('Link copied to clipboard!', 'success');
           };
 
-          document.getElementById('sendEmailToGuest').onclick = () => window.open(
-            `mailto:?subject=OCB Stays Information&body=${encodeURIComponent(this.generateEmailBody(guest, homeLink))}`
-          );
+          document.getElementById('sendEmailToGuest').onclick = () =>
+            window.open(
+              `mailto:?subject=OCB Stays Information&body=${encodeURIComponent(
+                this.generateEmailBody(guest, homeLink)
+              )}`
+            );
 
-          document.getElementById('sendWhatsappToGuest').onclick = () => window.open(
-            `https://wa.me/${guest.mobile}?text=${encodeURIComponent(this.generateWhatsappMessage(guest, homeLink))}`
-          );
+          document.getElementById('sendWhatsappToGuest').onclick = () =>
+            window.open(
+              `https://wa.me/${guest.mobile}?text=${encodeURIComponent(
+                this.generateWhatsappMessage(guest, homeLink)
+              )}`
+            );
 
           document.getElementById('callGuest').href = `tel:${guest.mobile}`;
 
@@ -2107,9 +2202,10 @@ Team OCB Stays`;
           const orders = await this.getGuestOrders(guestId);
           if (!orders.length) return 0;
 
-          return orders.reduce((total, order) => {
-            return total + (order.TotalAmount || 0);
-          }, 0);
+          return orders.reduce(
+            (total, order) => total + (order.TotalAmount || 0),
+            0
+          );
         } catch (error) {
           console.error('Error calculating food total:', error);
           return 0;
@@ -2117,26 +2213,26 @@ Team OCB Stays`;
       },
 
       initCalendar() {
-        flatpickr("#dateRange", {
-          mode: "range",
-          minDate: "today",
-          dateFormat: "Y-m-d",
-          onChange: function(selectedDates) {
+        flatpickr('#dateRange', {
+          mode: 'range',
+          minDate: 'today',
+          dateFormat: 'Y-m-d',
+          onChange(selectedDates) {
             if (selectedDates.length === 2) {
               app.checkRoomAvailability();
             }
           }
         });
 
-        flatpickr("#editCheckin", {
-          minDate: "today",
-          dateFormat: "Y-m-d",
+        flatpickr('#editCheckin', {
+          minDate: 'today',
+          dateFormat: 'Y-m-d',
           defaultDate: null
         });
 
-        flatpickr("#editCheckout", {
-          minDate: "today",
-          dateFormat: "Y-m-d",
+        flatpickr('#editCheckout', {
+          minDate: 'today',
+          dateFormat: 'Y-m-d',
           defaultDate: null
         });
       },
@@ -2147,11 +2243,14 @@ Team OCB Stays`;
           const foodTotal = await this.calculateFoodTotal(guest.guestID);
           const totalDue = (parseFloat(guest.balanceAmount) || 0) + foodTotal;
 
-          document.getElementById('checkoutBalance').value = totalDue.toFixed(2);
+          document.getElementById('checkoutBalance').value =
+            totalDue.toFixed(2);
           document.getElementById('checkoutPaymentType').value = '';
           document.getElementById('checkoutComments').value = '';
 
-          const modal = new bootstrap.Modal(document.getElementById('checkoutModal'));
+          const modal = new bootstrap.Modal(
+            document.getElementById('checkoutModal')
+          );
           modal.show();
         } catch (error) {
           console.error('Error preparing checkout:', error);
@@ -2251,13 +2350,16 @@ Team OCB Stays`;
       async loadLogs() {
         const container = document.getElementById('logs-container');
         if (!container) return;
-
         logger.renderLogs();
       },
 
       showRegistrationSuccess(guest, homeLink) {
-        const modal = new bootstrap.Modal(document.getElementById('registrationSuccessModal'));
-        const detailsDiv = document.getElementById('registrationSuccessDetails');
+        const modal = new bootstrap.Modal(
+          document.getElementById('registrationSuccessModal')
+        );
+        const detailsDiv = document.getElementById(
+          'registrationSuccessDetails'
+        );
         const linkInput = document.getElementById('guestLinkInput');
 
         detailsDiv.innerHTML = `
@@ -2271,11 +2373,19 @@ Team OCB Stays`;
         linkInput.value = homeLink;
 
         document.getElementById('sendEmailFromModal').onclick = () => {
-          window.open(`mailto:?subject=OCB Stays Booking Confirmation&body=${encodeURIComponent(this.generateEmailBody(guest, homeLink))}`);
+          window.open(
+            `mailto:?subject=OCB Stays Booking Confirmation&body=${encodeURIComponent(
+              this.generateEmailBody(guest, homeLink)
+            )}`
+          );
         };
 
         document.getElementById('sendWhatsappFromModal').onclick = () => {
-          window.open(`https://wa.me/${guest.mobile}?text=${encodeURIComponent(this.generateWhatsappMessage(guest, homeLink))}`);
+          window.open(
+            `https://wa.me/${guest.mobile}?text=${encodeURIComponent(
+              this.generateWhatsappMessage(guest, homeLink)
+            )}`
+          );
         };
 
         modal.show();
@@ -2298,20 +2408,28 @@ Team OCB Stays`;
           const room = document.getElementById('room').value;
           const name = document.getElementById('name').value;
           const mobile = document.getElementById('mobile').value;
-          const rawAdvanceAmount = document.getElementById('advanceAmount').value;
+          const rawAdvanceAmount =
+            document.getElementById('advanceAmount').value;
           const rawAdvanceMode = document.getElementById('advanceMode').value;
-          const rawBalanceAmount = document.getElementById('balanceAmount').value;
+          const rawBalanceAmount =
+            document.getElementById('balanceAmount').value;
           const comments = document.getElementById('comments').value || '';
 
           if (!room) throw new Error('Please select a room');
           if (!name) throw new Error('Please enter guest name');
           if (!mobile) throw new Error('Please enter mobile number');
 
-          const advanceAmount = rawAdvanceAmount ? parseFloat(rawAdvanceAmount) : 0;
-          const balanceAmount = rawBalanceAmount ? parseFloat(rawBalanceAmount) : 0;
+          const advanceAmount = rawAdvanceAmount
+            ? parseFloat(rawAdvanceAmount)
+            : 0;
+          const balanceAmount = rawBalanceAmount
+            ? parseFloat(rawBalanceAmount)
+            : 0;
 
           const guestID = helpers.generateGuestId();
-          const homeLink = `${config.urls.guestPortal}?guestID=${guestID}&room=${encodeURIComponent(room)}`;
+          const homeLink = `${config.urls.guestPortal}?guestID=${guestID}&room=${encodeURIComponent(
+            room
+          )}`;
 
           const payload = {
             guestID,
@@ -2320,14 +2438,13 @@ Team OCB Stays`;
             checkout,
             name,
             mobile,
-            status: "Active",
+            status: 'Active',
             homeLink,
             advanceAmount,
             balanceAmount,
             Comments: comments
           };
 
-          // Only send advanceMode if there is a positive advance and a selected mode
           if (advanceAmount > 0 && rawAdvanceMode) {
             payload.advanceMode = rawAdvanceMode;
           }
@@ -2336,7 +2453,6 @@ Team OCB Stays`;
 
           if (!response.guestID) throw new Error('Failed to create guest record');
 
-          // For the success modal, we pass a simpler object
           const formDataForModal = {
             room,
             checkin,
@@ -2348,6 +2464,7 @@ Team OCB Stays`;
           };
 
           document.getElementById('guestForm').reset();
+          document.getElementById('availabilityStatus').innerHTML = '';
 
           app.showRegistrationSuccess(formDataForModal, homeLink);
 
@@ -2356,9 +2473,8 @@ Team OCB Stays`;
           await app.loadTodaysGuests();
           await app.loadUpcomingGuests();
           await app.generateCalendarView();
-
         } catch (error) {
-          console.error("Registration error:", error);
+          console.error('Registration error:', error);
           helpers.showToast(`Error: ${error.message}`, 'danger');
         } finally {
           btn.disabled = false;
@@ -2376,7 +2492,8 @@ Team OCB Stays`;
         const btn = document.getElementById('generateBill');
         btn.disabled = true;
         helpers.toggleSpinner('billSpinner', true);
-        document.getElementById('billOutput').innerHTML = '<div class="alert alert-info">Generating food bill...</div>';
+        document.getElementById('billOutput').innerHTML =
+          '<div class="alert alert-info">Generating food bill...</div>';
 
         try {
           const guestId = selectedGuest.dataset.guestId;
@@ -2388,16 +2505,24 @@ Team OCB Stays`;
             return;
           }
 
-          const billResult = await app.createFoodBill(guestId, guestData, orders);
+          const billResult = await app.createFoodBill(
+            guestId,
+            guestData,
+            orders
+          );
 
-          const billItems = billResult.orders.map(order => `
+          const billItems = billResult.orders
+            .map(
+              order => `
             <tr>
               <td>${order.item}</td>
               <td class="text-center">${order.quantity}</td>
               <td class="text-right">₹${order.price.toFixed(2)}</td>
               <td class="text-right">₹${order.amount.toFixed(2)}</td>
             </tr>
-          `).join('');
+          `
+            )
+            .join('');
 
           document.getElementById('billOutput').innerHTML = `
             <div class="alert alert-success">Food bill generated!</div>
@@ -2444,7 +2569,7 @@ Team OCB Stays`;
             </div>
           `;
         } catch (error) {
-          console.error("Bill generation error:", error);
+          console.error('Bill generation error:', error);
           helpers.showToast(`Error: ${error.message}`, 'danger');
         } finally {
           btn.disabled = false;
@@ -2471,7 +2596,8 @@ Team OCB Stays`;
         btn.disabled = true;
 
         try {
-          const paymentType = document.getElementById('checkoutPaymentType').value;
+          const paymentType =
+            document.getElementById('checkoutPaymentType').value;
           const comments = document.getElementById('checkoutComments').value;
 
           if (!paymentType) {
@@ -2480,8 +2606,6 @@ Team OCB Stays`;
 
           const guestId = selectedGuest.dataset.guestId;
           const guest = await app.loadGuestDetails(guestId);
-          const foodTotal = await app.calculateFoodTotal(guest.guestID);
-          // foodTotal currently not persisted on guest; used just for display
 
           await apiService.checkoutGuest(guestId, {
             PaymentType: paymentType,
@@ -2489,7 +2613,9 @@ Team OCB Stays`;
             balanceAmount: parseFloat(guest.balanceAmount) || 0
           });
 
-          const modal = bootstrap.Modal.getInstance(document.getElementById('checkoutModal'));
+          const modal = bootstrap.Modal.getInstance(
+            document.getElementById('checkoutModal')
+          );
           modal.hide();
 
           helpers.showToast('Guest checked out successfully', 'success');
@@ -2500,7 +2626,7 @@ Team OCB Stays`;
           await app.loadUpcomingGuests();
           await app.generateCalendarView();
         } catch (error) {
-          console.error("Checkout error:", error);
+          console.error('Checkout error:', error);
           helpers.showToast(`Error: ${error.message}`, 'danger');
         } finally {
           btn.disabled = false;
@@ -2511,7 +2637,7 @@ Team OCB Stays`;
         const guestList = document.getElementById('guestList');
         if (!guestList) return;
 
-        guestList.addEventListener('click', async function(e) {
+        guestList.addEventListener('click', async function (e) {
           const guestItem = e.target.closest('.guest-list-item');
           if (!guestItem) return;
 
@@ -2532,7 +2658,10 @@ Team OCB Stays`;
           document.getElementById('billOutput').innerHTML = '';
 
           try {
-            await app.loadGuestDetailsForDisplay(guestItem.dataset.guestId, JSON.parse(guestItem.dataset.guest));
+            await app.loadGuestDetailsForDisplay(
+              guestItem.dataset.guestId,
+              JSON.parse(guestItem.dataset.guest)
+            );
           } catch (error) {
             console.error('Error loading guest details:', error);
             document.getElementById('guestDetailsContent').innerHTML = `
@@ -2546,7 +2675,7 @@ Team OCB Stays`;
         const pastGuestList = document.getElementById('pastGuestList');
         if (!pastGuestList) return;
 
-        pastGuestList.addEventListener('click', async function(e) {
+        pastGuestList.addEventListener('click', async function (e) {
           const guestItem = e.target.closest('.guest-list-item');
           if (!guestItem) return;
 
@@ -2588,7 +2717,9 @@ Team OCB Stays`;
           }
 
           const guest = JSON.parse(selectedGuest.dataset.guest);
-          const menuLink = `${config.urls.guestMenu}?guestID=${guest.guestID}&room=${encodeURIComponent(guest.room)}`;
+          const menuLink = `${config.urls.guestMenu}?guestID=${guest.guestID}&room=${encodeURIComponent(
+            guest.room
+          )}`;
           window.open(menuLink, '_blank');
         });
       },
@@ -2608,15 +2739,25 @@ Team OCB Stays`;
           document.getElementById('editName').value = guest.name || '';
           document.getElementById('editMobile').value = guest.mobile || '';
           document.getElementById('editRoom').value = guest.room || '';
-          document.getElementById('editCheckin')._flatpickr.setDate(guest.checkin);
-          document.getElementById('editCheckout')._flatpickr.setDate(guest.checkout);
-          document.getElementById('editAdvance').value = guest.advanceAmount || 0;
-          document.getElementById('editAdvanceMode').value = guest.advanceMode || '';
-          document.getElementById('editBalance').value = guest.balanceAmount || 0;
-          document.getElementById('editComments').value = guest.Comments || '';
+          document.getElementById('editCheckin')._flatpickr.setDate(
+            guest.checkin
+          );
+          document.getElementById('editCheckout')._flatpickr.setDate(
+            guest.checkout
+          );
+          document.getElementById('editAdvance').value =
+            guest.advanceAmount || 0;
+          document.getElementById('editAdvanceMode').value =
+            guest.advanceMode || '';
+          document.getElementById('editBalance').value =
+            guest.balanceAmount || 0;
+          document.getElementById('editComments').value =
+            guest.Comments || '';
           document.getElementById('editGuestId').value = guestId;
 
-          const modal = new bootstrap.Modal(document.getElementById('editGuestModal'));
+          const modal = new bootstrap.Modal(
+            document.getElementById('editGuestModal')
+          );
           modal.show();
         });
       },
@@ -2634,9 +2775,12 @@ Team OCB Stays`;
           const room = document.getElementById('editRoom').value;
           const checkin = document.getElementById('editCheckin').value;
           const checkout = document.getElementById('editCheckout').value;
-          const rawAdvanceAmount = document.getElementById('editAdvance').value;
-          const rawAdvanceMode = document.getElementById('editAdvanceMode').value;
-          const rawBalanceAmount = document.getElementById('editBalance').value;
+          const rawAdvanceAmount =
+            document.getElementById('editAdvance').value;
+          const rawAdvanceMode =
+            document.getElementById('editAdvanceMode').value;
+          const rawBalanceAmount =
+            document.getElementById('editBalance').value;
           const comments = document.getElementById('editComments').value || '';
 
           if (!name) throw new Error('Name is required');
@@ -2645,8 +2789,12 @@ Team OCB Stays`;
           if (!checkin) throw new Error('Check-in date is required');
           if (!checkout) throw new Error('Check-out date is required');
 
-          const advanceAmount = rawAdvanceAmount ? parseFloat(rawAdvanceAmount) : 0;
-          const balanceAmount = rawBalanceAmount ? parseFloat(rawBalanceAmount) : 0;
+          const advanceAmount = rawAdvanceAmount
+            ? parseFloat(rawAdvanceAmount)
+            : 0;
+          const balanceAmount = rawBalanceAmount
+            ? parseFloat(rawBalanceAmount)
+            : 0;
 
           const formData = {
             name,
@@ -2665,7 +2813,9 @@ Team OCB Stays`;
 
           await apiService.updateGuest(guestId, formData);
 
-          const modal = bootstrap.Modal.getInstance(document.getElementById('editGuestModal'));
+          const modal = bootstrap.Modal.getInstance(
+            document.getElementById('editGuestModal')
+          );
           modal.hide();
 
           helpers.showToast('Guest details updated successfully!', 'success');
@@ -2676,11 +2826,12 @@ Team OCB Stays`;
 
           window.selectedGuestId = guestId;
           const guestList = document.getElementById('guestList');
-          const guestItem = guestList.querySelector(`[data-guest-id="${guestId}"]`);
+          const guestItem = guestList.querySelector(
+            `[data-guest-id="${guestId}"]`
+          );
           if (guestItem) {
             guestItem.click();
           }
-
         } catch (error) {
           console.error('Error updating guest:', error);
           helpers.showToast(`Error: ${error.message}`, 'danger');
@@ -2693,13 +2844,14 @@ Team OCB Stays`;
         const contactIcon = document.getElementById('openContacts');
         if (!contactIcon) return;
 
-        contactIcon.addEventListener('click', (e) => {
+        contactIcon.addEventListener('click', e => {
           e.stopPropagation();
           const mobileInput = document.getElementById('mobile');
           mobileInput.focus();
 
           if (navigator.contacts && navigator.contacts.select) {
-            navigator.contacts.select(['name', 'tel'], { multiple: false })
+            navigator.contacts
+              .select(['name', 'tel'], { multiple: false })
               .then(contacts => {
                 if (contacts && contacts.length > 0) {
                   const contact = contacts[0];
@@ -2737,7 +2889,7 @@ Team OCB Stays`;
 
       setupTabNavigation() {
         document.querySelectorAll('#mainTabs .nav-link').forEach(tab => {
-          tab.addEventListener('click', (e) => {
+          tab.addEventListener('click', e => {
             e.preventDefault();
             const target = tab.dataset.tabTarget;
 
@@ -2768,20 +2920,23 @@ Team OCB Stays`;
           });
         });
 
-        document.getElementById('past-tab')?.addEventListener('click', () => {
-          app.loadPastGuests();
-        });
+        const pastTab = document.getElementById('past-tab');
+        if (pastTab) {
+          pastTab.addEventListener('click', () => {
+            app.loadPastGuests();
+          });
+        }
       },
 
       setupAutoFocus() {
         document.querySelectorAll('input, select').forEach(input => {
-          input.addEventListener('change', function() {
+          input.addEventListener('change', function () {
             if (this.value) {
               helpers.focusNextInput(this);
             }
           });
 
-          input.addEventListener('keypress', function(e) {
+          input.addEventListener('keypress', function (e) {
             if (e.key === 'Enter') {
               helpers.focusNextInput(this);
             }
@@ -2790,13 +2945,20 @@ Team OCB Stays`;
       },
 
       setupLogsButtons() {
-        document.getElementById('refreshLogs')?.addEventListener('click', () => {
-          app.loadLogs();
-        });
+        const refreshBtn = document.getElementById('refreshLogs');
+        const clearBtn = document.getElementById('clearLogs');
 
-        document.getElementById('clearLogs')?.addEventListener('click', () => {
-          logger.clear();
-        });
+        if (refreshBtn) {
+          refreshBtn.addEventListener('click', () => {
+            app.loadLogs();
+          });
+        }
+
+        if (clearBtn) {
+          clearBtn.addEventListener('click', () => {
+            logger.clear();
+          });
+        }
       }
     };
 
@@ -2805,11 +2967,21 @@ Team OCB Stays`;
       window.logger = logger;
       logger.log('Dashboard initialized', 'info');
 
-      document.getElementById('guestForm')?.addEventListener('submit', handlers.registerGuest);
-      document.getElementById('generateBill')?.addEventListener('click', handlers.generateBill);
-      document.getElementById('checkoutGuest')?.addEventListener('click', handlers.checkoutGuest);
-      document.getElementById('saveGuestChanges')?.addEventListener('click', handlers.saveGuestChanges);
-      document.getElementById('confirmCheckout')?.addEventListener('click', handlers.confirmCheckout);
+      document
+        .getElementById('guestForm')
+        ?.addEventListener('submit', handlers.registerGuest);
+      document
+        .getElementById('generateBill')
+        ?.addEventListener('click', handlers.generateBill);
+      document
+        .getElementById('checkoutGuest')
+        ?.addEventListener('click', handlers.checkoutGuest);
+      document
+        .getElementById('saveGuestChanges')
+        ?.addEventListener('click', handlers.saveGuestChanges);
+      document
+        .getElementById('confirmCheckout')
+        ?.addEventListener('click', handlers.confirmCheckout);
       document.getElementById('bookThisDate')?.addEventListener('click', () => {
         document.querySelector('#register-footer-tab').click();
       });
@@ -2827,12 +2999,17 @@ Team OCB Stays`;
 
       app.initCalendar();
 
-      await app.loadTodaysGuests();
-      await app.loadUpcomingGuests();
-      await app.generateCalendarView();
-      await app.loadActiveGuests();
-      await app.loadPastGuests();
-      await app.loadAnalytics();
+      try {
+        await app.loadTodaysGuests();
+        await app.loadUpcomingGuests();
+        await app.generateCalendarView();
+        await app.loadActiveGuests();
+        await app.loadPastGuests();
+        await app.loadAnalytics();
+      } catch (err) {
+        console.error('Initial load error:', err);
+        helpers.showToast('Error loading dashboard data', 'danger');
+      }
 
       window.app = app;
       window.showToast = helpers.showToast;
