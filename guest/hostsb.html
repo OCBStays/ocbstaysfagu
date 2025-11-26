@@ -1077,7 +1077,7 @@
       },
 
       async createGuest(guestData) {
-        return this.request('/Guests', {
+        return this.request('/guests', {
           method: 'POST',
           body: JSON.stringify(guestData)
         });
