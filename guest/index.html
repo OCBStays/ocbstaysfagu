@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome to OCB Stays</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <h1 id="welcomeMessage"><i class="fas fa-home"></i> Welcome to OCB Stays 🌲</h1>
+
+  <!-- Guest Details Section -->
+  <div class="section" id="stayDetails">
+    <div class="collapsible-header" onclick="toggleCollapse('guestDetailsCollapse')">
+      <h2><i class="fas fa-info-circle"></i> Your Stay Details</h2>
+      <i class="fas fa-chevron-down toggle-icon" id="guestDetailsToggle"></i>
+    </div>
+    <div class="basic-info">
+      <p><strong>Name:</strong> <span id="guestName">Loading...</span></p>
+      <p><strong>Room:</strong> <span id="room">Loading...</span></p>
+    </div>
+    <div class="collapsible-content" id="guestDetailsCollapse">
+      <div class="guest-details">
+        <p><strong>Guest ID:</strong> <span id="guestID">Loading...</span></p>
+        <p><strong>Check-In:</strong> <span id="checkin">Loading...</span> (Check-out: 11:00 AM)</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- House Rules Section -->
+  <div class="section">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <h2><i class="fas fa-clipboard-list"></i> House Rules</h2>
+      <button class="btn btn-outline-primary rules-btn" data-bs-toggle="modal" data-bs-target="#rulesModal">
+        <i class="fas fa-info-circle"></i> View Rules
+      </button>
+    </div>
+    <p>Please review the house rules for a pleasant stay.</p>
+  </div>
+
+  <!-- Property Location Section -->
+  <div class="section" id="propertyLocation">
+    <h2><i class="fas fa-map-marker-alt"></i> Property Location</h2>
+    <div class="location-timeline">
+      <div class="timeline-line"></div>
+      <div class="location-container">
+        <div class="location-dot" onclick="openLocation('fagu')"></div>
+        <div class="location-label">
+          Fagu
+          <div style="font-size: 0.7rem;">(Market & ATM)</div>
+        </div>
+      </div>
+      <div class="location-container">
+        <div class="location-dot" onclick="openLocation('cheog')"></div>
+        <div class="location-label">
+          Cheog Market
+          <div style="font-size: 0.7rem;">(Last market for cosmetics & essentials)</div>
+        </div>
+      </div>
+      <div class="location-container">
+        <div class="location-dot" onclick="openLocation('temple')"></div>
+        <div class="location-label">
+          Banga Pani Temple
+          <div style="font-size: 0.7rem;">(Meet Gaurav here)</div>
+          <div class="contact-icons">
+            <button class="contact-btn call-btn" onclick="makeCall('+917018148652')"><i class="fas fa-phone"></i></button>
+            <button class="contact-btn whatsapp-btn" onclick="openWhatsApp('+917018148652')"><i class="fab fa-whatsapp"></i></button>
+          </div>
+        </div>
+      </div>
+      <div class="location-container">
+        <div class="location-dot" onclick="openLocation('property')"></div>
+        <div class="location-label">
+          Cottage
+          <div style="font-size: 0.7rem;">(OCB Stays)</div>
+        </div>
+      </div>
+    </div>
+    <div class="location-actions">
+      <button class="btn btn-outline-primary" onclick="openAllLocations()">
+        <i class="fas fa-map-marked-alt"></i> View All Locations
+      </button>
+    </div>
+  </div>
+
+  <!-- Team OCB Card -->
+  <div class="section" id="teamSection">
+    <h2><i class="fas fa-users"></i> Team OCB</h2>
+    <div class="contact-person">
+      <div class="contact-person-name">Host: Prateek</div>
+      <div class="contact-person-buttons">
+        <button class="contact-btn call-btn" onclick="makeCall('+918708480965')"><i class="fas fa-phone"></i></button>
+        <button class="contact-btn whatsapp-btn" onclick="openWhatsApp('+918708480965')"><i class="fab fa-whatsapp"></i></button>
+      </div>
+    </div>
+    <div class="contact-person">
+      <div class="contact-person-name">Co-Host: Neev</div>
+      <div class="contact-person-buttons">
+        <button class="contact-btn call-btn" onclick="makeCall('+918553200001')"><i class="fas fa-phone"></i></button>
+        <button class="contact-btn whatsapp-btn" onclick="openWhatsApp('+918553200001')"><i class="fab fa-whatsapp"></i></button>
+      </div>
+    </div>
+    <div class="contact-person">
+      <div class="contact-person-name">Co-Host: Gaurav</div>
+      <div class="contact-person-buttons">
+        <button class="contact-btn call-btn" onclick="makeCall('+917018148652')"><i class="fas fa-phone"></i></button>
+        <button class="contact-btn whatsapp-btn" onclick="openWhatsApp('+917018148652')"><i class="fab fa-whatsapp"></i></button>
+      </div>
+    </div>
+    <div class="contact-person">
+      <div class="contact-person-name">Chef: Deepak</div>
+      <div class="contact-person-buttons">
+        <button class="contact-btn call-btn" onclick="makeCall('+919519437416')"><i class="fas fa-phone"></i></button>
+        <button class="contact-btn whatsapp-btn" onclick="openWhatsApp('+9179519437416')"><i class="fab fa-whatsapp"></i></button>
+      </div>
+    </div>
+    <div class="contact-person">
+      <div class="contact-person-name">Caretaker: Prakash</div>
+      <div class="contact-person-buttons">
+        <button class="contact-btn call-btn" onclick="makeCall('+918091296204')"><i class="fas fa-phone"></i></button>
+        <button class="contact-btn whatsapp-btn" onclick="openWhatsApp('+918091296204')"><i class="fab fa-whatsapp"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- WiFi Details Card -->
+  <div class="section" id="wifiSection">
+    <h2><i class="fas fa-wifi"></i> Wi-Fi Details</h2>
+    <p><strong>Network:</strong> OCB Stays</p>
+    <p><strong>Password:</strong> OCBStays123</p>
+    <button id="connectWifiBtn" class="btn btn-primary wifi-connect-btn">
+      <i class="fas fa-wifi"></i> Copy Wi-Fi Password
+    </button>
+  </div>
+
+  <!-- Food Menu and Orders Section -->
+  <div class="section" id="foodOrders">
+    <h2><i class="fas fa-utensils"></i> Food & Café</h2>
+    <button id="menuButton" class="btn btn-primary mb-3">View Menu & Place Order</button>
+    
+    <div id="ordersContainer">
+      <h3>Your Orders</h3>
+      <div id="ordersList">
+        <p>Loading your orders...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Checkout Info Section -->
+  <div class="section" id="checkoutInfo">
+    <h2><i class="fas fa-door-open"></i> Check-Out Information</h2>
+    <p><strong>Check-Out Time:</strong> 11:00 AM</p>
+    <div id="billDetails">
+      <p>Loading bill information...</p>
+    </div>
+  </div>
+
+  <!-- Rules Modal -->
+  <div class="modal fade" id="rulesModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="fas fa-info-circle me-2"></i> House Rules</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <ul class="rules-list">
+            <li><strong>Puff with the Peaks, Not the Sheets</strong> - Take your smoke breaks outside—let the room breathe as easy as the mountains do!</li>
+            <li><strong>Lower the Volume, Raise the Peace</strong> – After 10 PM, let quiet charm take over.</li>
+            <li><strong>Soft Feet, Sweet Dreams</strong> – Wooden floors love gentle steps and calm voices.</li>
+            <li><strong>Good Food Takes Time</strong> – Our kitchen hums from 8 AM to 2 PM and 4:30 PM to 8 PM (last order). Order early, savor later.</li>
+          </ul>
+          <p class="mt-3">Relax, unwind, and enjoy the magic of the mountains! 😊</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Got it!</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Order Details Modal -->
+  <div class="modal fade" id="orderModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="orderModalTitle">Order Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="orderModalBody">
+          <div class="text-center">
+            <div class="spinner"></div>
+            <p>Loading order details...</p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" id="cancelOrderBtn" class="btn btn-danger d-none">Cancel Order</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer Navigation -->
+  <div class="footer-nav">
+    <a href="#stayDetails" class="nav-tab active">
+      <i class="fas fa-info-circle"></i>
+      <span>Stay</span>
+    </a>
+    <a href="#propertyLocation" class="nav-tab">
+      <i class="fas fa-map-marker-alt"></i>
+      <span>Location</span>
+    </a>
+    <a href="#teamSection" class="nav-tab">
+      <i class="fas fa-users"></i>
+      <span>Team</span>
+    </a>
+    <a href="#wifiSection" class="nav-tab">
+      <i class="fas fa-wifi"></i>
+      <span>WiFi</span>
+    </a>
+    <a href="#foodOrders" class="nav-tab">
+      <i class="fas fa-utensils"></i>
+      <span>Food</span>
+    </a>
+    <a href="#checkoutInfo" class="nav-tab">
+      <i class="fas fa-door-open"></i>
+      <span>Checkout</span>
+    </a>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
