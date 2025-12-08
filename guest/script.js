@@ -200,12 +200,35 @@ async function loadGuestDetails() {
     const guest = await apiGet(`/guests/by-guest-id/${encodeURIComponent(guestID)}`);
     currentGuest = guest;
 
+    /*const displayName = guest.name || 'Guest';
+    setText('welcomeMessage', `Welcome to OCB Stays 🌲, ${displayName}`);
+    setText('guestName', displayName);
+    setText('room', guest.room || room || 'Not specified');
+    setText('guestID', guest.guestID || guestID);
+    setText('checkin', formatDate(guest.checkin));*/
+
     const displayName = guest.name || 'Guest';
     setText('welcomeMessage', `Welcome to OCB Stays 🌲, ${displayName}`);
     setText('guestName', displayName);
     setText('room', guest.room || room || 'Not specified');
     setText('guestID', guest.guestID || guestID);
-    setText('checkin', formatDate(guest.checkin));
+    
+    // Build "Stay dates: 06 Dec 2025 (1 PM) - 08 Dec 2025 (11 AM)"
+    const checkinDate = formatDate(guest.checkin);
+    const checkoutDate = formatDate(guest.checkout);
+    
+    let stayDatesText = 'Not available';
+    
+    if (guest.checkin && guest.checkout) {
+      stayDatesText = `${checkinDate} (1 PM) - ${checkoutDate} (11 AM)`;
+    } else if (guest.checkin) {
+      stayDatesText = `${checkinDate} (1 PM) - Checkout (11 AM)`;
+    } else {
+      stayDatesText = 'To be confirmed';
+    }
+    
+    setText('stayDates', stayDatesText);
+
 
     // Also update menu button link (for safety)
     initMenuButton();
