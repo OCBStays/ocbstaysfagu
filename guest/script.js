@@ -48,7 +48,7 @@ function setText(id, value) {
   if (el) el.textContent = value;
 }
 
-function toggleCollapse(id) {
+/*function toggleCollapse(id) {
   const content = document.getElementById(id);
   const icon = document.getElementById('guestDetailsToggle');
   if (!content) return;
@@ -58,7 +58,24 @@ function toggleCollapse(id) {
     icon.classList.toggle('fa-chevron-down', isVisible);
     icon.classList.toggle('fa-chevron-up', !isVisible);
   }
+}*/
+
+function toggleCollapse(id) {
+  const content = document.getElementById(id);
+  const icon = document.getElementById('guestDetailsToggle');
+  if (!content) return;
+
+  const isExpanded = content.classList.contains('expanded');
+
+  if (isExpanded) {
+    content.classList.remove('expanded');
+    if (icon) icon.classList.remove('expanded');
+  } else {
+    content.classList.add('expanded');
+    if (icon) icon.classList.add('expanded');
+  }
 }
+
 
 function makeCall(number) {
   if (!number) return;
