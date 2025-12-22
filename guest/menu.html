@@ -547,11 +547,18 @@
       const spinner = document.getElementById('orderSpinner');
       const instructions = document.getElementById('instructions').value;
       
+      // PREVENT MULTIPLE CLICKS - FIX ADDED HERE
+      if (placeOrderBtn.classList.contains('processing')) {
+        return; // Already processing, ignore click
+      }
+      
       if (Object.keys(cart).length === 0) {
         alert('Your cart is empty!');
         return;
       }
       
+      // Mark as processing
+      placeOrderBtn.classList.add('processing');
       placeOrderBtn.disabled = true;
       spinner.classList.remove('d-none');
       
@@ -589,15 +596,42 @@
         document.getElementById('confirmationMsgModal').classList.remove('d-none');
         document.getElementById('cartItems').classList.add('d-none');
         
+        // HIDE THE PLACE ORDER BUTTON AFTER SUCCESS - FIX ADDED HERE
+        placeOrderBtn.style.display = 'none';
+        document.querySelector('.modal-footer .btn-secondary').textContent = 'Close';
+        
         startRedirectCountdown();
         
       } catch (error) {
         console.error('Order error:', error);
         alert(`Failed to place order: ${error.message}`);
-      } finally {
+        
+        // Re-enable button on error
+        placeOrderBtn.classList.remove('processing');
         placeOrderBtn.disabled = false;
         spinner.classList.add('d-none');
       }
+    });
+
+    // CLEAR PROCESSING STATE WHEN MODAL CLOSES - FIX ADDED HERE
+    document.getElementById('cartModal').addEventListener('hidden.bs.modal', function () {
+      const placeOrderBtn = document.getElementById('placeOrder');
+      placeOrderBtn.classList.remove('processing');
+      placeOrderBtn.disabled = false;
+      placeOrderBtn.style.display = ''; // Reset display
+      document.getElementById('orderSpinner').classList.add('d-none');
+      
+      // Clear any existing countdown timer
+      if (redirectTimer) {
+        clearInterval(redirectTimer);
+      }
+      
+      // Reset confirmation message in modal if it's showing
+      document.getElementById('confirmationMsgModal').classList.add('d-none');
+      document.getElementById('cartItems').classList.remove('d-none');
+      
+      // Reset close button text
+      document.querySelector('.modal-footer .btn-secondary').textContent = 'Close';
     });
 
     // ---------- Scroll buttons ----------
