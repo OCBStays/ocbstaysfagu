@@ -2,7 +2,7 @@ console.log('🟢 guest script.js loaded');
 
 const config = {
   //apiBaseUrl: 'https://railway-production-1577.up.railway.app/api',
-  apiBaseUrl: 'https://hestialabs.onrender.com/api',
+  apiBaseUrl: 'https://railway-125w.onrender.com/api',
   menuUrl: 'https://ocbstays.github.io/ocbstaysfagu/guest/menu.html'
 };
 
