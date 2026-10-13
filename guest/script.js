@@ -140,11 +140,11 @@ function initWifiButton() {
   if (!btn) return;
   btn.addEventListener('click', async () => {
     try {
-      await navigator.clipboard.writeText('OCBStays123');
-      alert('Wi-Fi password copied to clipboard: OCBStays123');
+      await navigator.clipboard.writeText('OCBSTAYS123');
+      alert('Wi-Fi password copied to clipboard: OCBSTAYS123');
     } catch (err) {
       console.error('Clipboard error:', err);
-      alert('Wi-Fi password: OCBStays123');
+      alert('Wi-Fi password: OCBSTAYS123');
     }
   });
 }
